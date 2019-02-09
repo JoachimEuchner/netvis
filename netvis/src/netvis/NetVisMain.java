@@ -13,8 +13,6 @@ import org.pcap4j.core.PcapNetworkInterface;
 import org.pcap4j.core.Pcaps;
 import org.pcap4j.core.PcapNetworkInterface.PromiscuousMode;
 import org.pcap4j.packet.Packet;
-import org.pcap4j.sample.Loop;
-import org.pcap4j.sample.ReadPacketFile;
 
 import netvis.model.Model;
 import netvis.ui.NetVisComponent;
@@ -30,13 +28,13 @@ public class NetVisMain
    public Model mNetVisModel;
    public NetVisFrame mNetVisFrame;
    
-   private static final String COUNT_KEY = Loop.class.getName() + ".count";
+   private static final String COUNT_KEY = NetVisMain.class.getName() + ".count";
    private static final int COUNT = Integer.getInteger(COUNT_KEY, 1000);
 
-   private static final String READ_TIMEOUT_KEY = Loop.class.getName() + ".readTimeout";
+   private static final String READ_TIMEOUT_KEY = NetVisMain.class.getName() + ".readTimeout";
    private static final int READ_TIMEOUT = Integer.getInteger(READ_TIMEOUT_KEY, 100); // [ms]
 
-   private static final String SNAPLEN_KEY = Loop.class.getName() + ".snaplen";
+   private static final String SNAPLEN_KEY = NetVisMain.class.getName() + ".snaplen";
    private static final int SNAPLEN = Integer.getInteger(SNAPLEN_KEY, 65536); // [bytes]
   
    private PcapHandle pcapHandle; 
@@ -100,7 +98,7 @@ public class NetVisMain
          
          try 
          {
-            String PCAP_FILE_KEY = ReadPacketFile.class.getName() + ".pcapFile";
+            String PCAP_FILE_KEY = NetVisMain.class.getName() + ".pcapFile";
             String PCAP_FILE = System.getProperty(PCAP_FILE_KEY, "smallCapture2.pcapng");
             try 
             {
@@ -203,8 +201,8 @@ public class NetVisMain
                e.printStackTrace();
             }
 
-            int nifIdx = 0;
-            // int nifIdx = 2;
+            // int nifIdx = 0;
+            int nifIdx = 2;
             nif = allDevs.get(nifIdx);
 
             try

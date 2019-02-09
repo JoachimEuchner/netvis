@@ -62,7 +62,7 @@ public class NetVisPackageListener implements PacketListener
             }
             
             
-            if( true ) // accept )
+            if( accept )
             {
                synchronized( mModel  )
                {
