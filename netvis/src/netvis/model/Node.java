@@ -21,7 +21,7 @@ public class Node
    public int my;
    public int mWidth;
    public int mHeight;
-   public boolean mbIsUserMoved;
+   public boolean mbIsInitialLayouted;
    public boolean mbCanFlow;
    
    public double x;
@@ -71,7 +71,7 @@ public class Node
       fx = 0.0;
       fy = 0.0;
       
-      mbIsUserMoved = false;
+      mbIsInitialLayouted = false;
       mbCanFlow = true;
       
       timeOfLastSeenPacket = 0;

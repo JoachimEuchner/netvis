@@ -7,7 +7,6 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
-import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -19,8 +18,6 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
-import java.sql.Timestamp;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
@@ -411,29 +408,19 @@ public class NetVisComponent extends JComponent implements
       {
          Vector<Node> mAllNodes = mModel.getAllNodes();
          
-         int nrOfNodesToLayout = 0;  // mAllNodes.size();
+         int nrOfNodesToLayout = mAllNodes.size();
          
          int xCenter = mWidth / 2;
          int yCenter = mHeight / 2;
-         
-         // System.out.println("Width = "+mWidth);
-         
+                 
          double radius = mHeight * 0.4;
-         
-         for (Node n : mAllNodes )
-         {
-            if( true )// !n.mbIsUserMoved )
-            {
-               nrOfNodesToLayout++;
-            }
-         }
-                  
+                          
          double i = 0.0;
          if( nrOfNodesToLayout > 0 )
          {
             for (Node n : mAllNodes )
             {
-               if( ( !n.mbIsUserMoved ) ) //  && ( !n.mbCanFlow ) )
+               if( !n.mbIsInitialLayouted ) 
                {
                   double angle = 2* Math.PI / nrOfNodesToLayout * i;
 
@@ -444,7 +431,7 @@ public class NetVisComponent extends JComponent implements
                   n.y = n.my;
                }
                i += 1.0;
-               n.mbIsUserMoved = true;
+               n.mbIsInitialLayouted = true;
             }
          }
       }
@@ -994,7 +981,7 @@ public class NetVisComponent extends JComponent implements
             mDraggingNode = n;
             mDraggingNodeDx = ev.getX() - n.mx;
             mDraggingNodeDy = ev.getY() - n.my;   // 0...11
-            n.mbIsUserMoved = true; 
+            n.mbIsInitialLayouted = true; 
          }
       }
    }

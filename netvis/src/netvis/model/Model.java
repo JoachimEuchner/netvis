@@ -1,7 +1,6 @@
 package netvis.model;
 
 import java.net.Inet4Address;
-import java.sql.Timestamp;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
@@ -9,7 +8,6 @@ import java.util.Vector;
 import org.pcap4j.packet.IpV4Packet;
 
 import netvis.NetVisMain;
-import netvis.ui.NetVisComponent.ReverseIterator;
 
 public class Model
 {

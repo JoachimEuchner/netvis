@@ -1,8 +1,5 @@
 package netvis.model;
 
-import java.net.Inet4Address;
-import java.sql.Timestamp;
-
 public class Packet
 {
    public long ts;
