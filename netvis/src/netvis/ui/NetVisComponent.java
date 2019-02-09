@@ -76,8 +76,8 @@ public class NetVisComponent extends JComponent implements
    
    private final Model mModel;
    
-   int                       mWidth            = 1000;                   // 1500;
-   int                       mHeight           = 500;                    // 1000;
+   int                       mWidth            = 300;                   // 1500;
+   int                       mHeight           = 200;                    // 1000;
 
    public Font                         myPlain10Font;
    public int                          mLineHeight;
@@ -437,13 +437,13 @@ public class NetVisComponent extends JComponent implements
                {
                   double angle = 2* Math.PI / nrOfNodesToLayout * i;
 
-                  n.mx = (int)( xCenter + radius * Math.sin ( angle )) - n.mDisplayNameXoffset;
+                  n.mx = (int)( xCenter + radius * Math.sin ( angle ));
                   n.my = (int)( yCenter + radius * Math.cos ( angle ));
 
                   n.x = n.mx;
                   n.y = n.my;
-                  i += 1.0;
                }
+               i += 1.0;
                n.mbIsUserMoved = true;
             }
          }

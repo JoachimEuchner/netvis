@@ -79,10 +79,7 @@ public class NetVisMain
          mFileReaderThread.start();
       }
       
-      
-      
-      
-      mNetVisFrame.setSize(750, 500);
+      mNetVisFrame.setSize(500, 300);
       mNetVisFrame.setVisible( true );
    }     
      
@@ -201,8 +198,8 @@ public class NetVisMain
                e.printStackTrace();
             }
 
-            // int nifIdx = 0;
-            int nifIdx = 2;
+            int nifIdx = 1;
+            //  int nifIdx = 2;
             nif = allDevs.get(nifIdx);
 
             try
