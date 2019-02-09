@@ -49,16 +49,16 @@ public class NetVisPackageListener implements PacketListener
 
             boolean accept = true;
             
-//            byte[] srcAddressBytes = ipv4p.getHeader().getSrcAddr().getAddress();
-//            byte[] dstAddressBytes = ipv4p.getHeader().getDstAddr().getAddress();
-//            if( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 1) )
-//            {
-//               accept = false;
-//            }
-//            if( (dstAddressBytes[0] == -64) && (dstAddressBytes[1] == -88) && (dstAddressBytes[2] == 1) )
-//            {
-//               accept = false;
-//            }
+            byte[] srcAddressBytes = ipv4p.getHeader().getSrcAddr().getAddress();
+            byte[] dstAddressBytes = ipv4p.getHeader().getDstAddr().getAddress();
+            if( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 1) )
+            {
+               accept = false;
+            }
+            if( (dstAddressBytes[0] == -64) && (dstAddressBytes[1] == -88) && (dstAddressBytes[2] == 1) )
+            {
+               accept = false;
+            }
             
          
             if( accept )

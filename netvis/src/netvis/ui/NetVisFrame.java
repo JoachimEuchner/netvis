@@ -75,11 +75,7 @@ public class NetVisFrame extends  JFrame implements FocusListener, KeyListener
       
       this.add(mGraphCtrlPanel, BorderLayout.SOUTH);
       
-      
       pack();
-
-    
-     
    }
    
    

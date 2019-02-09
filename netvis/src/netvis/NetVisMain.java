@@ -15,7 +15,6 @@ import org.pcap4j.core.PcapNetworkInterface.PromiscuousMode;
 import org.pcap4j.packet.Packet;
 
 import netvis.model.Model;
-import netvis.ui.NetVisComponent;
 import netvis.ui.NetVisFrame;
 
 public class NetVisMain
@@ -79,7 +78,7 @@ public class NetVisMain
          mFileReaderThread.start();
       }
       
-      mNetVisFrame.setSize(500, 300);
+      mNetVisFrame.setSize(1000, 500);
       mNetVisFrame.setVisible( true );
    }     
      
@@ -198,8 +197,8 @@ public class NetVisMain
                e.printStackTrace();
             }
 
-            int nifIdx = 1;
-            //  int nifIdx = 2;
+            // int nifIdx = 1;
+            int nifIdx = 2;
             nif = allDevs.get(nifIdx);
 
             try
