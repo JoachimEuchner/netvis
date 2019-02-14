@@ -15,6 +15,7 @@ import org.pcap4j.core.PcapNetworkInterface.PromiscuousMode;
 import org.pcap4j.packet.Packet;
 
 import netvis.model.Model;
+import netvis.traceroute.Traceroute;
 import netvis.ui.NetVisFrame;
 
 public class NetVisMain
@@ -27,6 +28,8 @@ public class NetVisMain
    public Model mNetVisModel;
    public NetVisFrame mNetVisFrame;
    
+   public Traceroute mTraceRouter;
+   
    private static final String COUNT_KEY = NetVisMain.class.getName() + ".count";
    private static final int COUNT = Integer.getInteger(COUNT_KEY, 1000);
 
@@ -38,6 +41,16 @@ public class NetVisMain
   
    private PcapHandle pcapHandle; 
   
+   public PcapHandle getPcapHandle()
+   {
+      return pcapHandle;
+   }
+   
+   public PcapNetworkInterface getNif()
+   {
+      return nif;
+   }
+   
    public boolean isOnline;
    
    MyListeningStarter mLs;
@@ -54,13 +67,19 @@ public class NetVisMain
       if( args.length == 0 )
       {
          isOnline = true;
-         
+
+  
          nvpl = new NetVisPackageListener( pcapHandle, mNetVisModel );
          mLs = new MyListeningStarter();
 
          mListeningStartThread = new Thread(mLs );
          mListeningStartThread.start();
 
+         mTraceRouter = new Traceroute( this );
+         mTraceRouter.doTraceRoute("blog.fefe.de");
+         
+         
+         
          Watchdog wd = new Watchdog();
          Thread watchdogThread = new Thread( wd );
          watchdogThread.start();
