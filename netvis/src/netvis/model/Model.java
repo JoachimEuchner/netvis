@@ -189,9 +189,9 @@ public class Model
       }
 
 
-      System.out.println("addIPv4Packet("+src+"->"+dst+"), got " +
-               mAllNodes.size() + " nodes and " +
-               mAllLinks.size() + " links, done.");
+//      System.out.println("addIPv4Packet("+src+"->"+dst+"), got " +
+//               mAllNodes.size() + " nodes and " +
+//               mAllLinks.size() + " links, done.");
    }
    
    private class CondoCleaner implements Runnable

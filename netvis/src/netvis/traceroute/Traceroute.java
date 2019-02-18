@@ -3,20 +3,21 @@ package netvis.traceroute;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.List;
 
 import org.pcap4j.core.NotOpenException;
-import org.pcap4j.core.PacketListener;
 import org.pcap4j.core.PcapHandle;
 import org.pcap4j.core.PcapNativeException;
+import org.pcap4j.core.PcapNetworkInterface;
+import org.pcap4j.core.Pcaps;
+import org.pcap4j.core.PcapHandle.BlockingMode;
 import org.pcap4j.core.PcapNetworkInterface.PromiscuousMode;
-import org.pcap4j.packet.AbstractPacket.AbstractBuilder;
 import org.pcap4j.packet.EthernetPacket;
 import org.pcap4j.packet.IcmpV4CommonPacket;
 import org.pcap4j.packet.IcmpV4EchoPacket;
 import org.pcap4j.packet.IpV4Packet;
 import org.pcap4j.packet.IpV4Rfc791Tos;
 import org.pcap4j.packet.Packet;
-import org.pcap4j.packet.Packet.Builder;
 import org.pcap4j.packet.UnknownPacket;
 import org.pcap4j.packet.namednumber.EtherType;
 import org.pcap4j.packet.namednumber.IcmpV4Code;
@@ -53,23 +54,47 @@ public class Traceroute
 
    public void doTraceRoute(String target)
    {
-      while ( main.getNif() == null )
-      {
-         try {
-            Thread.sleep(1000);
-         } catch (InterruptedException e) {
-            break;
-         }
-      }
       
-      try
+      List<PcapNetworkInterface> allDevs = null;
+      try 
       {
-         sendHandle = main.getNif().openLive(SNAPLEN, PromiscuousMode.PROMISCUOUS, READ_TIMEOUT);
+         allDevs = Pcaps.findAllDevs();
       } 
-      catch (PcapNativeException e)
+      catch (PcapNativeException e) 
       {
          e.printStackTrace();
       }
+
+      int nifIdx = 0;
+      // int nifIdx = 2;
+      PcapNetworkInterface nif = allDevs.get(nifIdx);
+      
+      try
+      {
+         sendHandle = nif.openLive(SNAPLEN, PromiscuousMode.PROMISCUOUS, READ_TIMEOUT);
+         sendHandle.setBlockingMode(BlockingMode.NONBLOCKING);
+      } 
+      catch (PcapNativeException e1)
+      {
+         e1.printStackTrace();
+      }
+      catch (NotOpenException noe )
+      {
+         noe.printStackTrace();
+      }
+      
+      
+//      while ( main.getNif() == null )
+//      {
+//         try {
+//            Thread.sleep(1000);
+//         } catch (InterruptedException e) {
+//            break;
+//         }
+//      }
+      
+      
+    
        
       try 
       {
@@ -83,10 +108,9 @@ public class Traceroute
             throw new IllegalArgumentException("args[0]: " + target);
          }
 
-         final Inet4Address srcAddress = (Inet4Address) InetAddress.getLocalHost();
+         final Inet4Address srcAddress = (Inet4Address) InetAddress.getByName("192.168.1.44");
          
-         Packet.Builder tmp;
-         final IpV4Packet.Builder ipv4b = new IpV4Packet.Builder();
+        
 
          byte[] echoData = new byte[TU - 28];
          for (int i = 0; i < echoData.length; i++) {
@@ -106,45 +130,51 @@ public class Traceroute
             .correctChecksumAtBuild(true);
 
          IpV4Packet.Builder ipV4Builder = new IpV4Packet.Builder();
-         
-         for ( int ttl = 1; ttl < 20; ttl++)
-         {
-            
-            
-            ipV4Builder
-               .version(IpVersion.IPV4)
-               .tos(IpV4Rfc791Tos.newInstance((byte) 0))
-               .ttl((byte) ttl)                           // <---------------------!!
-               .protocol(IpNumber.ICMPV4)
-               .srcAddr( srcAddress )
-               .dstAddr( targetAddress )
-               .payloadBuilder(icmpV4CommonBuilder)
-               .correctChecksumAtBuild(true)
-               .correctLengthAtBuild(true);
-            
-            MacAddress srcMac = MacAddress.getByName("aa:aa:aa:00:7e:24");
-            
-            EthernetPacket.Builder etherBuilder = new EthernetPacket.Builder();
-            etherBuilder.dstAddr(MacAddress.ETHER_BROADCAST_ADDRESS)
-                    .srcAddr(srcMac)
-                    .type(EtherType.IPV4)
-                    .payloadBuilder(ipV4Builder)
-                    .paddingAtBuild(true);
+                
+         for ( int ttl = 1; ttl < 5; ttl++)
+         {            
+            for ( int attempt = 1; attempt <= 3; attempt++)
+            {
+               System.out.println("starting attempt: "+attempt +" for depth:" +ttl);
+               
+               ipV4Builder
+                  .version(IpVersion.IPV4)
+                  .tos(IpV4Rfc791Tos.newInstance((byte) 0))
+                  .ttl((byte) ttl)                           // <---------------------!!
+                  .protocol(IpNumber.ICMPV4)
+                  .srcAddr( srcAddress )
+                  .dstAddr( targetAddress )
+                  .payloadBuilder(icmpV4CommonBuilder)
+                  .correctChecksumAtBuild(true)
+                  .correctLengthAtBuild(true);
 
-            Packet p = etherBuilder.build();
-            
-            System.out.println("Traceroute, ttl="+ttl+": sending "+p);
-            
-            main.getPcapHandle().sendPacket(p);
+               MacAddress srcMac = MacAddress.getByName("00:e0:4c:69:13:c7");
+               MacAddress dstMac = MacAddress.getByName("34:31:c4:33:ce:ee");
 
-            try {
-               Thread.sleep(1000);
-            } catch (InterruptedException e) {
-               break;
+               EthernetPacket.Builder etherBuilder = new EthernetPacket.Builder();
+               etherBuilder.dstAddr(MacAddress.ETHER_BROADCAST_ADDRESS)
+                  .srcAddr(srcMac)
+                  .dstAddr(dstMac)
+                  .type(EtherType.IPV4)
+                  .payloadBuilder(ipV4Builder)
+                  .paddingAtBuild(true);
+
+               Packet p = etherBuilder.build();
+
+               System.out.println("Traceroute, attempt:"+attempt+", ttl="+ttl+": sending "+p);
+
+               sendHandle.sendPacket(p);
+
+               try {
+                  Thread.sleep(1000);
+               } catch (InterruptedException e) {
+                  break;
+               }
             }
          }
 
       } catch (Exception e) {
+         System.out.println("Traceroute, cought: "+e);
          e.printStackTrace();
       } finally {
          if (sendHandle != null && sendHandle.isOpen()) {

@@ -42,7 +42,7 @@ public class NetVisPackageListener implements PacketListener
          {
             // Inet4Address destAddr = ipv4p.getHeader().getDstAddr();
 
-            System.out.println("[nr.: " +counter +"]----> IPV4: "+ 
+            System.out.println("received: [nr.: " +counter +"]----> IPV4: "+ 
                      ipv4p.getHeader().getSrcAddr() + " --> " +
                      ipv4p.getHeader().getDstAddr() + ": len " +
                      ipv4p.length());
@@ -53,11 +53,12 @@ public class NetVisPackageListener implements PacketListener
             byte[] dstAddressBytes = ipv4p.getHeader().getDstAddr().getAddress();
             if( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 1) )
             {
-               accept = false;
+               accept = true;
             }
-            if( (dstAddressBytes[0] == -64) && (dstAddressBytes[1] == -88) && (dstAddressBytes[2] == 1) )
+                      
+            if( (dstAddressBytes[0] == -64) && (dstAddressBytes[1] == -88) && (dstAddressBytes[2] == 1) && (dstAddressBytes[3] == 44))
             {
-               accept = false;
+               System.out.println("received [nr.: " +counter +"]: "+packet);
             }
             
          

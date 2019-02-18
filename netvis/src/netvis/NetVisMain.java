@@ -82,7 +82,7 @@ public class NetVisMain
          
          Watchdog wd = new Watchdog();
          Thread watchdogThread = new Thread( wd );
-         watchdogThread.start();
+         // watchdogThread.start();
       }
       else
       {
@@ -216,8 +216,8 @@ public class NetVisMain
                e.printStackTrace();
             }
 
-            // int nifIdx = 1;
-            int nifIdx = 2;
+            int nifIdx = 0;
+            // int nifIdx = 2;
             nif = allDevs.get(nifIdx);
 
             try
