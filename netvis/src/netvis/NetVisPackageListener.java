@@ -1,5 +1,7 @@
 package netvis;
 
+import java.net.Inet4Address;
+
 import org.pcap4j.core.PacketListener;
 import org.pcap4j.core.PcapHandle;
 import org.pcap4j.packet.ArpPacket;
@@ -58,7 +60,7 @@ public class NetVisPackageListener implements PacketListener
             {
                accept = true;
             }
-                      
+
             if( (dstAddressBytes[0] == -64) && (dstAddressBytes[1] == -88) && (dstAddressBytes[2] == 1) && (dstAddressBytes[3] == 44))
             {
                // System.out.println("received [nr.: " +counter +"]: "+packet);
@@ -71,8 +73,10 @@ public class NetVisPackageListener implements PacketListener
                // System.out.println("received [nr.: " +counter +"]: "+icmpTEp);
                // int depth = icmpTEp.get(IpV4Packet.class).getHeader().getTtl();
                // int depth  = icmpTEp.get(IpV4Packet.class).getPayload().getRawData()[0];
+               Inet4Address origDstAddr = (icmpTEp.get(IpV4Packet.class)).getHeader().getDstAddr();
                int depth  = icmpTEp.get(IcmpV4EchoPacket.class).getPayload().getRawData()[0];
-               System.out.println("received: [nr.: " +counter +"] from "+ ipv4p.getHeader().getSrcAddr()  +", at depth: " + depth);
+               System.out.println("received: [nr.: " +counter +"] from " + 
+                        ipv4p.getHeader().getSrcAddr()  +", at depth: " + depth +", sent to "+origDstAddr);
             }
             
             if( accept )
