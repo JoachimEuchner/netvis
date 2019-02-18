@@ -84,15 +84,6 @@ public class Traceroute
       }
       
       
-//      while ( main.getNif() == null )
-//      {
-//         try {
-//            Thread.sleep(1000);
-//         } catch (InterruptedException e) {
-//            break;
-//         }
-//      }
-      
       
     
        
@@ -109,33 +100,35 @@ public class Traceroute
          }
 
          final Inet4Address srcAddress = (Inet4Address) InetAddress.getByName("192.168.1.44");
+          
          
-        
-
-         byte[] echoData = new byte[TU - 28];
-         for (int i = 0; i < echoData.length; i++) {
-            echoData[i] = (byte) i;
-         }
-
-         IcmpV4EchoPacket.Builder echoBuilder = new IcmpV4EchoPacket.Builder();
-         echoBuilder
-            .identifier((short) 1)
-            .payloadBuilder(new UnknownPacket.Builder().rawData(echoData));
-
-         IcmpV4CommonPacket.Builder icmpV4CommonBuilder = new IcmpV4CommonPacket.Builder();
-         icmpV4CommonBuilder
-            .type(IcmpV4Type.ECHO)
-            .code(IcmpV4Code.NO_CODE)
-            .payloadBuilder(echoBuilder)
-            .correctChecksumAtBuild(true);
-
          IpV4Packet.Builder ipV4Builder = new IpV4Packet.Builder();
-                
+         
          for ( int ttl = 1; ttl < 5; ttl++)
          {            
             for ( int attempt = 1; attempt <= 3; attempt++)
             {
-               System.out.println("starting attempt: "+attempt +" for depth:" +ttl);
+
+               byte[] echoData = new byte[TU - 28];
+               for (int i = 0; i < echoData.length; i++) {
+                  echoData[i] = (byte) i;
+               }
+               echoData[0] = (byte)ttl;
+               
+               IcmpV4EchoPacket.Builder echoBuilder = new IcmpV4EchoPacket.Builder();
+               echoBuilder
+               .identifier((short) 1)
+               .payloadBuilder(new UnknownPacket.Builder().rawData(echoData));
+
+               IcmpV4CommonPacket.Builder icmpV4CommonBuilder = new IcmpV4CommonPacket.Builder();
+               icmpV4CommonBuilder
+               .type(IcmpV4Type.ECHO)
+               .code(IcmpV4Code.NO_CODE)
+               .payloadBuilder(echoBuilder)
+               .correctChecksumAtBuild(true);
+
+        
+               System.out.println("starting attempt: "+attempt +" for depth: " +ttl);
                
                ipV4Builder
                   .version(IpVersion.IPV4)
@@ -161,7 +154,7 @@ public class Traceroute
 
                Packet p = etherBuilder.build();
 
-               System.out.println("Traceroute, attempt:"+attempt+", ttl="+ttl+": sending "+p);
+               // System.out.println("Traceroute, attempt:"+attempt+", ttl="+ttl+": sending "+p);
 
                sendHandle.sendPacket(p);
 

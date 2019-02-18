@@ -4,6 +4,9 @@ import org.pcap4j.core.PacketListener;
 import org.pcap4j.core.PcapHandle;
 import org.pcap4j.packet.ArpPacket;
 import org.pcap4j.packet.EthernetPacket;
+import org.pcap4j.packet.IcmpV4CommonPacket;
+import org.pcap4j.packet.IcmpV4EchoPacket;
+import org.pcap4j.packet.IcmpV4TimeExceededPacket;
 import org.pcap4j.packet.IpV4Packet;
 import org.pcap4j.packet.LinuxSllPacket;
 import org.pcap4j.packet.Packet;
@@ -58,10 +61,20 @@ public class NetVisPackageListener implements PacketListener
                       
             if( (dstAddressBytes[0] == -64) && (dstAddressBytes[1] == -88) && (dstAddressBytes[2] == 1) && (dstAddressBytes[3] == 44))
             {
-               System.out.println("received [nr.: " +counter +"]: "+packet);
+               // System.out.println("received [nr.: " +counter +"]: "+packet);
             }
             
          
+            if (packet.contains(IcmpV4TimeExceededPacket.class)) 
+            {                
+               IcmpV4TimeExceededPacket icmpTEp = packet.get(IcmpV4TimeExceededPacket.class);
+               // System.out.println("received [nr.: " +counter +"]: "+icmpTEp);
+               // int depth = icmpTEp.get(IpV4Packet.class).getHeader().getTtl();
+               // int depth  = icmpTEp.get(IpV4Packet.class).getPayload().getRawData()[0];
+               int depth  = icmpTEp.get(IcmpV4EchoPacket.class).getPayload().getRawData()[0];
+               System.out.println("received: [nr.: " +counter +"] from "+ ipv4p.getHeader().getSrcAddr()  +", at depth: " + depth);
+            }
+            
             if( accept )
             {
                synchronized( mModel  )
