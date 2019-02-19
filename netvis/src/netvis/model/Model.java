@@ -18,6 +18,8 @@ public class Model
    private final Vector<netvis.model.Node> mAllNodes;
    private final Vector<netvis.model.Packet> mAllPackets;   
    
+   private final Vector<netvis.traceroute.TraceRouteNode> mTraceRouteNodes;
+   
    private CondoCleaner myCondoCleaner;
    
    public class ReverseIterator<T> implements Iterator<T>, Iterable<T> 
@@ -110,6 +112,8 @@ public class Model
       this.mAllNodes = new Vector<Node>(1000, 1000);
       this.mAllPackets = new Vector<Packet>(1000,1000);
       
+      this.mTraceRouteNodes = new Vector<netvis.traceroute.TraceRouteNode>(1000,1000);
+            
       myCondoCleaner = new CondoCleaner();
       Thread cleanerThread = new Thread( myCondoCleaner );
       cleanerThread.start();
@@ -193,6 +197,15 @@ public class Model
 //               mAllNodes.size() + " nodes and " +
 //               mAllLinks.size() + " links, done.");
    }
+   
+   public void addTraceRouteNode( netvis.traceroute.TraceRouteNode trn )
+   {
+      this.mTraceRouteNodes.add( trn );
+      
+   }
+   
+   
+   
    
    private class CondoCleaner implements Runnable
    {

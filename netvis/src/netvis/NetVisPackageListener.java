@@ -14,6 +14,7 @@ import org.pcap4j.packet.LinuxSllPacket;
 import org.pcap4j.packet.Packet;
 
 import netvis.model.Model;
+import netvis.traceroute.TraceRouteNode;
 
 public class NetVisPackageListener implements PacketListener
 { 
@@ -73,10 +74,14 @@ public class NetVisPackageListener implements PacketListener
                // System.out.println("received [nr.: " +counter +"]: "+icmpTEp);
                // int depth = icmpTEp.get(IpV4Packet.class).getHeader().getTtl();
                // int depth  = icmpTEp.get(IpV4Packet.class).getPayload().getRawData()[0];
+               Inet4Address origSrcAddr = (icmpTEp.get(IpV4Packet.class)).getHeader().getSrcAddr();
                Inet4Address origDstAddr = (icmpTEp.get(IpV4Packet.class)).getHeader().getDstAddr();
                int depth  = icmpTEp.get(IcmpV4EchoPacket.class).getPayload().getRawData()[0];
-               System.out.println("received: [nr.: " +counter +"] from " + 
+               System.out.println("received: [nr.: " +counter +"] src="+origSrcAddr +" reply from " + 
                         ipv4p.getHeader().getSrcAddr()  +", at depth: " + depth +", sent to "+origDstAddr);
+               
+               TraceRouteNode trn = new TraceRouteNode(origSrcAddr, origDstAddr, ipv4p.getHeader().getSrcAddr(), depth);
+               mModel.addTraceRouteNode(trn);
             }
             
             if( accept )
