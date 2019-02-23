@@ -18,6 +18,7 @@ public class Model
    private final Vector<netvis.model.Node> mAllNodes;
    private final Vector<netvis.model.Packet> mAllPackets;   
    
+   private final Vector<netvis.model.Route> mRoutes;
    private final Vector<netvis.traceroute.TraceRouteNode> mTraceRouteNodes;
    
    private CondoCleaner myCondoCleaner;
@@ -53,8 +54,7 @@ public class Model
       }
    }
    
-   
-   boolean equalsAddr( Inet4Address addr1, Inet4Address addr2 )
+   public static boolean equalsAddr( Inet4Address addr1, Inet4Address addr2 )
    {
       boolean retVal = false;
 
@@ -112,6 +112,7 @@ public class Model
       this.mAllNodes = new Vector<Node>(1000, 1000);
       this.mAllPackets = new Vector<Packet>(1000,1000);
       
+      this.mRoutes = new Vector<netvis.model.Route>(100,100);
       this.mTraceRouteNodes = new Vector<netvis.traceroute.TraceRouteNode>(1000,1000);
             
       myCondoCleaner = new CondoCleaner();
@@ -192,16 +193,68 @@ public class Model
          link.incPacketNr();
       }
 
-
 //      System.out.println("addIPv4Packet("+src+"->"+dst+"), got " +
 //               mAllNodes.size() + " nodes and " +
 //               mAllLinks.size() + " links, done.");
+      
+      
+   }
+   
+   public void addNode( Node n )
+   {
+      synchronized( mAllNodes )
+      {
+         mAllNodes.add(n);
+      }
+   }
+   
+   public void addLink( Link l )
+   {
+      synchronized( mAllLinks )
+      {
+         mAllLinks.add(l);
+      }
    }
    
    public void addTraceRouteNode( netvis.traceroute.TraceRouteNode trn )
    {
       this.mTraceRouteNodes.add( trn );
       
+      Route r = findRouteForTraceRouteNode( trn );
+      
+      if( r != null )
+      {
+         r.addTraceRouteNode(trn);
+      }
+      else
+      {
+         r = new Route( this, trn.mSrcAddr,  trn.mOrigDstAddr );
+         mRoutes.add(r);
+         r.addTraceRouteNode(trn);
+      }
+   }
+   
+   private Route findRouteForTraceRouteNode( netvis.traceroute.TraceRouteNode trn )
+   {
+      Route retVal = null;
+      synchronized( mRoutes )
+      {
+         for ( Route r : mRoutes )
+         {
+            // System.out.println("trn:<"+ trn.mSrcAddr + "->" +trn.mOrigDstAddr+"> ?= <"+ r.mSrcAddr+ "->" + r.mDstAddr +">");
+            
+            if( equalsAddr ( trn.mSrcAddr, r.mSrcAddr ) 
+             && equalsAddr ( trn.mOrigDstAddr, r.mDstAddr ) )
+            {
+               retVal = r;
+               break;
+            }
+         }
+      }
+      
+      // System.out.println("trn:<"+ trn.mSrcAddr + "->" +trn.mOrigDstAddr+"> found "+retVal+" as route");
+      
+      return ( retVal );
    }
    
    

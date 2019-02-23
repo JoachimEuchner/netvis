@@ -27,6 +27,13 @@ public class Link
       return ( System.currentTimeMillis() - timeOfLastSeenPacket);
    }
    
+   public void setTimeSeenLastPacket(long t)
+   {
+      timeOfLastSeenPacket = t;
+   }
+   
+   
+   
    public int getNrOfSeenPackets()
    {
       return seenPackets;

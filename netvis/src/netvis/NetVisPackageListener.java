@@ -48,28 +48,17 @@ public class NetVisPackageListener implements PacketListener
          {
             // Inet4Address destAddr = ipv4p.getHeader().getDstAddr();
 
-            System.out.println("received: [nr.: " +counter +"]----> IPV4: "+ 
-                     ipv4p.getHeader().getSrcAddr() + " --> " +
-                     ipv4p.getHeader().getDstAddr() + ": len " +
-                     ipv4p.length());
+//            System.out.println("received: [nr.: " +counter +"]----> IPV4: "+ 
+//                     ipv4p.getHeader().getSrcAddr() + " --> " +
+//                     ipv4p.getHeader().getDstAddr() + ": len " +
+//                     ipv4p.length());
 
-            boolean accept = true;
-            
-            byte[] srcAddressBytes = ipv4p.getHeader().getSrcAddr().getAddress();
-            byte[] dstAddressBytes = ipv4p.getHeader().getDstAddr().getAddress();
-            if( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 1) )
-            {
-               accept = true;
-            }
-
-            if( (dstAddressBytes[0] == -64) && (dstAddressBytes[1] == -88) && (dstAddressBytes[2] == 1) && (dstAddressBytes[3] == 44))
-            {
-               // System.out.println("received [nr.: " +counter +"]: "+packet);
-            }
             
          
             if (packet.contains(IcmpV4TimeExceededPacket.class)) 
-            {                
+            {  
+               // tarceroute reply.
+               
                IcmpV4TimeExceededPacket icmpTEp = packet.get(IcmpV4TimeExceededPacket.class);
                // System.out.println("received [nr.: " +counter +"]: "+icmpTEp);
                // int depth = icmpTEp.get(IpV4Packet.class).getHeader().getTtl();
@@ -83,12 +72,33 @@ public class NetVisPackageListener implements PacketListener
                TraceRouteNode trn = new TraceRouteNode(origSrcAddr, origDstAddr, ipv4p.getHeader().getSrcAddr(), depth);
                mModel.addTraceRouteNode(trn);
             }
-            
-            if( accept )
+            else
             {
-               synchronized( mModel  )
+
+               boolean accept = true;
+
+               byte[] srcAddressBytes = ipv4p.getHeader().getSrcAddr().getAddress();
+               byte[] dstAddressBytes = ipv4p.getHeader().getDstAddr().getAddress();
+               if( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 1) )
                {
-                  mModel.addIPv4Packet( /*pcapHandle.getTimestamp(),*/ ipv4p  );
+                  accept = false;
+               }
+
+               if( (dstAddressBytes[0] == -64) && (dstAddressBytes[1] == -88) && (dstAddressBytes[2] == 1) )
+               {
+                  accept = false;
+               }
+
+               if( (dstAddressBytes[0] == -64) && (dstAddressBytes[1] == -88) && (dstAddressBytes[2] == 1) && (dstAddressBytes[3] == 44))
+               {
+                  // System.out.println("received [nr.: " +counter +"]: "+packet);
+               }
+               if( accept )
+               {
+                  synchronized( mModel  )
+                  {
+                     mModel.addIPv4Packet( /*pcapHandle.getTimestamp(),*/ ipv4p  );
+                  }
                }
             }
          }
@@ -98,10 +108,10 @@ public class NetVisPackageListener implements PacketListener
             if( arpp != null )
             {                               
                // dunno
-               System.out.println("[nr.:" +counter +"]----> ARP: "+ 
-                        arpp.getHeader().getSrcProtocolAddr() + " --> " +
-                        arpp.getHeader().getDstProtocolAddr() + ": len" + 
-                        arpp.length());
+//               System.out.println("[nr.:" +counter +"]----> ARP: "+ 
+//                        arpp.getHeader().getSrcProtocolAddr() + " --> " +
+//                        arpp.getHeader().getDstProtocolAddr() + ": len" + 
+//                        arpp.length());
             }
             else
             {

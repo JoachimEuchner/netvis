@@ -57,6 +57,7 @@ public class NetVisMain
   
    Thread mListeningStartThread; 
    Thread mFileReaderThread;
+   Thread mTraceRouteThread;
    
    private NetVisMain(String[] args) 
    {
@@ -68,7 +69,6 @@ public class NetVisMain
       {
          isOnline = true;
 
-  
          nvpl = new NetVisPackageListener( pcapHandle, mNetVisModel );
          mLs = new MyListeningStarter();
 
@@ -76,13 +76,12 @@ public class NetVisMain
          mListeningStartThread.start();
 
          mTraceRouter = new Traceroute( this );
-         mTraceRouter.doTraceRoute("blog.fefe.de");
-         
-         
+         mTraceRouteThread = new Thread( mTraceRouter );
+         mTraceRouteThread.start();
          
          Watchdog wd = new Watchdog();
          Thread watchdogThread = new Thread( wd );
-         // watchdogThread.start();
+         watchdogThread.start();
       }
       else
       {
@@ -216,8 +215,8 @@ public class NetVisMain
                e.printStackTrace();
             }
 
-            int nifIdx = 0;
-            // int nifIdx = 2;
+            // int nifIdx = 0;
+            int nifIdx = 2;
             nif = allDevs.get(nifIdx);
 
             try
