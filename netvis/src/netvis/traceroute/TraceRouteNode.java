@@ -22,6 +22,8 @@ public class TraceRouteNode extends netvis.model.Node
       mObservedTimes = 1;
       
       timeOfLastSeenPacket = System.currentTimeMillis();
+      
+      mDisplayName = mDisplayName+"@"+depth;
    }
   
 }

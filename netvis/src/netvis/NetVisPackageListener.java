@@ -93,6 +93,7 @@ public class NetVisPackageListener implements PacketListener
                {
                   // System.out.println("received [nr.: " +counter +"]: "+packet);
                }
+               
                if( accept )
                {
                   synchronized( mModel  )

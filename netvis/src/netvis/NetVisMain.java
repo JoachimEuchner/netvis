@@ -30,6 +30,7 @@ public class NetVisMain
    
    public Traceroute mTraceRouter;
    
+   
    private static final String COUNT_KEY = NetVisMain.class.getName() + ".count";
    private static final int COUNT = Integer.getInteger(COUNT_KEY, 1000);
 

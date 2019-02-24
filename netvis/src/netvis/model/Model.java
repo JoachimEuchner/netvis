@@ -86,6 +86,24 @@ public class Model
       return ( retVal );
    }
    
+   public Node findNodeAndAdd( Inet4Address addr )
+   {
+      Node retVal = findNode( addr );
+      
+      if( retVal == null )
+      {
+         synchronized( mAllNodes )
+         {
+            Node n = new Node( addr );
+            mAllNodes.add( n );
+         }
+      }
+      
+      return ( retVal );
+   }
+   
+   
+   
    public Link findLink( Node src, Node dst )
    {
       Link retVal = null;
@@ -104,8 +122,10 @@ public class Model
       return ( retVal );
    }
    
-   public Model( NetVisMain m)
+   public Model( NetVisMain m )
    {
+      System.out.println("Model<ctor> called.");
+      
       mMain = m;
       
       this.mAllLinks = new Vector<Link>(100, 100);
@@ -141,6 +161,9 @@ public class Model
    {
       Inet4Address src = ipv4p.getHeader().getSrcAddr();
       Inet4Address dst = ipv4p.getHeader().getDstAddr();  
+      
+      byte[] srcAddressBytes = src.getAddress();
+      byte[] dstAddressBytes = dst.getAddress();
 
       long now = System.currentTimeMillis();
       
@@ -194,9 +217,20 @@ public class Model
       }
 
 //      System.out.println("addIPv4Packet("+src+"->"+dst+"), got " +
-//               mAllNodes.size() + " nodes and " +
-//               mAllLinks.size() + " links, done.");
+//                  mAllNodes.size() + " nodes and " +
+//                  mAllLinks.size() + " links, done.");
       
+      
+      if( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 1) )
+      {
+         mMain.mTraceRouter.setTargetAddess( dst );
+      }
+      else
+      {
+         mMain.mTraceRouter.setTargetAddess( src );
+      }
+
+
       
    }
    
@@ -212,9 +246,27 @@ public class Model
    {
       synchronized( mAllLinks )
       {
+         System.out.println("addLink("+l.src.getAddr()+"->"+l.dst.getAddr()+")");
          mAllLinks.add(l);
       }
    }
+   
+   public void removeLink(  Inet4Address src , Inet4Address dst )
+   {
+    
+      synchronized( mAllLinks )
+      {
+         for( Link l: new ReverseIterator<Link>(mAllLinks) )
+         {
+            if( ( Model.equalsAddr( l.src.getAddr(), src) )
+               && Model.equalsAddr( l.dst.getAddr(), dst ) ) 
+            {
+               mAllLinks.remove( l );
+            }
+         }
+      }
+   }
+   
    
    public void addTraceRouteNode( netvis.traceroute.TraceRouteNode trn )
    {
@@ -273,40 +325,38 @@ public class Model
             try
             {
                Thread.sleep(1000);
-               
-               long now = System.currentTimeMillis();
-              
-               synchronized( mAllNodes ) 
-               {
-                  for( Node n: new ReverseIterator<Node>(mAllNodes) )
-                  {
-                     if ( n.timeOfLastSeenPacket < ( now - (300000) ))
-                     {                        
-                        synchronized( mAllLinks )
-                        {
-                           for( Link l: new ReverseIterator<Link>(mAllLinks) )
-                           {
-                              if( l.src == n )
-                              {
-                                 mAllLinks.remove( l );
-                              }
-                              if( l.dst == n )
-                              {
-                                 mAllLinks.remove( l );
-                              }
-                           }
-                        }
-                        mAllNodes.remove(n);
-                     }
-                  }
-               }
-               
-               
             }
             catch( InterruptedException ie )
             {
                //...
             }
+            long now = System.currentTimeMillis();
+
+            synchronized( mAllNodes ) 
+            {
+               for( Node n: new ReverseIterator<Node>(mAllNodes) )
+               {
+                  if ( false) // n.timeOfLastSeenPacket < ( now - (300000000) ))
+                  {                        
+                     synchronized( mAllLinks )
+                     {
+                        for( Link l: new ReverseIterator<Link>(mAllLinks) )
+                        {
+                           if( l.src == n )
+                           {
+                              mAllLinks.remove( l );
+                           }
+                           if( l.dst == n )
+                           {
+                              mAllLinks.remove( l );
+                           }
+                        }
+                     }
+                     mAllNodes.remove(n);
+                  }
+               }
+            }
+
          }
       }
    }

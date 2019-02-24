@@ -93,8 +93,11 @@ public class Route
                   }
                }
             }
-            System.out.println("Route <"+mSrcAddr+", "+mDstAddr+">: found "+ previousNode + " while searching @depth="
-                     +searchDepth+" in "+mTraceRouteNodes.size()+" trns");
+            if( previousNode != null )
+            {
+               System.out.println("Route <"+mSrcAddr+", "+mDstAddr+">: found "+ previousNode.getAddr() + " while searching @depth="
+                        + searchDepth + " in "+mTraceRouteNodes.size()+" trns");
+            }
 
             searchDepth--;
          }
@@ -102,7 +105,7 @@ public class Route
 
       if( previousNode != null )
       {
-         System.out.println("Route <"+mSrcAddr+", "+mDstAddr+">: got previous node="+
+         System.out.println("Route <"+mSrcAddr+", "+mDstAddr+">: found previous node="+
                   previousNode.mReplyingAddr + "@depth=" + previousNode.mDepth);
 
          if ( mMain.findNode(previousNode.mReplyingAddr) == null )
@@ -115,16 +118,25 @@ public class Route
          }
          
          Link l = mMain.findLink(previousNode, trn);
-         if( l== null )
+         if( l == null )
          {
-            l = new Link(  mMain.findNode(previousNode.mReplyingAddr), mMain.findNode(trn.mReplyingAddr));
+            l = new Link( mMain.findNode(previousNode.mReplyingAddr), mMain.findNode(trn.mReplyingAddr)); 
             mMain.addLink( l );
          }
-         l.setTimeSeenLastPacket(System.currentTimeMillis());
+         l.setTimeSeenLastPacket( System.currentTimeMillis() );
          
+         mMain.removeLink( previousNode.getAddr(), trn.mOrigDstAddr );
+         Node finalNode =  mMain.findNodeAndAdd( trn.mOrigDstAddr );
+         Link finalLink = new Link(mMain.findNode(trn.mReplyingAddr), finalNode);
+         finalLink.setTimeSeenLastPacket( System.currentTimeMillis() );
+         mMain.addLink( finalLink );
          
          System.out.println("Route <"+mSrcAddr+", "+mDstAddr+">: link("
                   + previousNode.mReplyingAddr+" to "+ trn.mReplyingAddr  +"@depth="+trn.mDepth+")");
+      }
+      else
+      {
+         System.out.println("Route <"+mSrcAddr+", "+mDstAddr+">: found no previous node.");
       }
 
       dumpRoute();

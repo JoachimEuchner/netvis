@@ -46,6 +46,30 @@ public class Traceroute
    
    private final NetVisMain main;
    private PcapHandle sendHandle;
+   
+   Inet4Address mTargetAddress;
+   boolean targetAddressLocked = false;
+   public void setTargetAddess( Inet4Address t )
+   {
+      if( !targetAddressLocked )
+      {
+         byte[] srcAddressBytes = t.getAddress();
+         
+         if(!( (srcAddressBytes[0] == 127) && (srcAddressBytes[1] == 0) && (srcAddressBytes[2] == 0) ) )
+         {
+            if(!( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 1) ) )
+            {
+               if(!( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 2) ) )
+               {
+
+                  System.out.println("Traceroute, setTarget: "+t);
+                  mTargetAddress = t;
+               }
+            }
+         }
+      }
+   }
+   
 
    public Traceroute( NetVisMain m )
    {
@@ -54,6 +78,15 @@ public class Traceroute
 
    public void doTraceRoute(String target)
    {
+      try 
+      {
+         mTargetAddress = (Inet4Address) InetAddress.getByName(target);
+      } 
+      catch (UnknownHostException e1) 
+      {
+         throw new IllegalArgumentException("args[0]: " + target);
+      }
+      
       
       List<PcapNetworkInterface> allDevs = null;
       try 
@@ -84,25 +117,19 @@ public class Traceroute
        
       try 
       {
-         final Inet4Address targetAddress;
-         try 
-         {
-            targetAddress = (Inet4Address) InetAddress.getByName(target);
-         } 
-         catch (UnknownHostException e1) 
-         {
-            throw new IllegalArgumentException("args[0]: " + target);
-         }
+         
 
          final Inet4Address srcAddress = (Inet4Address) InetAddress.getByName("192.168.1.44");
           
          IpV4Packet.Builder ipV4Builder = new IpV4Packet.Builder();
          
-         for ( int attempt = 1; attempt <= 500; attempt++)
+         for ( int attempt = 1; attempt <= 50000; attempt++)
          {
-            System.out.println("Traceroute, attempt:"+attempt);
+            System.out.println("Traceroute, attempt:"+attempt+" to " + mTargetAddress);
             
-            for ( int ttl = 1; ttl <= 11; ttl++)
+            targetAddressLocked = true;
+            
+            for ( int ttl = 1; ttl <= 20; ttl++)
             {            
                byte[] echoData = new byte[TU - 28];
                for (int i = 0; i < echoData.length; i++) {
@@ -120,7 +147,7 @@ public class Traceroute
                                   .payloadBuilder(echoBuilder)
                                   .correctChecksumAtBuild(true);
         
-               System.out.println("starting attempt: "+attempt +" for depth: " +ttl);
+               System.out.println("target= " +mTargetAddress + ", starting attempt: "+attempt +" for depth: " +ttl);
                
                ipV4Builder
                   .version(IpVersion.IPV4)
@@ -128,7 +155,7 @@ public class Traceroute
                   .ttl((byte) ttl)                           // <---------------------!!
                   .protocol(IpNumber.ICMPV4)
                   .srcAddr( srcAddress )
-                  .dstAddr( targetAddress )
+                  .dstAddr( mTargetAddress )
                   .payloadBuilder(icmpV4CommonBuilder)
                   .correctChecksumAtBuild(true)
                   .correctLengthAtBuild(true);
@@ -152,7 +179,7 @@ public class Traceroute
 
                try 
                {
-                  Thread.sleep(1000);
+                  Thread.sleep(500);
                } 
                catch (InterruptedException e) 
                {
@@ -160,9 +187,11 @@ public class Traceroute
                }
             }
             
+            targetAddressLocked = false;
+            
             try 
             {
-               Thread.sleep(10000);
+               Thread.sleep(2000);
             } 
             catch (InterruptedException e) 
             {
@@ -184,6 +213,16 @@ public class Traceroute
    @Override
    public void run()
    {
+      try
+      {
+         Thread.sleep(10000);
+      }
+      catch( InterruptedException ie )
+      {
+         //...
+      }
+      
+      
       doTraceRoute("www.yahoo.com");
       
    }

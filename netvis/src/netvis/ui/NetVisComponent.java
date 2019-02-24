@@ -71,7 +71,7 @@ public class NetVisComponent extends JComponent implements
    transient Image           offscreen;
    transient Toolkit         mToolkit;
    
-   private final Model mModel;
+   private final Model       mModel;
    
    int                       mWidth            = 300;                   // 1500;
    int                       mHeight           = 200;                    // 1000;
@@ -104,6 +104,7 @@ public class NetVisComponent extends JComponent implements
    
    public NetVisComponent( Model m )
    {
+      System.out.println("NetVisComponent<ctor> called.");
       mModel = m;
       addMouseListener(this);
       addKeyListener(this);
@@ -243,6 +244,16 @@ public class NetVisComponent extends JComponent implements
       {
          System.out.println("MyLayouter.run() called.");
          
+         try
+         {
+            Thread.sleep(2000);
+         }
+         catch( InterruptedException ie )
+         {
+            //...
+         }
+         System.out.println("MyLayouter.run() start layouting, "+mModel);
+       
          
          while ( mHost.doLayouting )
          {
@@ -254,146 +265,161 @@ public class NetVisComponent extends JComponent implements
             {
                //...
             }
-            
-            
-            synchronized( mModel.getAllNodes() )
-            {
-               Vector<Node> mAllNodes = mModel.getAllNodes();
-               // new ReverseIterator<String>(mAllNodes)
-               // for (Node n : mAllNodes )
-               for( Node n: new ReverseIterator<Node>(mAllNodes) )
-               {
-                  n.fx = 0.0;
-                  n.fy = 0.0;
 
-                  if ( n.mbCanFlow )
+            if( mModel != null )
+            {
+               if( mModel.getAllNodes() != null  )
+               {
+                  // System.out.println("MyLayouter.run() start layouting "+mModel.getAllNodes().size()+" nodes");
+                                    
+                  synchronized( mModel.getAllNodes() )
                   {
 
-                     double charge = standardCharge;
-                     for (Node m : mAllNodes )
-                     {
-                        if( n != m )
-                        {
-                           if( ( n.isActive ) && ( m.isActive ) )
-                           {
-                              double d2 = (n.x - m.x)*(n.x - m.x) + (n.y - m.y)*(n.y - m.y);
+                     Vector<Node> mAllNodes = mModel.getAllNodes();
 
-                              double localCharge = charge;
-                              if ( n.addressBytes[0] == m.addressBytes[0] ) 
-                              { 
-                                 localCharge = standardCharge / 2.0;
-                                 if  ( n.addressBytes[1] == m.addressBytes[1] ) 
+                     // System.out.println("...MyLayouter.run() got Mutex,  layouting "+mAllNodes.size()+" nodes");
+
+                     // new ReverseIterator<String>(mAllNodes)
+                     // for (Node n : mAllNodes )
+                     for( Node n: new ReverseIterator<Node>(mAllNodes) )
+                     {
+                        n.fx = 0.0;
+                        n.fy = 0.0;
+
+                        if ( n.mbCanFlow )
+                        {
+
+                           double charge = standardCharge;
+                           for (Node m : mAllNodes )
+                           {
+                              if( n != m )
+                              {
+                                 if( ( n.isActive ) && ( m.isActive ) )
                                  {
-                                    localCharge = standardCharge / 10.0;
-                                    if  ( n.addressBytes[2] == m.addressBytes[2] ) 
+                                    double d2 = (n.x - m.x)*(n.x - m.x) + (n.y - m.y)*(n.y - m.y);
+
+                                    double localCharge = charge;
+                                    if ( n.addressBytes[0] == m.addressBytes[0] ) 
+                                    { 
+                                       localCharge = standardCharge / 2.0;
+                                       if  ( n.addressBytes[1] == m.addressBytes[1] ) 
+                                       {
+                                          localCharge = standardCharge / 10.0;
+                                          if  ( n.addressBytes[2] == m.addressBytes[2] ) 
+                                          {
+                                             localCharge = standardCharge / 50.0;
+                                          }
+                                       }
+                                    }
+
+
+                                    if( d2 > 0 )
                                     {
-                                       localCharge = standardCharge / 50.0;
+                                       double d = Math.sqrt ( d2 );
+
+                                       double nx = (n.x - m.x) / d;
+                                       double ny = (n.y - m.y) / d;
+                                       n.fx += localCharge * nx / d2;
+                                       n.fy += localCharge * ny / d2;
                                     }
                                  }
                               }
-
-
-                              if( d2 > 0 )
-                              {
-                                 double d = Math.sqrt ( d2 );
-
-                                 double nx = (n.x - m.x) / d;
-                                 double ny = (n.y - m.y) / d;
-                                 n.fx += localCharge * nx / d2;
-                                 n.fy += localCharge * ny / d2;
-                              }
                            }
-                        }
-                     }
-                     
-                     // System.out.println("fx="+n.fx+" fy="+n.fy);
-                     
-                     
-                     double spring = 0.01;
-                     synchronized( mModel.getAllLinks() )
-                     {
-                        Vector<netvis.model.Link> mAllLinks = mModel.getAllLinks();
 
-                        for (netvis.model.Link l : mAllLinks )
-                        {
-                           Node s = l.src;
-                           Node d = l.dst;
-                           
-                           if( ( s.isActive ) && ( d.isActive ) )
+                           // System.out.println("fx="+n.fx+" fy="+n.fy);
+
+
+                           double spring = 0.01;
+                           synchronized( mModel.getAllLinks() )
                            {
-                              double mySpring = spring * (1.0 + l.getNrOfSeenPackets() / 1000.0 );
-                              if( mySpring > 0.5)
+                              Vector<netvis.model.Link> mAllLinks = mModel.getAllLinks();
+
+                              for (netvis.model.Link l : mAllLinks )
                               {
-                                 mySpring = 0.5;
-                              }
-                              if( n == s ) 
-                              {
-                                 n.fx -=  mySpring * (n.x - d.x) ;
-                                 n.fy -=  mySpring * (n.y - d.y) ;
-                              }
+                                 Node s = l.src;
+                                 Node d = l.dst;
+
+                                 if( ( s!= null ) && (d!= null ))
+                                 {
+                                    if( ( s.isActive ) && ( d.isActive ) )
+                                    {
+                                       double mySpring = spring * (1.0 + l.getNrOfSeenPackets() / 1000.0 );
+                                       if( mySpring > 0.5)
+                                       {
+                                          mySpring = 0.5;
+                                       }
+                                       if( n == s ) 
+                                       {
+                                          n.fx -=  mySpring * (n.x - d.x) ;
+                                          n.fy -=  mySpring * (n.y - d.y) ;
+                                       }
 
 
-                              if ( n == d )
-                              {
-                                 n.fx -= mySpring * (n.x - s.x) ;
-                                 n.fy -= mySpring * (n.y - s.y) ;
+                                       if ( n == d )
+                                       {
+                                          n.fx -= mySpring * (n.x - s.x) ;
+                                          n.fy -= mySpring * (n.y - s.y) ;
+                                       }
+                                    }
+                                 }
                               }
                            }
+
+                           // n.vx += n.fx;
+                           // n.vy += n.fy;
+                           if( n.fx > 50.0 )
+                           {
+                              n.fx = 50.0;
+                           }
+                           if( n.fx < -50.0 )
+                           {
+                              n.fx = -50.0;
+                           }
+
+                           n.x += n.fx ;
+                           n.mx = (int)( n.x + 0.5);
+                           if( n.mx < 0 )
+                           {
+                              n.mx = 0;
+                              n.x = 0;
+                           }
+                           if( n.mx > (mWidth - 100)  )
+                           {
+                              n.mx = (mWidth - 100);
+                              n.x = (mWidth - 100);
+                           }
+
+                           if( n.fy > 50.0 )
+                           {
+                              n.fy = 50.0;
+                           }
+                           if( n.fy < -50.0 )
+                           {
+                              n.fy = -50.0;
+                           }
+
+                           n.y += n.fy;
+                           n.my = (int)( n.y +0.5);
+                           if( n.my < 0 )
+                           {
+                              n.my = 0;
+                              n.y = 0;
+                           }
+                           if( n.my > (mHeight - 10)  )
+                           {
+                              n.my = (mHeight - 10);
+                              n.y = (mHeight - 10);
+                           }
+
+                           // System.out.println(" -----> fx="+n.fx+" fy="+n.fy+", vx="+n.vx+" "+"vy="+n.vy+", x="+n.x+" "+n.y);
                         }
                      }
-                     
-                     // n.vx += n.fx;
-                     // n.vy += n.fy;
-                     if( n.fx > 50.0 )
-                     {
-                        n.fx = 50.0;
-                     }
-                     if( n.fx < -50.0 )
-                     {
-                        n.fx = -50.0;
-                     }
-
-                     n.x += n.fx ;
-                     n.mx = (int)( n.x + 0.5);
-                     if( n.mx < 0 )
-                     {
-                        n.mx = 0;
-                        n.x = 0;
-                     }
-                     if( n.mx > (mWidth - 100)  )
-                     {
-                        n.mx = (mWidth - 100);
-                        n.x = (mWidth - 100);
-                     }
-                     
-                     if( n.fy > 50.0 )
-                     {
-                        n.fy = 50.0;
-                     }
-                     if( n.fy < -50.0 )
-                     {
-                        n.fy = -50.0;
-                     }
-                     
-                     n.y += n.fy;
-                     n.my = (int)( n.y +0.5);
-                     if( n.my < 0 )
-                     {
-                        n.my = 0;
-                        n.y = 0;
-                     }
-                     if( n.my > (mHeight - 10)  )
-                     {
-                        n.my = (mHeight - 10);
-                        n.y = (mHeight - 10);
-                     }
- 
-                     // System.out.println(" -----> fx="+n.fx+" fy="+n.fy+", vx="+n.vx+" "+"vy="+n.vy+", x="+n.x+" "+n.y);
                   }
                }
             }
-            
-            
+
+
+
             mHost.repaint();
          }
       }
@@ -676,50 +702,53 @@ public class NetVisComponent extends JComponent implements
                  
          for (netvis.model.Link l : mAllLinks )
          {
-             Node s = l.src;
-             Node d = l.dst;
-        
-             int packets = l.getNrOfSeenPackets();
-             
-             g2.setStroke(mStroke1);
-             if( ( packets > 2 ) && ( s.isActive ) && ( d.isActive ) )
-             {
-                g2.setStroke(mStroke2);
-                if( packets > 5 ) 
-                {
-                   g2.setStroke(mStroke3);
-                   if( packets > 10 ) 
-                   {
-                      g2.setStroke(mStroke4);
-                      if( packets > 50 ) 
-                      {
-                         g2.setStroke(mStroke5);
-                         if( packets > 100 ) 
-                         {
-                            g2.setStroke(mStroke6);
-                            if( packets > 500 ) 
-                            {
-                               g2.setStroke(mStroke7);
-                               if( packets > 1000 ) 
-                               {
-                                  g2.setStroke(mStroke8);
-                               }
-                            }
-                         }
-                      }
-                   }
-                }
-             }
-             
-             
-             ShortestPair xp = getShortestPair(s.mx,  s.mx + s.mWidth, d.mx,  d.mx + d.mWidth); 
-             ShortestPair yp = getShortestPair(s.my,  s.my + s.mHeight, d.my, d.my + d.mHeight); 
-             
-             Color c = getColorOfLinkAge( l.getTimeSinceLastSeenPacket(), (s.isActive && d.isActive) );
-             g2.setColor(c);
-             
-             // g2.drawLine( xp.s1, yp.s1, xp.s2, yp.s2 );
-             drawParabel( g2, xp.s1, yp.s1, xp.s2, yp.s2, 10 );
+            Node s = l.src;
+            Node d = l.dst;
+
+            if(( s!=null) && ( d!=null ))
+            {
+               int packets = l.getNrOfSeenPackets();
+
+               g2.setStroke(mStroke1);
+               if( ( packets > 2 ) && ( s.isActive ) && ( d.isActive ) )
+               {
+                  g2.setStroke(mStroke2);
+                  if( packets > 5 ) 
+                  {
+                     g2.setStroke(mStroke3);
+                     if( packets > 10 ) 
+                     {
+                        g2.setStroke(mStroke4);
+                        if( packets > 50 ) 
+                        {
+                           g2.setStroke(mStroke5);
+                           if( packets > 100 ) 
+                           {
+                              g2.setStroke(mStroke6);
+                              if( packets > 500 ) 
+                              {
+                                 g2.setStroke(mStroke7);
+                                 if( packets > 1000 ) 
+                                 {
+                                    g2.setStroke(mStroke8);
+                                 }
+                              }
+                           }
+                        }
+                     }
+                  }
+               }
+
+
+               ShortestPair xp = getShortestPair(s.mx,  s.mx + s.mWidth, d.mx,  d.mx + d.mWidth); 
+               ShortestPair yp = getShortestPair(s.my,  s.my + s.mHeight, d.my, d.my + d.mHeight); 
+
+               Color c = getColorOfLinkAge( l.getTimeSinceLastSeenPacket(), (s.isActive && d.isActive) );
+               g2.setColor(c);
+
+               // g2.drawLine( xp.s1, yp.s1, xp.s2, yp.s2 );
+               drawParabel( g2, xp.s1, yp.s1, xp.s2, yp.s2, 10 );
+            }
          }
       }
    }
