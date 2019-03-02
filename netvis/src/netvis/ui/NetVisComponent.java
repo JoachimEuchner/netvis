@@ -26,6 +26,7 @@ import javax.swing.JComponent;
 
 import netvis.model.Model;
 import netvis.model.Node;
+import netvis.traceroute.TraceRouteNode;
 
 public class NetVisComponent extends JComponent implements
    MouseListener, MouseWheelListener, MouseMotionListener, KeyListener,
@@ -486,14 +487,19 @@ public class NetVisComponent extends JComponent implements
             {
                int width = g2.getFontMetrics().stringWidth(s);
 
-               n.mWidth = width;
-               
-               if( n.mLoD == 1 )
+               if( n.mLoD == 0 )
                {
+                  n.mWidth = 5;
+                  n.mHeight = 5;
+               }
+               else if( n.mLoD == 1 )
+               {
+                  n.mWidth = width;
                   n.mHeight = 1 * this.mLineHeight;
                } 
                else if( n.mLoD == 2 )
                {
+                  n.mWidth = width;
                   n.mHeight = 3 * this.mLineHeight;
                }
                else if( n.mLoD == 3 )
@@ -509,6 +515,15 @@ public class NetVisComponent extends JComponent implements
             
             Color mainColor = Color.BLACK;
             Color textColor = Color.LIGHT_GRAY;
+            Color borderColor = Color.GRAY.darker();
+         
+            
+            if( n.type == Node.TYPE_ENDPOINT )
+            {
+               mainColor = Color.BLACK;
+               borderColor = Color.YELLOW;
+            }
+            
             if( n.isLocal )
             {
                mainColor = Color.WHITE;
@@ -518,9 +533,32 @@ public class NetVisComponent extends JComponent implements
             g2.setColor(mainColor);
             g2.fillRect(n.mx,n.my,n.mWidth,n.mHeight);
 
-            g2.setColor(textColor);
-            g2.drawString(s, n.mx, n.my+ this.mLineHeight - 1);
-
+       
+            if( n.mLoD == 0 )
+            {
+               if( n.type == Node.TYPE_ROUTEPOINT) 
+               {
+                  try 
+                  {
+                     if( n instanceof TraceRouteNode)
+                     {
+                        int depth = ((TraceRouteNode)n).mDepth;
+                        g2.setColor(textColor);
+                        g2.drawString( Integer.toString(depth), n.mx+5, n.my+ this.mLineHeight - 1);
+                     }
+                  }
+                  catch (ClassCastException cce )
+                  {
+                     
+                  }
+               }
+            }
+            else if( n.mLoD > 0)
+            {
+               g2.setColor(textColor);
+               g2.drawString(s, n.mx, n.my+ this.mLineHeight - 1);
+            }
+            
             if( n.mLoD > 1 )
             {
                String s2 = n.getAddr().toString();
@@ -597,11 +635,11 @@ public class NetVisComponent extends JComponent implements
             }
             
             g2.setStroke(mStroke1);
-            g2.setColor(Color.GRAY);
+            g2.setColor(borderColor);
             g2.drawRect(n.mx,n.my,n.mWidth,n.mHeight);
             if( n == mSelectedNode )
             {
-               g2.setColor(Color.GRAY);
+               g2.setColor(borderColor);
                g2.drawRect(n.mx,n.my,n.mWidth,n.mHeight);
                g2.drawRect(n.mx-1,n.my-1,n.mWidth+2,n.mHeight+2);
                g2.drawRect(n.mx-2,n.my-2,n.mWidth+4,n.mHeight+4);
@@ -609,7 +647,7 @@ public class NetVisComponent extends JComponent implements
             
             if ( !n.mbCanFlow )
             {
-               g2.setColor(Color.GRAY);
+               g2.setColor(borderColor);
                g2.fillRect(n.mx,n.my,3,3);
             }
             
@@ -938,7 +976,7 @@ public class NetVisComponent extends JComponent implements
                n.mLoD++; 
                if ( n.mLoD > 3 )
                {
-                  n.mLoD = 1;
+                  n.mLoD = 0;
                }
                
                if( n.mLoD == 1 )

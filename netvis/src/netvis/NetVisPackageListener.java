@@ -6,7 +6,6 @@ import org.pcap4j.core.PacketListener;
 import org.pcap4j.core.PcapHandle;
 import org.pcap4j.packet.ArpPacket;
 import org.pcap4j.packet.EthernetPacket;
-import org.pcap4j.packet.IcmpV4CommonPacket;
 import org.pcap4j.packet.IcmpV4EchoPacket;
 import org.pcap4j.packet.IcmpV4TimeExceededPacket;
 import org.pcap4j.packet.IpV4Packet;
@@ -19,11 +18,13 @@ import netvis.traceroute.TraceRouteNode;
 public class NetVisPackageListener implements PacketListener
 { 
    
+   private NetVisMain mMain;
    private Model mModel;
    
-   public NetVisPackageListener( PcapHandle pch, Model m ) 
+   public NetVisPackageListener( NetVisMain main, PcapHandle pch, Model m ) 
    {
       // pcapHandle = pch;
+      mMain = main;
       mModel = m;
       timeOfLastPackage = System.currentTimeMillis();
    };
@@ -39,7 +40,7 @@ public class NetVisPackageListener implements PacketListener
       // System.out.println("got Packet @"+mPcapHandle.getTimestamp());
 
       // String s = packet.toString();
-      // System.out.println(s);
+      System.out.println("received [nr.: "+counter+"]");
 
       if( true )
       {
@@ -60,12 +61,28 @@ public class NetVisPackageListener implements PacketListener
                // tarceroute reply.
                
                IcmpV4TimeExceededPacket icmpTEp = packet.get(IcmpV4TimeExceededPacket.class);
-               // System.out.println("received [nr.: " +counter +"]: "+icmpTEp);
+               System.out.println("received [nr.: " +counter +"] : "+packet);
+               System.out.println("received [nr.: " +counter +"] TTLEx: "+icmpTEp);
                // int depth = icmpTEp.get(IpV4Packet.class).getHeader().getTtl();
                // int depth  = icmpTEp.get(IpV4Packet.class).getPayload().getRawData()[0];
                Inet4Address origSrcAddr = (icmpTEp.get(IpV4Packet.class)).getHeader().getSrcAddr();
                Inet4Address origDstAddr = (icmpTEp.get(IpV4Packet.class)).getHeader().getDstAddr();
-               int depth  = icmpTEp.get(IcmpV4EchoPacket.class).getPayload().getRawData()[0];
+               int depth  = -1;
+               
+               try
+               {
+                  depth = icmpTEp.get(IcmpV4EchoPacket.class).getPayload().getRawData()[0];
+               }
+               catch (Exception e )
+               {
+                  System.out.println("received [nr.: " +counter +"] : cought: "+e);
+               }
+                              
+               if( depth == -1 )
+               {
+                  depth = mMain.mTraceRouter.getLastSentDepth();
+               }
+               
                System.out.println("received: [nr.: " +counter +"] src="+origSrcAddr +" reply from " + 
                         ipv4p.getHeader().getSrcAddr()  +", at depth: " + depth +", sent to "+origDstAddr);
                
@@ -74,7 +91,6 @@ public class NetVisPackageListener implements PacketListener
             }
             else
             {
-
                boolean accept = true;
 
                byte[] srcAddressBytes = ipv4p.getHeader().getSrcAddr().getAddress();
@@ -91,7 +107,7 @@ public class NetVisPackageListener implements PacketListener
 
                if( (dstAddressBytes[0] == -64) && (dstAddressBytes[1] == -88) && (dstAddressBytes[2] == 1) && (dstAddressBytes[3] == 44))
                {
-                  // System.out.println("received [nr.: " +counter +"]: "+packet);
+                  System.out.println("received [nr.: " +counter +"] IPv4: "+packet);
                }
                
                if( accept )

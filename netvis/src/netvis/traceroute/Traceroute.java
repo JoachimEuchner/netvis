@@ -46,6 +46,26 @@ public class Traceroute
    
    private final NetVisMain main;
    private PcapHandle sendHandle;
+ 
+   private Integer mLastSentDepth = -1;
+   
+   public int getLastSentDepth()
+   {
+      int depth;
+      synchronized ( mLastSentDepth )
+      {
+         depth = mLastSentDepth.intValue();
+      }
+      return depth;
+   }
+   private void setLastSentDepth( int depth )
+   {
+      synchronized ( mLastSentDepth )
+      {
+         mLastSentDepth = depth ;
+      }
+   }
+   
    
    Inet4Address mTargetAddress;
    boolean targetAddressLocked = false;
@@ -78,6 +98,8 @@ public class Traceroute
 
    public void doTraceRoute(String target)
    {
+      System.out.println("doTraceRoute("+target+") entered.");
+      
       try 
       {
          mTargetAddress = (Inet4Address) InetAddress.getByName(target);
@@ -100,6 +122,7 @@ public class Traceroute
 
       int nifIdx = 0;
       PcapNetworkInterface nif = allDevs.get(nifIdx);
+      System.out.println("doTraceRoute("+target+") nifIdx:"+nifIdx+", got nif "+nif.getName());
       
       try
       {
@@ -117,19 +140,17 @@ public class Traceroute
        
       try 
       {
-         
-
          final Inet4Address srcAddress = (Inet4Address) InetAddress.getByName("192.168.1.44");
           
          IpV4Packet.Builder ipV4Builder = new IpV4Packet.Builder();
          
-         for ( int attempt = 1; attempt <= 50000; attempt++)
+         for ( int attempt = 1; attempt <= 2; attempt++)
          {
             System.out.println("Traceroute, attempt:"+attempt+" to " + mTargetAddress);
             
             targetAddressLocked = true;
             
-            for ( int ttl = 1; ttl <= 20; ttl++)
+            for ( int ttl = 1; ttl <= 3; ttl++)
             {            
                byte[] echoData = new byte[TU - 28];
                for (int i = 0; i < echoData.length; i++) {
@@ -175,11 +196,12 @@ public class Traceroute
 
                // System.out.println("Traceroute, attempt:"+attempt+", ttl="+ttl+": sending "+p);
 
+               setLastSentDepth( ttl );
                sendHandle.sendPacket(p);
 
                try 
                {
-                  Thread.sleep(500);
+                  Thread.sleep(1000);
                } 
                catch (InterruptedException e) 
                {
@@ -191,7 +213,7 @@ public class Traceroute
             
             try 
             {
-               Thread.sleep(2000);
+               Thread.sleep(20000);
             } 
             catch (InterruptedException e) 
             {
@@ -207,6 +229,8 @@ public class Traceroute
             sendHandle.close();
          }
       }
+      
+      System.out.println("doTraceRoute("+target+") done.");
    }
 
 

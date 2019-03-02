@@ -21,6 +21,8 @@ public class TraceRouteNode extends netvis.model.Node
       mDepth = depth;      
       mObservedTimes = 1;
       
+      type = TYPE_ROUTEPOINT;
+      
       timeOfLastSeenPacket = System.currentTimeMillis();
       
       mDisplayName = mDisplayName+"@"+depth;

@@ -17,6 +17,11 @@ public class Node
    public String mDisplayName;
    public int mDisplayNameXoffset;
    
+   
+   public final static int TYPE_ENDPOINT = 1;
+   public final static int TYPE_ROUTEPOINT = 2; 
+   public int type;
+   
    public int mx;
    public int my;
    public int mWidth;
@@ -44,6 +49,8 @@ public class Node
       mDisplayNameXoffset = 0;
       isActive = true;
       mLoD = 1;
+
+      type = TYPE_ENDPOINT;
       
       receivedPackets = 0;
       sentPackets = 0;
@@ -75,6 +82,8 @@ public class Node
       mbCanFlow = true;
       
       timeOfLastSeenPacket = 0;
+      
+      System.out.println("Node.<ctor> done: " + mDisplayName);
    }
    
    public Inet4Address getAddr()

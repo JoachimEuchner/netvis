@@ -70,7 +70,7 @@ public class NetVisMain
       {
          isOnline = true;
 
-         nvpl = new NetVisPackageListener( pcapHandle, mNetVisModel );
+         nvpl = new NetVisPackageListener( this, pcapHandle, mNetVisModel );
          mLs = new MyListeningStarter();
 
          mListeningStartThread = new Thread(mLs );
@@ -89,7 +89,7 @@ public class NetVisMain
          FileReader fr = new FileReader();
          // fr.filename = args[0];
          
-         nvpl = new NetVisPackageListener( pcapHandle, mNetVisModel );
+         nvpl = new NetVisPackageListener( this, pcapHandle, mNetVisModel );
          
          isOnline = false;
          mFileReaderThread = new Thread( fr );
@@ -219,6 +219,7 @@ public class NetVisMain
             // int nifIdx = 0;
             int nifIdx = 2;
             nif = allDevs.get(nifIdx);
+            System.out.println("MyListeningStarter.run(): nifIdx:"+nifIdx+", got nif "+nif.getName());
 
             try
             {
@@ -234,6 +235,8 @@ public class NetVisMain
                noe.printStackTrace();
             }
 
+            System.out.println("MyListeningStarter.run(): nifIdx:"+nifIdx+", start  pcapHandle.loop()");
+            
             try
             {
                pcapHandle.loop(COUNT, nvpl);
@@ -256,6 +259,7 @@ public class NetVisMain
 
             pcapHandle.close();      
          }
+         
          System.out.println("startListening() done.");
       }
    }
