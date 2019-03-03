@@ -40,7 +40,7 @@ public class NetVisPackageListener implements PacketListener
       // System.out.println("got Packet @"+mPcapHandle.getTimestamp());
 
       // String s = packet.toString();
-      System.out.println("received [nr.: "+counter+"]");
+      // System.out.println("received [nr.: "+counter+"]");
 
       if( true )
       {
@@ -61,8 +61,8 @@ public class NetVisPackageListener implements PacketListener
                // tarceroute reply.
                
                IcmpV4TimeExceededPacket icmpTEp = packet.get(IcmpV4TimeExceededPacket.class);
-               System.out.println("received [nr.: " +counter +"] : "+packet);
-               System.out.println("received [nr.: " +counter +"] TTLEx: "+icmpTEp);
+               // System.out.println("received [nr.: " +counter +"] : "+packet);
+               // System.out.println("received [nr.: " +counter +"] TTLEx: "+icmpTEp);
                // int depth = icmpTEp.get(IpV4Packet.class).getHeader().getTtl();
                // int depth  = icmpTEp.get(IpV4Packet.class).getPayload().getRawData()[0];
                Inet4Address origSrcAddr = (icmpTEp.get(IpV4Packet.class)).getHeader().getSrcAddr();
@@ -107,7 +107,7 @@ public class NetVisPackageListener implements PacketListener
 
                if( (dstAddressBytes[0] == -64) && (dstAddressBytes[1] == -88) && (dstAddressBytes[2] == 1) && (dstAddressBytes[3] == 44))
                {
-                  System.out.println("received [nr.: " +counter +"] IPv4: "+packet);
+                  // System.out.println("received [nr.: " +counter +"] IPv4: "+packet);
                }
                
                if( accept )

@@ -27,6 +27,7 @@ import org.pcap4j.packet.namednumber.IpVersion;
 import org.pcap4j.util.MacAddress;
 
 import netvis.NetVisMain;
+import netvis.model.Model;
 
 public class Traceroute
    implements Runnable
@@ -82,7 +83,10 @@ public class Traceroute
                if(!( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 2) ) )
                {
 
-                  System.out.println("Traceroute, setTarget: "+t);
+                  if ( !Model.equalsAddr(t, mTargetAddress))
+                  {
+                     System.out.println("Traceroute, setTarget: "+t);
+                  }
                   mTargetAddress = t;
                }
             }
@@ -144,13 +148,13 @@ public class Traceroute
           
          IpV4Packet.Builder ipV4Builder = new IpV4Packet.Builder();
          
-         for ( int attempt = 1; attempt <= 2; attempt++)
+         for ( int attempt = 1; attempt <= 200000; attempt++)
          {
             System.out.println("Traceroute, attempt:"+attempt+" to " + mTargetAddress);
             
             targetAddressLocked = true;
             
-            for ( int ttl = 1; ttl <= 3; ttl++)
+            for ( int ttl = 1; ttl <= 20; ttl++)
             {            
                byte[] echoData = new byte[TU - 28];
                for (int i = 0; i < echoData.length; i++) {
@@ -194,7 +198,7 @@ public class Traceroute
 
                Packet p = etherBuilder.build();
 
-               // System.out.println("Traceroute, attempt:"+attempt+", ttl="+ttl+": sending "+p);
+               System.out.println("Traceroute, attempt:"+attempt+", ttl="+ttl); // +": sending "+p);
 
                setLastSentDepth( ttl );
                sendHandle.sendPacket(p);
@@ -213,10 +217,11 @@ public class Traceroute
             
             try 
             {
-               Thread.sleep(20000);
+               Thread.sleep(10000);
             } 
             catch (InterruptedException e) 
             {
+               System.out.println("doTraceRoute("+target+") cought:"+e);
                break;
             }
          }
