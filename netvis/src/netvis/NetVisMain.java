@@ -5,7 +5,6 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
-import java.util.Timer;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
@@ -24,15 +23,18 @@ import org.pcap4j.core.Pcaps;
 import org.pcap4j.core.PcapNetworkInterface.PromiscuousMode;
 import org.pcap4j.packet.Packet;
 import org.pcap4j.util.MacAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import netvis.model.Model;
-import netvis.traceroute.TraceRouteMsg;
 import netvis.traceroute.Traceroute;
 import netvis.traceroute.TracerouteScheduler;
 import netvis.ui.NetVisFrame;
 
 public class NetVisMain
 {
+   private static final  Logger logger = LoggerFactory.getLogger(NetVisMain.class);
+   
    PcapNetworkInterface nif;
    
    static NetVisMain handle;
@@ -126,12 +128,13 @@ public class NetVisMain
    }
    
   
-   
-   
+ 
    private NetVisMain(String[] args) 
    {
-      mNetVisModel = new Model( this );
+      logger.info("info:NetVisMain.<ctor>() called.");
+      // System.out.println("System.out.println:NetVisMain.<ctor>() called.");
       
+      mNetVisModel = new Model( this );
       mNetVisFrame = new NetVisFrame( this );
       
 
@@ -260,12 +263,12 @@ public class NetVisMain
          {
             try
             {
-               Thread.sleep(5000);
+               Thread.sleep(10000);
                
                long now = System.currentTimeMillis();
                if ( ( nvpl.timeOfLastPackage + 5000 ) < now )
                {
-                  System.out.println("Watchdog.run() last package received " 
+                  System.out.println("Watchdog.run() last package["+ nvpl.counter +"] received " 
                            + (now - nvpl.timeOfLastPackage) + " ms ago..");
                      
                   StackTraceElement[] stackTrace = mListeningStartThread.getStackTrace();

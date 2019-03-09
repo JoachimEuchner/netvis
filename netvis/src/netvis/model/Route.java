@@ -105,8 +105,8 @@ public class Route
 
       if( previousNode != null )
       {
-         System.out.println("Route <"+mSrcAddr+", "+mDstAddr+">: found previous node="+
-                  previousNode.mReplyingAddr + "@depth=" + previousNode.mDepth);
+         // System.out.println("Route <"+mSrcAddr+", "+mDstAddr+">: found previous node="+
+         //          previousNode.mReplyingAddr + "@depth=" + previousNode.mDepth);
 
          if ( mMain.findNode(previousNode.mReplyingAddr) == null )
          {

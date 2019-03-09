@@ -6,12 +6,16 @@ import java.util.List;
 import java.util.Vector;
 
 import org.pcap4j.packet.IpV4Packet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import netvis.NetVisMain;
+import netvis.traceroute.Traceroute;
 
 public class Model
 {
-   
+   private static final Logger logger = LoggerFactory.getLogger(Model.class);
+
    public NetVisMain mMain;
    
    private final Vector<netvis.model.Link> mAllLinks;
@@ -116,11 +120,14 @@ public class Model
       {
          for ( Link l : mAllLinks )
          {
-            if( equalsAddr ( l.src.getAddr(), src.getAddr() ) 
-                     && equalsAddr ( l.dst.getAddr(), dst.getAddr() ) )
+            if( ( l!= null) && ( l.src != null ) && ( l.dst != null ))
             {
-               retVal = l;
-               break;
+               if( equalsAddr ( l.src.getAddr(), src.getAddr() ) 
+                        && equalsAddr ( l.dst.getAddr(), dst.getAddr() ) )
+               {
+                  retVal = l;
+                  break;
+               }
             }
          }
       }
@@ -252,7 +259,14 @@ public class Model
       synchronized( mAllLinks )
       {
          // System.out.println("addLink("+l.src.getAddr()+"->"+l.dst.getAddr()+")");
-         mAllLinks.add(l);
+         if(( l.src != null ) && ( l.dst != null ))
+         {
+            mAllLinks.add(l);
+         }
+         else
+         {
+            logger.warn("Model.addLink(): tried to add l with "+l.src+" -> "+l.dst);
+         }
       }
    }
    
@@ -263,10 +277,13 @@ public class Model
       {
          for( Link l: new ReverseIterator<Link>(mAllLinks) )
          {
-            if( ( Model.equalsAddr( l.src.getAddr(), src) )
-               && Model.equalsAddr( l.dst.getAddr(), dst ) ) 
+            if( ( l!= null) && ( l.src != null ) && ( l.dst != null ))
             {
-               mAllLinks.remove( l );
+               if( ( Model.equalsAddr( l.src.getAddr(), src) )
+                        && Model.equalsAddr( l.dst.getAddr(), dst ) ) 
+               {
+                  mAllLinks.remove( l );
+               }
             }
          }
       }
@@ -341,7 +358,7 @@ public class Model
             {
                for( Node n: new ReverseIterator<Node>(mAllNodes) )
                {
-                  if ( false) // n.timeOfLastSeenPacket < ( now - (300000000) ))
+                  if ( false ) // n.timeOfLastSeenPacket < ( now - (300000000) ))
                   {                        
                      synchronized( mAllLinks )
                      {

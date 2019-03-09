@@ -7,10 +7,17 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import netvis.NetVisMain;
+import netvis.model.Model;
 
 public class TracerouteScheduler
 {
+   private static final Logger logger = LoggerFactory.getLogger(TracerouteScheduler.class);
+   
+   
    private class TracerouteSchedulerTimerReceiver extends TimerTask
    {
       public void run()
@@ -21,7 +28,7 @@ public class TracerouteScheduler
          }
          catch ( Exception e )
          {
-            System.out.println("TraceRouteTimerReceiver: cought: "+e);
+            logger.error("TraceRouteTimerReceiver: cought: "+e);
          }
       }
    }
@@ -38,6 +45,18 @@ public class TracerouteScheduler
       public TracerouteTargetHost( Inet4Address ta )
       {
          targetAddress = ta;
+      }
+      
+      public boolean equals( Object o )
+      { 
+         if(o == null || !getClass().equals(o.getClass()))  
+            return false;
+         if(o == this)  
+            return true;
+
+         TracerouteTargetHost tth = (TracerouteTargetHost) o;
+         // return this.key.compareTo(tth.key) == 0 ? true : false;
+         return ( Model.equalsAddr(targetAddress, tth.targetAddress));
       }
    }
    
@@ -66,13 +85,19 @@ public class TracerouteScheduler
          }
          
          TracerouteTargetHost tth = new TracerouteTargetHost( targetAddress );
-         mTargetHosts.add(tth);
+         
+         if (!mTargetHosts.contains( tth ))
+         {   
+            mTargetHosts.add(tth);
+         }
       }
    }
    
    public void addTargetName( String targetName )
    {
       Inet4Address targetAddress = null;
+      
+      logger.info("trs.addTargetName(\"" + targetName +"\") called.");
       
       if(!targetName.equalsIgnoreCase("localhost"))
       {
@@ -83,7 +108,7 @@ public class TracerouteScheduler
          } 
          catch (UnknownHostException e1) 
          {
-            System.out.println("TraceRouteMsg<ctor>: " + targetName + " got "+e1);
+            logger.warn("TraceRouteMsg<ctor>: " + targetName + " got "+e1);
          }
 
          addTargetAddress( targetAddress );
@@ -106,11 +131,11 @@ public class TracerouteScheduler
          {
             mTimerReceiver.cancel();
             mTimerReceiver = new TracerouteSchedulerTimerReceiver();
-            timer.schedule(mTimerReceiver, (long)5000);
+            timer.schedule(mTimerReceiver, (long)20000);
          }
          catch ( java.lang.IllegalStateException ise )
          {
-            System.out.println("getNextTargetAddress() cought: "+ ise);
+            logger.warn("getNextTargetAddress() cought: "+ ise);
          }
          
       }
@@ -126,7 +151,7 @@ public class TracerouteScheduler
    {
       Inet4Address nextAddress = getNextTargetAddress();
       
-      System.out.println("trs.traceNextTarget(): "+nextAddress );
+      logger.trace("trs.traceNextTarget(): "+nextAddress+" from "+mTargetHosts.size() +" targets" );
       
       if( nextAddress != null )
       {
