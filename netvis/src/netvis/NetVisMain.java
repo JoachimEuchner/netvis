@@ -1,6 +1,9 @@
 package netvis;
 
 import java.io.EOFException;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Timer;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -20,6 +23,7 @@ import org.pcap4j.core.PcapNetworkInterface;
 import org.pcap4j.core.Pcaps;
 import org.pcap4j.core.PcapNetworkInterface.PromiscuousMode;
 import org.pcap4j.packet.Packet;
+import org.pcap4j.util.MacAddress;
 
 import netvis.model.Model;
 import netvis.traceroute.TraceRouteMsg;
@@ -123,7 +127,7 @@ public class NetVisMain
 
       this.mQueue = new ArrayBlockingQueue<>(100);
       ExecutorService threadPool = Executors.newFixedThreadPool(1); 
-      Future<NetVisMsg> sum = threadPool.submit(new MainCallabe() ); 
+      Future<NetVisMsg> sum = threadPool.submit(new MainCallabe()); 
       
       mTraceRouter = new Traceroute( this );
       
@@ -138,10 +142,22 @@ public class NetVisMain
          mListeningStartThread = new Thread(mLs );
          mListeningStartThread.start();
 
-         
-         mTraceRouter.initialize();
-         TraceRouteMsg trm = new TraceRouteMsg(mTraceRouter, "www.yahoo.com");
-         sendMsg ( trm );
+         Inet4Address srcAddress = null;
+         try
+         {
+            srcAddress = (Inet4Address) InetAddress.getByName("192.168.1.44");
+            MacAddress srcMac = MacAddress.getByName("00:e0:4c:69:13:c7");
+            MacAddress dstMac = MacAddress.getByName("34:31:c4:33:ce:ee");
+            
+            mTraceRouter.initialize(srcAddress, srcMac, dstMac );
+            TraceRouteMsg trm = new TraceRouteMsg(mTraceRouter, "www.yahoo.com");
+            sendMsg ( trm );
+         } 
+         catch (UnknownHostException e)
+         {
+            e.printStackTrace();
+         }
+       
          
          Watchdog wd = new Watchdog();
          Thread watchdogThread = new Thread( wd );

@@ -62,6 +62,11 @@ public class Traceroute
    private static final String TU_KEY = Traceroute.class.getName() + ".tu";
    private static final int TU = Integer.getInteger(TU_KEY, 40); // [bytes] 
  
+   
+   private Inet4Address srcAddress;
+   MacAddress srcMac;
+   MacAddress dstMac;
+   
    private Timer timer;
    private final NetVisMain main;
    private PcapHandle sendHandle;
@@ -117,14 +122,22 @@ public class Traceroute
    {
       main = m;     
           
+      
+      
       mTimerReceiver = new TraceRouteTimerReceiver();
       timer = new Timer("TraceRouteTimer", true);
       // Schedule task to start immediately and re-fire every second...
       timer.scheduleAtFixedRate(mTimerReceiver, (long)0, (long)1000);
    }
    
-   public void initialize()
+   public void initialize(Inet4Address _srcAddr,
+                          MacAddress _srcMac, 
+                          MacAddress _dstMac )
    {
+      srcAddress = _srcAddr;
+      srcMac = _srcMac;
+      dstMac = _dstMac;
+      
       List<PcapNetworkInterface> allDevs = null;
       try 
       {
@@ -152,7 +165,61 @@ public class Traceroute
          noe.printStackTrace();
       } 
       
-      System.out.println("tr.initialize() nifIdx:"+nifIdx+", got nif "+nif.getName());
+      System.out.println("tr.initialize() done, got: nifIdx:"+nifIdx+" and nif "+nif.getName());
+   }
+   
+   
+   private void sendICMPPackage( Inet4Address srcAddress, Inet4Address dst, int ttl )
+   {
+      IpV4Packet.Builder ipV4Builder = new IpV4Packet.Builder();
+      byte[] echoData = new byte[TU - 28];
+      for (int i = 0; i < echoData.length; i++) {
+         echoData[i] = (byte) i;
+      }
+      echoData[0] = (byte)ttl;
+
+      IcmpV4EchoPacket.Builder echoBuilder = new IcmpV4EchoPacket.Builder();
+      echoBuilder.identifier((short) 1)
+      .payloadBuilder(new UnknownPacket.Builder().rawData(echoData));
+
+      IcmpV4CommonPacket.Builder icmpV4CommonBuilder = new IcmpV4CommonPacket.Builder();
+      icmpV4CommonBuilder.type(IcmpV4Type.ECHO)
+               .code(IcmpV4Code.NO_CODE).payloadBuilder(echoBuilder)
+               .correctChecksumAtBuild(true);
+
+      ipV4Builder.version(IpVersion.IPV4).tos(IpV4Rfc791Tos.newInstance((byte) 0))
+               .ttl((byte) ttl) 
+               .protocol(IpNumber.ICMPV4)
+               .srcAddr(srcAddress)
+               .dstAddr(mTargetAddress)
+               .payloadBuilder(icmpV4CommonBuilder)
+               .correctChecksumAtBuild(true)
+               .correctLengthAtBuild(true);
+
+      EthernetPacket.Builder etherBuilder = new EthernetPacket.Builder();
+      etherBuilder.dstAddr(MacAddress.ETHER_BROADCAST_ADDRESS)
+               .srcAddr(srcMac)
+               .dstAddr(dstMac)
+               .type(EtherType.IPV4)
+               .payloadBuilder(ipV4Builder)
+               .paddingAtBuild(true);
+
+      Packet p = etherBuilder.build();
+
+      setLastSentDepth( ttl );
+      try
+      {
+         sendHandle.sendPacket(p);
+      } 
+      catch (PcapNativeException e)
+      { 
+         e.printStackTrace();
+      } 
+      catch (NotOpenException e)
+      {
+         e.printStackTrace();
+      }
+
    }
    
    
@@ -162,11 +229,7 @@ public class Traceroute
       System.out.println("doTraceRoute("+target+") entered.");
        
       try 
-      {
-         final Inet4Address srcAddress = (Inet4Address) InetAddress.getByName("192.168.1.44");
-          
-         IpV4Packet.Builder ipV4Builder = new IpV4Packet.Builder();
-         
+      {          
          for ( int attempt = 1; attempt <= 200000; attempt++)
          {
             System.out.println("Traceroute, attempt:"+attempt+" to " + mTargetAddress);
@@ -175,53 +238,10 @@ public class Traceroute
             
             for ( int ttl = 1; ttl <= 20; ttl++)
             {            
-               byte[] echoData = new byte[TU - 28];
-               for (int i = 0; i < echoData.length; i++) {
-                  echoData[i] = (byte) i;
-               }
-               echoData[0] = (byte)ttl;
-               
-               IcmpV4EchoPacket.Builder echoBuilder = new IcmpV4EchoPacket.Builder();
-               echoBuilder.identifier((short) 1)
-                          .payloadBuilder(new UnknownPacket.Builder().rawData(echoData));
-
-               IcmpV4CommonPacket.Builder icmpV4CommonBuilder = new IcmpV4CommonPacket.Builder();
-               icmpV4CommonBuilder.type(IcmpV4Type.ECHO)
-                                  .code(IcmpV4Code.NO_CODE)
-                                  .payloadBuilder(echoBuilder)
-                                  .correctChecksumAtBuild(true);
-        
                System.out.println("target= " +mTargetAddress + ", starting attempt: "+attempt +" for depth: " +ttl);
                
-               ipV4Builder
-                  .version(IpVersion.IPV4)
-                  .tos(IpV4Rfc791Tos.newInstance((byte) 0))
-                  .ttl((byte) ttl)                           // <---------------------!!
-                  .protocol(IpNumber.ICMPV4)
-                  .srcAddr( srcAddress )
-                  .dstAddr( mTargetAddress )
-                  .payloadBuilder(icmpV4CommonBuilder)
-                  .correctChecksumAtBuild(true)
-                  .correctLengthAtBuild(true);
-
-               MacAddress srcMac = MacAddress.getByName("00:e0:4c:69:13:c7");
-               MacAddress dstMac = MacAddress.getByName("34:31:c4:33:ce:ee");
-
-               EthernetPacket.Builder etherBuilder = new EthernetPacket.Builder();
-               etherBuilder.dstAddr(MacAddress.ETHER_BROADCAST_ADDRESS)
-                  .srcAddr(srcMac)
-                  .dstAddr(dstMac)
-                  .type(EtherType.IPV4)
-                  .payloadBuilder(ipV4Builder)
-                  .paddingAtBuild(true);
-
-               Packet p = etherBuilder.build();
-
-               System.out.println("Traceroute, attempt:"+attempt+", ttl="+ttl); // +": sending "+p);
-
-               setLastSentDepth( ttl );
-               sendHandle.sendPacket(p);
-
+               sendICMPPackage(srcAddress, mTargetAddress, ttl);
+               
                try 
                {
                   Thread.sleep(1000);
