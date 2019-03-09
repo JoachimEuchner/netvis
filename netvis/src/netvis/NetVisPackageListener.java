@@ -39,6 +39,8 @@ public class NetVisPackageListener implements PacketListener
    {
       counter++;
       timeOfLastPackage = System.currentTimeMillis();
+      System.out.print(".");
+      
       // System.out.println("got Packet @"+mPcapHandle.getTimestamp());
 
       // String s = packet.toString();

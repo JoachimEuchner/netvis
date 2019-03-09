@@ -80,8 +80,8 @@ public class Route
 
          while ( ( searchDepth >= 0 ) && ( previousNode == null ))
          {
-            System.out.println("Route <"+mSrcAddr+", "+mDstAddr+">: searching @depth="
-                     +searchDepth+" in "+mTraceRouteNodes.size()+" trns");
+            // System.out.println("Route <"+mSrcAddr+", "+mDstAddr+">: searching @depth="
+            //          +searchDepth+" in "+mTraceRouteNodes.size()+" trns");
             synchronized( mTraceRouteNodes )
             {
                for ( TraceRouteNode _trn : mTraceRouteNodes )
@@ -95,8 +95,8 @@ public class Route
             }
             if( previousNode != null )
             {
-               System.out.println("Route <"+mSrcAddr+", "+mDstAddr+">: found "+ previousNode.getAddr() + " while searching @depth="
-                        + searchDepth + " in "+mTraceRouteNodes.size()+" trns");
+               //  System.out.println("Route <"+mSrcAddr+", "+mDstAddr+">: found "+ previousNode.getAddr() + " while searching @depth="
+               //          + searchDepth + " in "+mTraceRouteNodes.size()+" trns");
             }
 
             searchDepth--;
@@ -131,15 +131,15 @@ public class Route
          finalLink.setTimeSeenLastPacket( System.currentTimeMillis() );
          mMain.addLink( finalLink );
          
-         System.out.println("Route <"+mSrcAddr+", "+mDstAddr+">: link("
-                  + previousNode.mReplyingAddr+" to "+ trn.mReplyingAddr  +"@depth="+trn.mDepth+")");
+         // System.out.println("Route <"+mSrcAddr+", "+mDstAddr+">: link("
+         //          + previousNode.mReplyingAddr+" to "+ trn.mReplyingAddr  +"@depth="+trn.mDepth+")");
       }
       else
       {
          System.out.println("Route <"+mSrcAddr+", "+mDstAddr+">: found no previous node.");
       }
 
-      dumpRoute();
+      // dumpRoute();
 
       System.out.println("Route <"+mSrcAddr+", "+mDstAddr+">.added( trn: "+ 
                trn.mReplyingAddr+" at depth "+ trn.mDepth  +") got "+mTraceRouteNodes.size()+" nodes.");

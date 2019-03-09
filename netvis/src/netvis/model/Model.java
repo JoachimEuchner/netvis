@@ -225,15 +225,15 @@ public class Model
 //                  mAllNodes.size() + " nodes and " +
 //                  mAllLinks.size() + " links, done.");
       
-//      
-//      if( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 1) )
-//      {
-//         mMain.mTraceRouter.setTargetAddess( dst );
-//      }
-//      else
-//      {
-//         mMain.mTraceRouter.setTargetAddess( src );
-//      }
+      
+      if( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 1) )
+      {
+         mMain.mTracerouteScheduler.addTargetAddress(dst);
+      }
+      else
+      {
+         mMain.mTracerouteScheduler.addTargetAddress( src );
+      }
 
 
       
@@ -251,7 +251,7 @@ public class Model
    {
       synchronized( mAllLinks )
       {
-         System.out.println("addLink("+l.src.getAddr()+"->"+l.dst.getAddr()+")");
+         // System.out.println("addLink("+l.src.getAddr()+"->"+l.dst.getAddr()+")");
          mAllLinks.add(l);
       }
    }

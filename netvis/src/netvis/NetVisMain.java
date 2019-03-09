@@ -162,6 +162,9 @@ public class NetVisMain
             mTracerouteScheduler.addTargetName( "www.yahoo.com" );
             mTracerouteScheduler.addTargetName( "blog.fefe.de" );
             mTracerouteScheduler.addTargetName( "www.google.com" );
+            mTracerouteScheduler.addTargetName( "www.spiegel.de" );
+            mTracerouteScheduler.addTargetName( "www.taz.de" );
+            mTracerouteScheduler.addTargetName( "www.9gag.com" );
             mTracerouteScheduler.traceNextTarget();
          } 
          catch (UnknownHostException e)

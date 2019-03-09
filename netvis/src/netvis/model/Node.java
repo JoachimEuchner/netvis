@@ -54,7 +54,7 @@ public class Node
       
       receivedPackets = 0;
       sentPackets = 0;
-      setInet4Address(_addr);
+      setInet4Address(_addr );
       
       addressBytes = addr.getAddress();      
       
@@ -83,7 +83,7 @@ public class Node
       
       timeOfLastSeenPacket = 0;
       
-      System.out.println("Node.<ctor> done: " + mDisplayName);
+      // System.out.println("Node.<ctor> done: " + mDisplayName);
    }
    
    public Inet4Address getAddr()

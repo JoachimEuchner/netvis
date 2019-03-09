@@ -45,7 +45,7 @@ public class Traceroute
          }
          catch ( Exception e )
          {
-            System.out.println("TraceRouteTimerReceiver: cought: "+e);
+            System.out.println("TraceRouteTimerReceiver.run(): cought: "+e);
          }
       }
    }
@@ -129,7 +129,7 @@ public class Traceroute
       main = m;     
           
       mTimerReceiver = new TraceRouteTimerReceiver();
-      timer = new Timer("TraceRouteTimer", true);
+      timer = new Timer("TraceRouteTimer", false);
       // Schedule task to start immediately and re-fire every second...
       // timer.scheduleAtFixedRate(mTimerReceiver, (long)0, (long)1000);
      
@@ -176,7 +176,7 @@ public class Traceroute
    
    private void sendICMPPackage( Inet4Address dst, int ttl )
    {
-      System.out.println("sendICMPPackage("+dst+", "+ttl+") called.");
+      // System.out.println("sendICMPPackage("+dst+", "+ttl+") called.");
       
       IpV4Packet.Builder ipV4Builder = new IpV4Packet.Builder();
       byte[] echoData = new byte[TU - 28];
@@ -220,14 +220,23 @@ public class Traceroute
          
          try
          {
-            timer.cancel();
-            timer.purge();
-            timer.schedule(mTimerReceiver, (long)1000);
+            mTimerReceiver.cancel();
+            mTimerReceiver = new TraceRouteTimerReceiver();
          }
          catch ( java.lang.IllegalStateException ise )
          {
-            System.out.println("sendICMPPackage() cought: "+ ise);
+            System.out.println("sendICMPPackage() 1. cought: "+ ise);
          }
+         
+         try
+         {
+            timer.schedule(mTimerReceiver, (long)2000);
+         }
+         catch ( java.lang.IllegalStateException ise )
+         {
+            System.out.println("sendICMPPackage() 2. cought: "+ ise);
+         }
+         
             
       } 
       catch (PcapNativeException e)
@@ -239,7 +248,7 @@ public class Traceroute
          e.printStackTrace();
       }
          
-      System.out.println("sendICMPPackage("+dst+", "+ttl+") done.");
+      // System.out.println("sendICMPPackage("+dst+", "+ttl+") done.");
    }
    
   
@@ -252,19 +261,19 @@ public class Traceroute
       {
          // start new traceroute.
          setTargetAddess( trm.getAddr() );
-         sendICMPPackage(mTargetAddress, 2);
+         sendICMPPackage( mTargetAddress, 2 );
       }
       else
       {
          if( ( trm.getDepth() < 15 ) && ( mTargetAddress != null ) )
          {
-            if( !Model.equalsAddr(mTargetAddress, trm.getAddr()))
+            if( !Model.equalsAddr(mTargetAddress, trm.getAddr()) )
             {
-               sendICMPPackage(mTargetAddress, trm.getDepth()+1);
+               sendICMPPackage( mTargetAddress, trm.getDepth()+1 );
             }
             else
             {
-               System.out.println("tr.msgReceived() found targetHost");
+               System.out.println("tr.msgReceived() found targetHost, this traceroute completed.");
                main.mTracerouteScheduler.traceNextTarget();
             }
          }
@@ -280,7 +289,6 @@ public class Traceroute
       {
          if( getLastSentDepth() < 15 )
          {
-            // sendICMPPackage(mTargetAddress, getLastSentDepth()+1);
             TraceRouteMsg trm = new TraceRouteMsg(this, null, getLastSentDepth()+1);
             main.sendMsg ( trm );
          }
