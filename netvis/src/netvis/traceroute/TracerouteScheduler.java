@@ -140,7 +140,7 @@ public class TracerouteScheduler
          
       }
       
-      System.out.println("trs.getNextTargetAddress(): "+
+      logger.debug("trs.getNextTargetAddress(): "+
                nextAddress+", "+ mTargetHosts.size() +" targets");
       
       
@@ -162,7 +162,7 @@ public class TracerouteScheduler
    
    public void timeoutOccured(int id)
    {
-      System.out.println("trs.timeoutOccured("+id+") called.");
+      logger.info("trs.timeoutOccured("+id+") called.");
       traceNextTarget();
    }
 }

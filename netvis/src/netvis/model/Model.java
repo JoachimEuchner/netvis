@@ -136,7 +136,7 @@ public class Model
    
    public Model( NetVisMain m )
    {
-      System.out.println("Model<ctor> called.");
+      logger.info("Model<ctor> called.");
       
       mMain = m;
       

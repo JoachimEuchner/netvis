@@ -90,7 +90,7 @@ public class NetVisPackageListener implements PacketListener
                System.out.println("received: [nr.: " +counter +"] src="+origSrcAddr +" reply from " + 
                         ipv4p.getHeader().getSrcAddr()  +", at depth: " + depth +", sent to "+origDstAddr);
                
-               TraceRouteMsg trm = new TraceRouteMsg(mMain.mTraceRouter, ipv4p.getHeader().getSrcAddr(), depth);
+               TraceRouteMsg trm = new TraceRouteMsg(mMain.mTraceRouter, ipv4p.getHeader().getSrcAddr(), depth+1);
                mMain.sendMsg ( trm );
                              
                TraceRouteNode trn = new TraceRouteNode(origSrcAddr, origDstAddr, ipv4p.getHeader().getSrcAddr(), depth);
@@ -100,7 +100,9 @@ public class NetVisPackageListener implements PacketListener
                       ( Model.equalsAddr( ipv4p.getHeader().getSrcAddr(), mMain.mTraceRouter.getTargetAddress()))  ) )
        
             {
-               TraceRouteMsg trm = new TraceRouteMsg(mMain.mTraceRouter, ipv4p.getHeader().getSrcAddr(), mMain.mTraceRouter.getLastSentDepth() );
+               TraceRouteMsg trm = new TraceRouteMsg(mMain.mTraceRouter, 
+                                                     ipv4p.getHeader().getSrcAddr(), 
+                                                     mMain.mTraceRouter.getLastSentDepth()+1 );
                mMain.sendMsg ( trm );
                
                System.out.println("received: [nr.: " +counter +"] IcmpV4CommonPacket reply from " + 

@@ -179,7 +179,7 @@ public class Traceroute
    
    private void sendICMPPackage( Inet4Address dst, int ttl )
    {
-      logger.info("tr.sendICMPPackage("+dst+", "+ttl+") called.");
+      // logger.info("tr.sendICMPPackage("+dst+", "+ttl+") called.");
       
       byte[] echoData = new byte[TU - 28];
       for (int i = 0; i < echoData.length; i++) {
@@ -252,15 +252,14 @@ public class Traceroute
          logger.error( "sendPacket: cought:"+ e2 );
       }
          
-      logger.info("sendICMPPackage("+dst+", "+ttl+") done.");
+      //  logger.info("sendICMPPackage("+dst+", "+ttl+") done.");
    }
    
   
    public void msgReceived( NetVisMsg msg )
    {
       TraceRouteMsg trm = (TraceRouteMsg) msg ;      
-     
-      
+           
       if( ( trm.getDepth() == -1 ) && ( trm.getAddr() != null ) )
       {
          // start new traceroute.
@@ -270,11 +269,11 @@ public class Traceroute
       }
       else
       {
-         if( ( trm.getDepth() < 20 ) && ( mTargetAddress != null ) )
+         if( /*( trm.getDepth() < 21 ) &&*/ ( mTargetAddress != null ) )
          {
             if( !Model.equalsAddr(mTargetAddress, trm.getAddr()) )
             {
-               sendICMPPackage( mTargetAddress, trm.getDepth()+1 );
+               sendICMPPackage( mTargetAddress, trm.getDepth() );
             }
             else
             {
@@ -288,7 +287,7 @@ public class Traceroute
    
    public void timeoutOccured(int id)
    {
-      logger.info("tr.timeoutOccured("+id+") called.");
+      logger.info("tr.timeoutOccured("+id+") called. mTargetAddress="+mTargetAddress+", lastDepth:"+ getLastSentDepth());
       
       if( mTargetAddress != null )
       {
@@ -300,7 +299,7 @@ public class Traceroute
          else
          {
             // giving up on mTargetHost.
-            System.out.println("tr.timeoutOccured() giving up on: "+ mTargetAddress);
+            logger.debug("tr.timeoutOccured() giving up on: "+ mTargetAddress);
             main.mTracerouteScheduler.traceNextTarget();
          }
       }
