@@ -30,7 +30,7 @@ public class TraceRouteMsg
       } 
       catch (UnknownHostException e1) 
       {
-         throw new IllegalArgumentException("TraceRouteMsg<ctor>: " + targetName);
+         System.out.println("TraceRouteMsg<ctor>: " + targetName + " got "+e1);
       }
       
       receivedDepth = -1;

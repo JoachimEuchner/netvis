@@ -78,7 +78,7 @@ public class NetVisMain
    {
       return mQueue;
    }
-   private class MainCallabe implements Callable<NetVisMsg>
+   private class MainCallable implements Callable<NetVisMsg>
    {
       @Override
       public NetVisMsg call()
@@ -87,19 +87,27 @@ public class NetVisMain
          {
             while ( true ) 
             { 
-               System.out.println("MainCallabe: going to call take()");
+               // System.out.println("MainCallable: going to call take()");
                NetVisMsg msg = (NetVisMsg) mQueue.take();
-               System.out.println("MainCallabe: got "+msg);
+               // System.out.println("MainCallable: got "+msg);
                NetVisMsgReceiver receiver = msg.getMsgReceiver();
-               receiver.msgReceived(msg);
+               try
+               {
+                  receiver.msgReceived(msg);
+               }
+               catch( Exception e)
+               {
+                  System.out.println("MainCallable: cought: "+e);
+               }
             }
          } 
          catch (InterruptedException e) 
          {
+            System.out.println("MainCallable: exiting call().");
             // Allow our thread to be interrupted
             Thread.currentThread().interrupt();
             return ( null ); // this will never run, but the compiler needs it
-         } 
+         }
       }
    }
    public void sendMsg( NetVisMsg msg )
@@ -107,7 +115,9 @@ public class NetVisMain
       BlockingQueue<NetVisMsg> theQueue = this.getQueue();
       try
       {
+         // System.out.println("MainCallable: going to call theQueue.put(msg)");
          theQueue.put(msg);
+         // System.out.println("MainCallable: returned from theQueue.put(msg)");
       } 
       catch (InterruptedException e)
       {
@@ -127,7 +137,7 @@ public class NetVisMain
 
       this.mQueue = new ArrayBlockingQueue<>(100);
       ExecutorService threadPool = Executors.newFixedThreadPool(1); 
-      Future<NetVisMsg> sum = threadPool.submit(new MainCallabe()); 
+      Future<NetVisMsg> sum = threadPool.submit(new MainCallable()); 
       
       mTraceRouter = new Traceroute( this );
       

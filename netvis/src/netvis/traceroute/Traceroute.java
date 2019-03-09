@@ -33,9 +33,6 @@ import netvis.NetVisMsg;
 import netvis.NetVisMsgReceiver;
 import netvis.model.Model;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
 
 public class Traceroute
    implements NetVisMsgReceiver
@@ -44,7 +41,14 @@ public class Traceroute
    {
       public void run()
       {
-         timeoutOccured ( 1 );         
+         try
+         {
+            timeoutOccured ( 1 );
+         }
+         catch ( Exception e )
+         {
+            System.out.println("TraceRouteTimerReceiver: cought: "+e);
+         }
       }
    }
    TraceRouteTimerReceiver mTimerReceiver;
@@ -54,25 +58,24 @@ public class Traceroute
             Traceroute.class.getName() + ".readTimeout";
    private static final int READ_TIMEOUT = Integer.getInteger(READ_TIMEOUT_KEY, 10); // [ms]
    
-  
    private static final String SNAPLEN_KEY = Traceroute.class.getName() + ".snaplen";
    private static final int SNAPLEN = Integer.getInteger(SNAPLEN_KEY, 65536); // [bytes]
 
-  
    private static final String TU_KEY = Traceroute.class.getName() + ".tu";
    private static final int TU = Integer.getInteger(TU_KEY, 40); // [bytes] 
  
    
    private Inet4Address srcAddress;
-   MacAddress srcMac;
-   MacAddress dstMac;
+   private Inet4Address mTargetAddress;
+   private MacAddress srcMac;
+   private MacAddress dstMac;
    
    private Timer timer;
    private final NetVisMain main;
    private PcapHandle sendHandle;
  
    private Integer mLastSentDepth = -1;
-   
+    
    public int getLastSentDepth()
    {
       int depth;
@@ -91,10 +94,11 @@ public class Traceroute
    }
    
    
-   Inet4Address mTargetAddress;
+  
    boolean targetAddressLocked = false;
    public void setTargetAddess( Inet4Address t )
    {
+      // System.out.println("tr.setTarget: "+t+" called, locked: "+targetAddressLocked);
       if( !targetAddressLocked )
       {
          byte[] srcAddressBytes = t.getAddress();
@@ -105,16 +109,20 @@ public class Traceroute
             {
                if(!( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 2) ) )
                {
-
                   if ( !Model.equalsAddr(t, mTargetAddress))
                   {
-                     System.out.println("Traceroute, setTarget: "+t);
+                     System.out.println("tr.setTarget: "+t);
                   }
                   mTargetAddress = t;
                }
             }
          }
       }
+      // System.out.println("tr.setTarget: "+t+", now: "+mTargetAddress);
+   }
+   public Inet4Address getTargetAddress()
+   {
+      return mTargetAddress;
    }
    
 
@@ -122,12 +130,11 @@ public class Traceroute
    {
       main = m;     
           
-      
-      
       mTimerReceiver = new TraceRouteTimerReceiver();
       timer = new Timer("TraceRouteTimer", true);
       // Schedule task to start immediately and re-fire every second...
-      timer.scheduleAtFixedRate(mTimerReceiver, (long)0, (long)1000);
+      // timer.scheduleAtFixedRate(mTimerReceiver, (long)0, (long)1000);
+     
    }
    
    public void initialize(Inet4Address _srcAddr,
@@ -169,8 +176,10 @@ public class Traceroute
    }
    
    
-   private void sendICMPPackage( Inet4Address srcAddress, Inet4Address dst, int ttl )
+   private void sendICMPPackage( Inet4Address dst, int ttl )
    {
+      System.out.println("sendICMPPackage("+dst+", "+ttl+") called.");
+      
       IpV4Packet.Builder ipV4Builder = new IpV4Packet.Builder();
       byte[] echoData = new byte[TU - 28];
       for (int i = 0; i < echoData.length; i++) {
@@ -205,11 +214,23 @@ public class Traceroute
                .paddingAtBuild(true);
 
       Packet p = etherBuilder.build();
-
-      setLastSentDepth( ttl );
+     
       try
       {
          sendHandle.sendPacket(p);
+         setLastSentDepth( ttl );
+         // timer.purge();
+         try
+         {
+            timer.cancel();
+            timer.purge();
+            timer.schedule(mTimerReceiver, (long)1000);
+         }
+         catch ( java.lang.IllegalStateException ise )
+         {
+            System.out.println("sendICMPPackage() cought: "+ ise);
+         }
+            
       } 
       catch (PcapNativeException e)
       { 
@@ -219,74 +240,52 @@ public class Traceroute
       {
          e.printStackTrace();
       }
-
+         
+      System.out.println("sendICMPPackage("+dst+", "+ttl+") done.");
    }
    
-   
-
-   public void doTraceRoute(String target)
-   {
-      System.out.println("doTraceRoute("+target+") entered.");
-       
-      try 
-      {          
-         for ( int attempt = 1; attempt <= 200000; attempt++)
-         {
-            System.out.println("Traceroute, attempt:"+attempt+" to " + mTargetAddress);
-            
-            targetAddressLocked = true;
-            
-            for ( int ttl = 1; ttl <= 20; ttl++)
-            {            
-               System.out.println("target= " +mTargetAddress + ", starting attempt: "+attempt +" for depth: " +ttl);
-               
-               sendICMPPackage(srcAddress, mTargetAddress, ttl);
-               
-               try 
-               {
-                  Thread.sleep(1000);
-               } 
-               catch (InterruptedException e) 
-               {
-                  break;
-               }
-            }
-            
-            targetAddressLocked = false;
-            
-            try 
-            {
-               Thread.sleep(10000);
-            } 
-            catch (InterruptedException e) 
-            {
-               System.out.println("doTraceRoute("+target+") cought:"+e);
-               break;
-            }
-         }
-
-      } catch (Exception e) {
-         System.out.println("Traceroute, cought: "+e);
-         e.printStackTrace();
-      } finally {
-         if (sendHandle != null && sendHandle.isOpen()) {
-            sendHandle.close();
-         }
-      }
-      
-      System.out.println("doTraceRoute("+target+") done.");
-   }
-   
+  
    public void msgReceived( NetVisMsg msg )
    {
       TraceRouteMsg trm = (TraceRouteMsg) msg ;      
       System.out.println("tr.msgReceived() got TraceRouteMsg("+trm.getAddr()+", "+trm.getDepth()+")");
+      
+      if( ( trm.getDepth() == -1 ) && ( trm.getAddr() != null ) )
+      {
+         // start new traceroute.
+         setTargetAddess( trm.getAddr() );
+         sendICMPPackage(mTargetAddress, 2);
+      }
+      else
+      {
+         if( ( trm.getDepth() < 15 ) && ( mTargetAddress != null ) )
+         {
+            if( !Model.equalsAddr(mTargetAddress, trm.getAddr()))
+            {
+               sendICMPPackage(mTargetAddress, trm.getDepth()+1);
+            }
+            else
+            {
+               System.out.println("tr.msgReceived() found targetHost");
+            }
+         }
+      }
    }
    
    
    public void timeoutOccured(int id)
    {
       System.out.println("tr.timeoutOccured("+id+") called.");
+      
+      if( mTargetAddress != null )
+      {
+         if( getLastSentDepth() < 15 )
+         {
+            // sendICMPPackage(mTargetAddress, getLastSentDepth()+1);
+            TraceRouteMsg trm = new TraceRouteMsg(this, null, getLastSentDepth()+1);
+            main.sendMsg ( trm );
+         }
+      }
    }
    
  

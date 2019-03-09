@@ -58,6 +58,11 @@ public class Model
    {
       boolean retVal = false;
 
+      if(( addr1 == null ) || ( addr2 == null))
+      {
+         return false;
+      }
+      
       if( ( addr1.getAddress()[0] == addr2.getAddress()[0])
           && ( addr1.getAddress()[1] == addr2.getAddress()[1])     
           && ( addr1.getAddress()[2] == addr2.getAddress()[2]) 
@@ -220,15 +225,15 @@ public class Model
 //                  mAllNodes.size() + " nodes and " +
 //                  mAllLinks.size() + " links, done.");
       
-      
-      if( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 1) )
-      {
-         mMain.mTraceRouter.setTargetAddess( dst );
-      }
-      else
-      {
-         mMain.mTraceRouter.setTargetAddess( src );
-      }
+//      
+//      if( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 1) )
+//      {
+//         mMain.mTraceRouter.setTargetAddess( dst );
+//      }
+//      else
+//      {
+//         mMain.mTraceRouter.setTargetAddess( src );
+//      }
 
 
       

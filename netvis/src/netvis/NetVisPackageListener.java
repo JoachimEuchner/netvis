@@ -6,6 +6,7 @@ import org.pcap4j.core.PacketListener;
 import org.pcap4j.core.PcapHandle;
 import org.pcap4j.packet.ArpPacket;
 import org.pcap4j.packet.EthernetPacket;
+import org.pcap4j.packet.IcmpV4CommonPacket;
 import org.pcap4j.packet.IcmpV4EchoPacket;
 import org.pcap4j.packet.IcmpV4TimeExceededPacket;
 import org.pcap4j.packet.IpV4Packet;
@@ -13,6 +14,7 @@ import org.pcap4j.packet.LinuxSllPacket;
 import org.pcap4j.packet.Packet;
 
 import netvis.model.Model;
+import netvis.traceroute.TraceRouteMsg;
 import netvis.traceroute.TraceRouteNode;
 
 public class NetVisPackageListener implements PacketListener
@@ -68,14 +70,14 @@ public class NetVisPackageListener implements PacketListener
                Inet4Address origSrcAddr = (icmpTEp.get(IpV4Packet.class)).getHeader().getSrcAddr();
                Inet4Address origDstAddr = (icmpTEp.get(IpV4Packet.class)).getHeader().getDstAddr();
                int depth  = -1;
-               
                try
                {
                   depth = icmpTEp.get(IcmpV4EchoPacket.class).getPayload().getRawData()[0];
                }
                catch (Exception e )
                {
-                  System.out.println("received [nr.: " +counter +"] : cought: "+e);
+                  // System.out.println("received [nr.: " +counter +"] : cought: "+e);
+                  System.out.println("received [nr.: " +counter +"]: no data[] in IcmpV4EchoPacket from "+ipv4p.getHeader().getSrcAddr());
                }
                               
                if( depth == -1 )
@@ -86,8 +88,22 @@ public class NetVisPackageListener implements PacketListener
                System.out.println("received: [nr.: " +counter +"] src="+origSrcAddr +" reply from " + 
                         ipv4p.getHeader().getSrcAddr()  +", at depth: " + depth +", sent to "+origDstAddr);
                
+               TraceRouteMsg trm = new TraceRouteMsg(mMain.mTraceRouter, ipv4p.getHeader().getSrcAddr(), depth);
+               mMain.sendMsg ( trm );
+                             
                TraceRouteNode trn = new TraceRouteNode(origSrcAddr, origDstAddr, ipv4p.getHeader().getSrcAddr(), depth);
                mModel.addTraceRouteNode(trn);
+            }
+            else if ( ( packet.contains(IcmpV4CommonPacket.class) && 
+                      ( Model.equalsAddr( ipv4p.getHeader().getSrcAddr(), mMain.mTraceRouter.getTargetAddress()))  ) )
+       
+            {
+               TraceRouteMsg trm = new TraceRouteMsg(mMain.mTraceRouter, ipv4p.getHeader().getSrcAddr(), mMain.mTraceRouter.getLastSentDepth() );
+               mMain.sendMsg ( trm );
+               
+               System.out.println("received: [nr.: " +counter +"] IcmpV4CommonPacket reply from " + 
+                        ipv4p.getHeader().getSrcAddr());
+               
             }
             else
             {
