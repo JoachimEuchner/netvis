@@ -4,6 +4,8 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.pcap4j.core.NotOpenException;
 import org.pcap4j.core.PcapHandle;
@@ -27,11 +29,27 @@ import org.pcap4j.packet.namednumber.IpVersion;
 import org.pcap4j.util.MacAddress;
 
 import netvis.NetVisMain;
+import netvis.NetVisMsg;
+import netvis.NetVisMsgReceiver;
 import netvis.model.Model;
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+
 public class Traceroute
-   implements Runnable
+   implements NetVisMsgReceiver
 {
+   private class TraceRouteTimerReceiver extends TimerTask
+   {
+      public void run()
+      {
+         timeoutOccured ( 1 );         
+      }
+   }
+   TraceRouteTimerReceiver mTimerReceiver;
+  
+   
    private static final String READ_TIMEOUT_KEY =
             Traceroute.class.getName() + ".readTimeout";
    private static final int READ_TIMEOUT = Integer.getInteger(READ_TIMEOUT_KEY, 10); // [ms]
@@ -44,7 +62,7 @@ public class Traceroute
    private static final String TU_KEY = Traceroute.class.getName() + ".tu";
    private static final int TU = Integer.getInteger(TU_KEY, 40); // [bytes] 
  
-   
+   private Timer timer;
    private final NetVisMain main;
    private PcapHandle sendHandle;
  
@@ -98,22 +116,15 @@ public class Traceroute
    public Traceroute( NetVisMain m )
    {
       main = m;     
+          
+      mTimerReceiver = new TraceRouteTimerReceiver();
+      timer = new Timer("TraceRouteTimer", true);
+      // Schedule task to start immediately and re-fire every second...
+      timer.scheduleAtFixedRate(mTimerReceiver, (long)0, (long)1000);
    }
-
-   public void doTraceRoute(String target)
+   
+   public void initialize()
    {
-      System.out.println("doTraceRoute("+target+") entered.");
-      
-      try 
-      {
-         mTargetAddress = (Inet4Address) InetAddress.getByName(target);
-      } 
-      catch (UnknownHostException e1) 
-      {
-         throw new IllegalArgumentException("args[0]: " + target);
-      }
-      
-      
       List<PcapNetworkInterface> allDevs = null;
       try 
       {
@@ -126,8 +137,7 @@ public class Traceroute
 
       int nifIdx = 0;
       PcapNetworkInterface nif = allDevs.get(nifIdx);
-      System.out.println("doTraceRoute("+target+") nifIdx:"+nifIdx+", got nif "+nif.getName());
-      
+   
       try
       {
          sendHandle = nif.openLive(SNAPLEN, PromiscuousMode.PROMISCUOUS, READ_TIMEOUT);
@@ -140,7 +150,16 @@ public class Traceroute
       catch (NotOpenException noe )
       {
          noe.printStackTrace();
-      }    
+      } 
+      
+      System.out.println("tr.initialize() nifIdx:"+nifIdx+", got nif "+nif.getName());
+   }
+   
+   
+
+   public void doTraceRoute(String target)
+   {
+      System.out.println("doTraceRoute("+target+") entered.");
        
       try 
       {
@@ -237,24 +256,18 @@ public class Traceroute
       
       System.out.println("doTraceRoute("+target+") done.");
    }
-
-
-   @Override
-   public void run()
+   
+   public void msgReceived( NetVisMsg msg )
    {
-      try
-      {
-         Thread.sleep(10000);
-      }
-      catch( InterruptedException ie )
-      {
-         //...
-      }
-      
-      
-      doTraceRoute("www.yahoo.com");
-      
+      TraceRouteMsg trm = (TraceRouteMsg) msg ;      
+      System.out.println("tr.msgReceived() got TraceRouteMsg("+trm.getAddr()+", "+trm.getDepth()+")");
    }
-
-
+   
+   
+   public void timeoutOccured(int id)
+   {
+      System.out.println("tr.timeoutOccured("+id+") called.");
+   }
+   
+ 
 }

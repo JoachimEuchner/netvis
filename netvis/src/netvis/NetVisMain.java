@@ -2,6 +2,13 @@ package netvis;
 
 import java.io.EOFException;
 import java.util.List;
+import java.util.Timer;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
 import org.pcap4j.core.NotOpenException;
@@ -15,6 +22,7 @@ import org.pcap4j.core.PcapNetworkInterface.PromiscuousMode;
 import org.pcap4j.packet.Packet;
 
 import netvis.model.Model;
+import netvis.traceroute.TraceRouteMsg;
 import netvis.traceroute.Traceroute;
 import netvis.ui.NetVisFrame;
 
@@ -58,13 +66,67 @@ public class NetVisMain
   
    Thread mListeningStartThread; 
    Thread mFileReaderThread;
-   Thread mTraceRouteThread;
+   
+  
+ 
+   private final BlockingQueue<NetVisMsg> mQueue;
+   public BlockingQueue<NetVisMsg> getQueue()
+   {
+      return mQueue;
+   }
+   private class MainCallabe implements Callable<NetVisMsg>
+   {
+      @Override
+      public NetVisMsg call()
+      {
+         try 
+         {
+            while ( true ) 
+            { 
+               System.out.println("MainCallabe: going to call take()");
+               NetVisMsg msg = (NetVisMsg) mQueue.take();
+               System.out.println("MainCallabe: got "+msg);
+               NetVisMsgReceiver receiver = msg.getMsgReceiver();
+               receiver.msgReceived(msg);
+            }
+         } 
+         catch (InterruptedException e) 
+         {
+            // Allow our thread to be interrupted
+            Thread.currentThread().interrupt();
+            return ( null ); // this will never run, but the compiler needs it
+         } 
+      }
+   }
+   public void sendMsg( NetVisMsg msg )
+   {
+      BlockingQueue<NetVisMsg> theQueue = this.getQueue();
+      try
+      {
+         theQueue.put(msg);
+      } 
+      catch (InterruptedException e)
+      {
+         e.printStackTrace();
+      }
+   }
+   
+  
+   
    
    private NetVisMain(String[] args) 
    {
       mNetVisModel = new Model( this );
       
       mNetVisFrame = new NetVisFrame( this );
+      
+
+      this.mQueue = new ArrayBlockingQueue<>(100);
+      ExecutorService threadPool = Executors.newFixedThreadPool(1); 
+      Future<NetVisMsg> sum = threadPool.submit(new MainCallabe() ); 
+      
+      mTraceRouter = new Traceroute( this );
+      
       
       if( args.length == 0 )
       {
@@ -76,9 +138,10 @@ public class NetVisMain
          mListeningStartThread = new Thread(mLs );
          mListeningStartThread.start();
 
-         mTraceRouter = new Traceroute( this );
-         mTraceRouteThread = new Thread( mTraceRouter );
-         mTraceRouteThread.start();
+         
+         mTraceRouter.initialize();
+         TraceRouteMsg trm = new TraceRouteMsg(mTraceRouter, "www.yahoo.com");
+         sendMsg ( trm );
          
          Watchdog wd = new Watchdog();
          Thread watchdogThread = new Thread( wd );
