@@ -1,8 +1,6 @@
 package netvis.traceroute;
 
 import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -219,7 +217,7 @@ public class Traceroute
       {
          sendHandle.sendPacket(p);
          setLastSentDepth( ttl );
-         // timer.purge();
+         
          try
          {
             timer.cancel();
@@ -267,6 +265,7 @@ public class Traceroute
             else
             {
                System.out.println("tr.msgReceived() found targetHost");
+               main.mTracerouteScheduler.traceNextTarget();
             }
          }
       }
@@ -284,6 +283,12 @@ public class Traceroute
             // sendICMPPackage(mTargetAddress, getLastSentDepth()+1);
             TraceRouteMsg trm = new TraceRouteMsg(this, null, getLastSentDepth()+1);
             main.sendMsg ( trm );
+         }
+         else
+         {
+            // giving up on mTargetHost.
+            System.out.println("tr.timeoutOccured() giving up on: "+ mTargetAddress);
+            main.mTracerouteScheduler.traceNextTarget();
          }
       }
    }

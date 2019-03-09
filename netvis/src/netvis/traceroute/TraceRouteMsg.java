@@ -20,6 +20,13 @@ public class TraceRouteMsg
       receivedDepth = depth;
    }
    
+   public TraceRouteMsg( NetVisMsgReceiver _rec, Inet4Address addr )
+   {
+      super( _rec );
+      ipV4Addr = addr;
+      receivedDepth = -1;
+   }
+   
    public TraceRouteMsg( NetVisMsgReceiver _rec, String targetName )
    {
       super( _rec );

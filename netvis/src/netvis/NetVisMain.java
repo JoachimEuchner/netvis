@@ -28,6 +28,7 @@ import org.pcap4j.util.MacAddress;
 import netvis.model.Model;
 import netvis.traceroute.TraceRouteMsg;
 import netvis.traceroute.Traceroute;
+import netvis.traceroute.TracerouteScheduler;
 import netvis.ui.NetVisFrame;
 
 public class NetVisMain
@@ -41,6 +42,7 @@ public class NetVisMain
    public NetVisFrame mNetVisFrame;
    
    public Traceroute mTraceRouter;
+   public TracerouteScheduler mTracerouteScheduler;
    
    
    private static final String COUNT_KEY = NetVisMain.class.getName() + ".count";
@@ -71,8 +73,6 @@ public class NetVisMain
    Thread mListeningStartThread; 
    Thread mFileReaderThread;
    
-  
- 
    private final BlockingQueue<NetVisMsg> mQueue;
    public BlockingQueue<NetVisMsg> getQueue()
    {
@@ -140,7 +140,7 @@ public class NetVisMain
       Future<NetVisMsg> sum = threadPool.submit(new MainCallable()); 
       
       mTraceRouter = new Traceroute( this );
-      
+      mTracerouteScheduler = new TracerouteScheduler( this, mTraceRouter );
       
       if( args.length == 0 )
       {
@@ -151,17 +151,18 @@ public class NetVisMain
 
          mListeningStartThread = new Thread(mLs );
          mListeningStartThread.start();
-
-         Inet4Address srcAddress = null;
+         
          try
          {
-            srcAddress = (Inet4Address) InetAddress.getByName("192.168.1.44");
+            Inet4Address srcAddress = (Inet4Address) InetAddress.getByName("192.168.1.44");
             MacAddress srcMac = MacAddress.getByName("00:e0:4c:69:13:c7");
             MacAddress dstMac = MacAddress.getByName("34:31:c4:33:ce:ee");
-            
             mTraceRouter.initialize(srcAddress, srcMac, dstMac );
-            TraceRouteMsg trm = new TraceRouteMsg(mTraceRouter, "www.yahoo.com");
-            sendMsg ( trm );
+            
+            mTracerouteScheduler.addTargetName( "www.yahoo.com" );
+            mTracerouteScheduler.addTargetName( "blog.fefe.de" );
+            mTracerouteScheduler.addTargetName( "www.google.com" );
+            mTracerouteScheduler.traceNextTarget();
          } 
          catch (UnknownHostException e)
          {
