@@ -68,6 +68,7 @@ public class Traceroute
  
    
    private Inet4Address srcAddress;
+   public Inet4Address getSrcAddress() { return srcAddress; };
    private Inet4Address mTargetAddress;
    private MacAddress srcMac;
    private MacAddress dstMac;

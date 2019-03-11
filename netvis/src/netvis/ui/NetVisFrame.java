@@ -29,7 +29,8 @@ public class NetVisFrame extends  JFrame implements FocusListener, KeyListener
    
    private final JButton                   mIncreaseChargeButton;
    private final JButton                   mDecreaseChargeButton;
-   
+   private final JButton                   mIncreaseSpringButton;
+   private final JButton                   mDecreaseSpringButton;
    
    public NetVisComponent getmNetVisComp()
    {
@@ -72,6 +73,16 @@ public class NetVisFrame extends  JFrame implements FocusListener, KeyListener
       this.mDecreaseChargeButton.addActionListener(this.getmNetVisComp());
       graphCtrlPanelConstraints.gridx = 1;
       this.mGraphCtrlPanel.add(this.mDecreaseChargeButton, graphCtrlPanelConstraints);
+      
+      this.mIncreaseSpringButton = new JButton("S++"); //$NON-NLS-1$
+      this.mIncreaseSpringButton.addActionListener(this.getmNetVisComp());
+      graphCtrlPanelConstraints.gridx = 2;
+      this.mGraphCtrlPanel.add(this.mIncreaseSpringButton, graphCtrlPanelConstraints);
+      
+      this.mDecreaseSpringButton = new JButton("S--"); //$NON-NLS-1$
+      this.mDecreaseSpringButton.addActionListener(this.getmNetVisComp());
+      graphCtrlPanelConstraints.gridx = 3;
+      this.mGraphCtrlPanel.add(this.mDecreaseSpringButton, graphCtrlPanelConstraints);
       
       this.add(mGraphCtrlPanel, BorderLayout.SOUTH);
       

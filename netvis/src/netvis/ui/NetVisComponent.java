@@ -95,13 +95,12 @@ public class NetVisComponent extends JComponent implements
    private int mDraggingNodeDx = 0;
    private int mDraggingNodeDy = 0;
    
-   // private static Point         mMouseMovePoint    = new Point( 0, 0);
-   
    
    public boolean doLayouting;
    public int paintCounter;
    
    double standardCharge;
+   double standardSpring;
    
    public NetVisComponent( Model m )
    {
@@ -135,6 +134,7 @@ public class NetVisComponent extends JComponent implements
       mDraggingNodeDy = 0;
       
       standardCharge = 4000.0;
+      standardSpring = 0.01;
       
       paintCounter = 0;
    }
@@ -330,7 +330,7 @@ public class NetVisComponent extends JComponent implements
                            // System.out.println("fx="+n.fx+" fy="+n.fy);
 
 
-                           double spring = 0.01;
+                           double spring = standardSpring;
                            synchronized( mModel.getAllLinks() )
                            {
                               Vector<netvis.model.Link> mAllLinks = mModel.getAllLinks();
@@ -878,7 +878,19 @@ public class NetVisComponent extends JComponent implements
          standardCharge = standardCharge* (1.0/1.1);
          repaint();
       }
-      System.out.println("Charge: "+standardCharge);
+      else if (arg0.getActionCommand().equals("S++")) //$NON-NLS-1$
+      {
+         standardSpring = standardSpring*1.1;
+         repaint();
+      } 
+      else if (arg0.getActionCommand().equals("S--")) //$NON-NLS-1$
+      {
+         standardSpring = standardSpring* (1.0/1.1);
+         repaint();
+      }
+      
+      
+      System.out.println("Charge: "+standardCharge + ", Spring: "+standardSpring);
 
    }
 

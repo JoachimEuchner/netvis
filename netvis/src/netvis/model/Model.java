@@ -134,6 +134,59 @@ public class Model
       return ( retVal );
    }
    
+   public Route findRoute( Node src, Node dst )
+   {
+      Route retVal = null;
+      
+      
+      byte[] srcAddressBytes = src.addressBytes;
+      byte[] dstAddressBytes = dst.addressBytes;
+      
+      if( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 2) )
+      {
+         // src=192.168.2.0/8, dst=X
+         // --> search for 192.168.1.44 <--> X
+         Node routeSrc = findNode( mMain.mTraceRouter.getSrcAddress() );
+         synchronized( mRoutes )
+         {
+            for ( Route r : mRoutes )
+            {
+               if( ( r!= null) && ( r.mSrcAddr != null ) && ( r.mDstAddr != null ))
+               {
+                  if( equalsAddr ( r.mSrcAddr, routeSrc.getAddr() ) 
+                           && equalsAddr ( r.mDstAddr, dst.getAddr() ) )
+                  {
+                     retVal = r;
+                     break;
+                  }
+               }
+            }
+         }
+      }
+      else  if ( (dstAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 2) )
+      {
+         Node routeDst = findNode( mMain.mTraceRouter.getSrcAddress() );
+         // dst=192.168.2.0/8, src=X
+         // --> search for 192.168.1.44 <--> X
+         synchronized( mRoutes )
+         {
+            for ( Route r : mRoutes )
+            {
+               if( ( r!= null) && ( r.mSrcAddr != null ) && ( r.mDstAddr != null ))
+               {
+                  if( equalsAddr ( r.mSrcAddr, src.getAddr() ) 
+                           && equalsAddr ( r.mDstAddr, routeDst.getAddr() ) )
+                  {
+                     retVal = r;
+                     break;
+                  }
+               }
+            }
+         }
+      }
+      return ( retVal );
+   }  
+   
    public Model( NetVisMain m )
    {
       logger.info("Model<ctor> called.");
@@ -215,7 +268,12 @@ public class Model
       mAllPackets.add(p);
       
       Link link = findLink( srcNode, dstNode );
-      if( link == null )
+      Route route = findRoute( srcNode, dstNode );
+      if( route != null )
+      {
+         route.add( p );
+      }
+      else if( link == null )
       {
          link = new Link( srcNode, dstNode );
          synchronized( mAllLinks )
@@ -223,15 +281,7 @@ public class Model
             mAllLinks.add( link );
          }
       }
-      else
-      {
-         link.incPacketNr();
-      }
-
-//      System.out.println("addIPv4Packet("+src+"->"+dst+"), got " +
-//                  mAllNodes.size() + " nodes and " +
-//                  mAllLinks.size() + " links, done.");
-      
+      link.incPacketNr();
       
       if( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 1) )
       {

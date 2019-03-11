@@ -1,8 +1,11 @@
 package netvis.model;
 
 import java.net.Inet4Address;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 
+import netvis.model.Model.ReverseIterator;
 import netvis.traceroute.TraceRouteNode;
 
 public class Route
@@ -12,6 +15,38 @@ public class Route
    Inet4Address mDstAddr;
    
    private final Vector<netvis.traceroute.TraceRouteNode> mTraceRouteNodes;
+   private final Vector<Link> mLinks;
+   public class ReverseIterator<T> implements Iterator<T>, Iterable<T> 
+   {
+      private final List<T> list;
+      private int position;
+
+      public ReverseIterator(List<T> list) {
+          this.list = list;
+          this.position = list.size() - 1;
+      }
+
+      @Override
+      public Iterator<T> iterator() {
+          return this;
+      }
+
+      @Override
+      public boolean hasNext() {
+          return position >= 0;
+      }
+
+      @Override
+      public T next() {
+          return list.get(position--);
+      }
+
+      @Override
+      public void remove() {
+          throw new UnsupportedOperationException();
+      }
+   }
+   
    
    public Route( Model m, Inet4Address src, Inet4Address dst )
    {
@@ -22,6 +57,27 @@ public class Route
       this.mTraceRouteNodes = new Vector<netvis.traceroute.TraceRouteNode>(30,30);
       TraceRouteNode trn = new TraceRouteNode(src, dst, src, 0);
       this.mTraceRouteNodes.add(trn);
+      
+      this.mLinks = new Vector<Link>(30,30);      
+   }
+   
+   public void removeLink(  Inet4Address src , Inet4Address dst )
+   {
+    
+      synchronized( mLinks )
+      {
+         for( Link l: new ReverseIterator<Link>(mLinks) )
+         {
+            if( ( l!= null) && ( l.src != null ) && ( l.dst != null ))
+            {
+               if( ( Model.equalsAddr( l.src.getAddr(), src) )
+                        && Model.equalsAddr( l.dst.getAddr(), dst ) ) 
+               {
+                  mLinks.remove( l );
+               }
+            }
+         }
+      }
    }
    
    
@@ -35,7 +91,6 @@ public class Route
                      + trn.mReplyingAddr +" @depth="+trn.mDepth );
          }
       }      
-      
    }
   
    public void addTraceRouteNode( TraceRouteNode newTrn )
@@ -122,14 +177,18 @@ public class Route
          {
             l = new Link( mMain.findNode(previousNode.mReplyingAddr), mMain.findNode(trn.mReplyingAddr)); 
             mMain.addLink( l );
+            mLinks.add(l);
          }
          l.setTimeSeenLastPacket( System.currentTimeMillis() );
+    
          
          mMain.removeLink( previousNode.getAddr(), trn.mOrigDstAddr );
+         removeLink(previousNode.getAddr(), trn.mOrigDstAddr );
          Node finalNode =  mMain.findNodeAndAdd( trn.mOrigDstAddr );
          Link finalLink = new Link(mMain.findNode(trn.mReplyingAddr), finalNode);
          finalLink.setTimeSeenLastPacket( System.currentTimeMillis() );
          mMain.addLink( finalLink );
+         mLinks.add(finalLink);
          
          // System.out.println("Route <"+mSrcAddr+", "+mDstAddr+">: link("
          //          + previousNode.mReplyingAddr+" to "+ trn.mReplyingAddr  +"@depth="+trn.mDepth+")");
@@ -145,5 +204,20 @@ public class Route
                trn.mReplyingAddr+" at depth "+ trn.mDepth  +") got "+mTraceRouteNodes.size()+" nodes.");
 
    }
+   
+   
+   public void add( Packet p )
+   {
+      synchronized( mLinks )
+      {
+         long now = System.currentTimeMillis();
+         for ( Link l : mLinks )
+         {
+            l.incPacketNr();
+            l.setTimeSeenLastPacket(now);
+         }
+      }
+   }
+   
    
 }

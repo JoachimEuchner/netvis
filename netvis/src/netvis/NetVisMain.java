@@ -123,7 +123,7 @@ public class NetVisMain
       } 
       catch (InterruptedException e)
       {
-         e.printStackTrace();
+         logger.error("sendMsg() cought: " + e);
       }
    }
    
