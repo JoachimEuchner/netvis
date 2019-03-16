@@ -172,7 +172,8 @@ public class Route
             mMain.addNode( trn );
          }
          
-         Link l = mMain.findLink(previousNode, trn);
+         // Link l = mMain.findLink(previousNode, trn);
+         Link l = mMain.findLink(previousNode.mReplyingAddr, trn.mReplyingAddr);
          if( l == null )
          {
             l = new Link( mMain.findNode(previousNode.mReplyingAddr), mMain.findNode(trn.mReplyingAddr)); 

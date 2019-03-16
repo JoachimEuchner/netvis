@@ -162,13 +162,13 @@ public class NetVisMain
             MacAddress dstMac = MacAddress.getByName("34:31:c4:33:ce:ee");
             mTraceRouter.initialize(srcAddress, srcMac, dstMac );
             
-            mTracerouteScheduler.addTargetName( "www.yahoo.com" );
-            mTracerouteScheduler.addTargetName( "blog.fefe.de" );
-            mTracerouteScheduler.addTargetName( "www.google.com" );
-            mTracerouteScheduler.addTargetName( "www.spiegel.de" );
-            mTracerouteScheduler.addTargetName( "www.taz.de" );
-            mTracerouteScheduler.addTargetName( "www.9gag.com" );
-            mTracerouteScheduler.traceNextTarget();
+//            mTracerouteScheduler.addTargetName( "www.yahoo.com" );
+//            mTracerouteScheduler.addTargetName( "blog.fefe.de" );
+//            mTracerouteScheduler.addTargetName( "www.google.com" );
+//            mTracerouteScheduler.addTargetName( "www.spiegel.de" );
+//            mTracerouteScheduler.addTargetName( "www.taz.de" );
+//            mTracerouteScheduler.addTargetName( "www.9gag.com" );
+//            mTracerouteScheduler.traceNextTarget();
          } 
          catch (UnknownHostException e)
          {

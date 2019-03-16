@@ -112,6 +112,27 @@ public class Model
    }
    
    
+   public Link findLink( Inet4Address src, Inet4Address dst )
+   {
+      Link retVal = null;
+      synchronized( mAllLinks )
+      {
+         for ( Link l : mAllLinks )
+         {
+            if( ( l!= null) && ( l.src != null ) && ( l.dst != null ))
+            {
+               if( equalsAddr ( l.src.getAddr(), src ) 
+                        && equalsAddr ( l.dst.getAddr(), dst ) )
+               {
+                  retVal = l;
+                  break;
+               }
+            }
+         }
+      }
+      return ( retVal );
+   }
+   
    
    public Link findLink( Node src, Node dst )
    {
@@ -283,18 +304,16 @@ public class Model
       }
       link.incPacketNr();
       
-      if( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 1) )
-      {
-         mMain.mTracerouteScheduler.addTargetAddress(dst);
-      }
-      else
-      {
-         mMain.mTracerouteScheduler.addTargetAddress( src );
-      }
-
-
-      
+//      if( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 1) )
+//      {
+//         mMain.mTracerouteScheduler.addTargetAddress( dst );
+//      }
+//      else
+//      {
+//         mMain.mTracerouteScheduler.addTargetAddress( src );
+//      }
    }
+   
    
    public void addNode( Node n )
    {
@@ -303,6 +322,7 @@ public class Model
          mAllNodes.add(n);
       }
    }
+   
    
    public void addLink( Link l )
    {

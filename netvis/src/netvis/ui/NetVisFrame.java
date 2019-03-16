@@ -47,7 +47,7 @@ public class NetVisFrame extends  JFrame implements FocusListener, KeyListener
       this.mNetVisPanel = new JPanel();
       this.mNetVisPanel.setLayout(new BorderLayout());
       
-      mLVComponent = new NetVisComponent( m.mNetVisModel );
+      mLVComponent = new NetVisComponent( m, m.mNetVisModel );
       this.mNetVisPanel.add( mLVComponent );
       
       this.add(mNetVisPanel, BorderLayout.CENTER);

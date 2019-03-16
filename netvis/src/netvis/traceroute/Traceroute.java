@@ -55,6 +55,11 @@ public class Traceroute
    }
    TraceRouteTimerReceiver mTimerReceiver;
   
+   public final static int TRACEROUTE_STATE_IDLE = 0;
+   public final static int TRACEROUTE_STATE_TRACING_ACTIVE = 1;
+   private int mState = TRACEROUTE_STATE_IDLE;
+   public int getState() {return mState;};
+   
    
    private static final String READ_TIMEOUT_KEY =
             Traceroute.class.getName() + ".readTimeout";
@@ -131,6 +136,8 @@ public class Traceroute
    {
       main = m;     
           
+      mState = TRACEROUTE_STATE_IDLE;
+      
       mTimerReceiver = new TraceRouteTimerReceiver();
       timer = new Timer("TraceRouteTimer", false);
       // Schedule task to start immediately and re-fire every second...
@@ -174,6 +181,7 @@ public class Traceroute
       } 
       
       logger.info("tr.initialize() done, got: nifIdx:"+nifIdx+" and nif "+nif.getName());
+      mState = TRACEROUTE_STATE_IDLE;
       // System.out.println();
    }
    
@@ -266,6 +274,7 @@ public class Traceroute
          // start new traceroute.
          logger.debug("##### tr.msgReceived() got TraceRouteMsg(): start new traceroute to "+trm.getAddr());
          setTargetAddess( trm.getAddr() );
+         mState = TRACEROUTE_STATE_TRACING_ACTIVE;
          sendICMPPackage( mTargetAddress, 1 );
       }
       else
@@ -274,11 +283,13 @@ public class Traceroute
          {
             if( !Model.equalsAddr(mTargetAddress, trm.getAddr()) )
             {
+               mState = TRACEROUTE_STATE_TRACING_ACTIVE;
                sendICMPPackage( mTargetAddress, trm.getDepth() );
             }
             else
             {
-               logger.debug("tr.msgReceived() found targetHost, this traceroute completed.-------------------");
+               logger.debug("tr.msgReceived() found targetHost, this traceroute completed.");
+               mState = TRACEROUTE_STATE_IDLE;
                main.mTracerouteScheduler.traceNextTarget();
             }
          }
@@ -301,6 +312,7 @@ public class Traceroute
          {
             // giving up on mTargetHost.
             logger.debug("tr.timeoutOccured() giving up on: "+ mTargetAddress);
+            mState = TRACEROUTE_STATE_IDLE;
             main.mTracerouteScheduler.traceNextTarget();
          }
       }

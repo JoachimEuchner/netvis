@@ -79,7 +79,28 @@ public class TracerouteScheduler
       {
          byte[] addressBytes = targetAddress.getAddress();      
          
+         
+         if( (addressBytes[0] == -64) && (addressBytes[1] == -88) && (addressBytes[2] == 1) )
+         {
+            return;
+         }
+         
+         if( (addressBytes[0] == -64) && (addressBytes[1] == -88) && (addressBytes[2] == 2) )
+         {
+            return;
+         }
+         
          if ( (addressBytes[0] == 127) && (addressBytes[1] == 0) && (addressBytes[2] == 0) )
+         {
+            return;
+         }
+         
+         if ( (addressBytes[0] == 127) && (addressBytes[1] == 0) && (addressBytes[2] == 0) )
+         {
+            return;
+         }
+         
+         if ( (addressBytes[0] == 0) && (addressBytes[1] == 0) && (addressBytes[2] == 0)  && (addressBytes[3] == 0))
          {
             return;
          }
@@ -89,6 +110,11 @@ public class TracerouteScheduler
          if (!mTargetHosts.contains( tth ))
          {   
             mTargetHosts.add(tth);
+         }
+         
+         if(( mTargetHosts.size() == 1) && ( traceroute.getState() == Traceroute.TRACEROUTE_STATE_IDLE))
+         {
+            traceNextTarget();
          }
       }
    }
@@ -163,6 +189,9 @@ public class TracerouteScheduler
    public void timeoutOccured(int id)
    {
       logger.info("trs.timeoutOccured("+id+") called.");
-      traceNextTarget();
+      if(( mTargetHosts.size() == 1) && ( traceroute.getState() == Traceroute.TRACEROUTE_STATE_IDLE))
+      {
+         traceNextTarget();
+      }
    }
 }

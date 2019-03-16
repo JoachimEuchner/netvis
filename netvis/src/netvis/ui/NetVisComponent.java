@@ -24,6 +24,7 @@ import java.util.Vector;
 
 import javax.swing.JComponent;
 
+import netvis.NetVisMain;
 import netvis.model.Model;
 import netvis.model.Node;
 import netvis.traceroute.TraceRouteNode;
@@ -72,6 +73,7 @@ public class NetVisComponent extends JComponent implements
    transient Image           offscreen;
    transient Toolkit         mToolkit;
    
+   private final NetVisMain  mMain;
    private final Model       mModel;
    
    int                       mWidth            = 300;                   // 1500;
@@ -102,9 +104,10 @@ public class NetVisComponent extends JComponent implements
    double standardCharge;
    double standardSpring;
    
-   public NetVisComponent( Model m )
+   public NetVisComponent( NetVisMain main, Model m )
    {
       System.out.println("NetVisComponent<ctor> called.");
+      mMain = main;
       mModel = m;
       addMouseListener(this);
       addKeyListener(this);
@@ -912,6 +915,16 @@ public class NetVisComponent extends JComponent implements
             if ( mSelectedNode != null )
             {
                mSelectedNode.isActive = !mSelectedNode.isActive;
+            }
+         }
+         
+         case KeyEvent.VK_T:
+         {
+            if ( mSelectedNode != null )
+            {
+               // mSelectedNode.isActive = !mSelectedNode.isActive;
+               mMain.mTracerouteScheduler.addTargetAddress(mSelectedNode.getAddr());
+               // mMain.mTracerouteScheduler.traceNextTarget();
             }
          }
       
