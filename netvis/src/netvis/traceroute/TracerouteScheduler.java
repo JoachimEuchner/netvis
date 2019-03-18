@@ -144,10 +144,11 @@ public class TracerouteScheduler
    
    public Inet4Address getNextTargetAddress()
    {
+      TracerouteTargetHost tth = null;
       Inet4Address nextAddress = null;
       if( !mTargetHosts.isEmpty() )
       {
-         TracerouteTargetHost tth = mTargetHosts.firstElement();
+         tth = mTargetHosts.firstElement();
          nextAddress = tth.targetAddress;
          mTargetHosts.remove(0);
       }
@@ -169,7 +170,7 @@ public class TracerouteScheduler
       logger.debug("trs.getNextTargetAddress(): "+
                nextAddress+", "+ mTargetHosts.size() +" targets");
       
-      
+      mTargetHosts.add(tth);
       return ( nextAddress );
    }
    

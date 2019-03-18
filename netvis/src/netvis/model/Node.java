@@ -3,9 +3,13 @@ package netvis.model;
 import java.net.Inet4Address;
 
 import org.pcap4j.packet.IpV4Packet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Node
 {
+   private static final Logger logger = LoggerFactory.getLogger(Node.class);
+   
    private Inet4Address addr;
    public byte[] addressBytes;
    
@@ -83,7 +87,7 @@ public class Node
       
       timeOfLastSeenPacket = 0;
       
-      // System.out.println("Node.<ctor> done: " + mDisplayName);
+      // logger.debug("Node.<ctor> done: " + mDisplayName);
    }
    
    public Inet4Address getAddr()
@@ -147,6 +151,7 @@ public class Node
    private static String getHostName(final String ip)
    {
       String retVal = null;
+      
       final String[] bytes = ip.split("\\.");
       if (bytes.length == 4)
       {
@@ -167,7 +172,7 @@ public class Node
                for (final java.util.Enumeration<?> vals = attr.getAll(); vals.hasMoreElements();)
                {
                   String value = vals.nextElement().toString();
-                  // System.out.println(attrId + ": " + value);
+                  // logger.debug(attrId + ": " + value);
 
                   if ("PTR".equals(attrId))
                   {
@@ -186,7 +191,7 @@ public class Node
          catch (final javax.naming.NamingException e)
          {
             // No reverse DNS that we could find, try with InetAddress
-            System.out.print(""); // NO-OP
+            logger.debug("cought: "+e); // NO-OP
          }
       }
 
@@ -202,6 +207,8 @@ public class Node
          }
       }
 
+      logger.debug("getHostNameFromIp("+ip+") got: "+retVal);
+      
       return retVal;
    }
 }

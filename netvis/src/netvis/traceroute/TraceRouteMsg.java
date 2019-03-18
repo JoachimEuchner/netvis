@@ -4,12 +4,16 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import netvis.NetVisMsg;
 import netvis.NetVisMsgReceiver;
 
 public class TraceRouteMsg
    extends NetVisMsg
 {
+   private static final Logger logger = LoggerFactory.getLogger(TraceRouteMsg.class);
    private Inet4Address ipV4Addr;
    private int receivedDepth;
    
@@ -37,7 +41,7 @@ public class TraceRouteMsg
       } 
       catch (UnknownHostException e1) 
       {
-         System.out.println("TraceRouteMsg<ctor>: " + targetName + " got "+e1);
+         logger.debug("TraceRouteMsg<ctor>: " + targetName + " got "+e1);
       }
       
       receivedDepth = -1;

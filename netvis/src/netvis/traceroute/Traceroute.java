@@ -104,7 +104,7 @@ public class Traceroute
    boolean targetAddressLocked = false;
    public void setTargetAddess( Inet4Address t )
    {
-      // System.out.println("tr.setTarget: "+t+" called, locked: "+targetAddressLocked);
+      // logger.debug("tr.setTarget: "+t+" called, locked: "+targetAddressLocked);
       if( !targetAddressLocked )
       {
          byte[] srcAddressBytes = t.getAddress();
@@ -124,7 +124,7 @@ public class Traceroute
             }
          }
       }
-      // System.out.println("tr.setTarget: "+t+", now: "+mTargetAddress);
+      // logger.debug("tr.setTarget: "+t+", now: "+mTargetAddress);
    }
    public Inet4Address getTargetAddress()
    {
@@ -182,7 +182,7 @@ public class Traceroute
       
       logger.info("tr.initialize() done, got: nifIdx:"+nifIdx+" and nif "+nif.getName());
       mState = TRACEROUTE_STATE_IDLE;
-      // System.out.println();
+      // logger.debug();
    }
    
    

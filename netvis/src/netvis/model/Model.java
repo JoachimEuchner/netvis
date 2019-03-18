@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import netvis.NetVisMain;
-import netvis.traceroute.Traceroute;
 
 public class Model
 {
@@ -248,8 +247,7 @@ public class Model
       Inet4Address src = ipv4p.getHeader().getSrcAddr();
       Inet4Address dst = ipv4p.getHeader().getDstAddr();  
       
-      byte[] srcAddressBytes = src.getAddress();
-      byte[] dstAddressBytes = dst.getAddress();
+    
 
       long now = System.currentTimeMillis();
       
@@ -303,15 +301,17 @@ public class Model
          }
       }
       link.incPacketNr();
-      
-//      if( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 1) )
-//      {
-//         mMain.mTracerouteScheduler.addTargetAddress( dst );
-//      }
-//      else
-//      {
-//         mMain.mTracerouteScheduler.addTargetAddress( src );
-//      }
+
+      //      byte[] srcAddressBytes = src.getAddress();
+      //      byte[] dstAddressBytes = dst.getAddress();
+      //      if( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 1) )
+      //      {
+      //         mMain.mTracerouteScheduler.addTargetAddress( dst );
+      //      }
+      //      else
+      //      {
+      //         mMain.mTracerouteScheduler.addTargetAddress( src );
+      //      }
    }
    
    
@@ -328,7 +328,7 @@ public class Model
    {
       synchronized( mAllLinks )
       {
-         // System.out.println("addLink("+l.src.getAddr()+"->"+l.dst.getAddr()+")");
+         // logger.debug("addLink("+l.src.getAddr()+"->"+l.dst.getAddr()+")");
          if(( l.src != null ) && ( l.dst != null ))
          {
             mAllLinks.add(l);
@@ -385,7 +385,7 @@ public class Model
       {
          for ( Route r : mRoutes )
          {
-            // System.out.println("trn:<"+ trn.mSrcAddr + "->" +trn.mOrigDstAddr+"> ?= <"+ r.mSrcAddr+ "->" + r.mDstAddr +">");
+            // logger.debug("trn:<"+ trn.mSrcAddr + "->" +trn.mOrigDstAddr+"> ?= <"+ r.mSrcAddr+ "->" + r.mDstAddr +">");
             
             if( equalsAddr ( trn.mSrcAddr, r.mSrcAddr ) 
              && equalsAddr ( trn.mOrigDstAddr, r.mDstAddr ) )
@@ -396,7 +396,7 @@ public class Model
          }
       }
       
-      // System.out.println("trn:<"+ trn.mSrcAddr + "->" +trn.mOrigDstAddr+"> found "+retVal+" as route");
+      // logger.debug("trn:<"+ trn.mSrcAddr + "->" +trn.mOrigDstAddr+"> found "+retVal+" as route");
       
       return ( retVal );
    }
@@ -409,7 +409,7 @@ public class Model
    
       public void run()
       {
-         System.out.println("CondoCleaner.run() called");
+         logger.debug("CondoCleaner.run() called");
          boolean watching = true;
          
          while ( watching )

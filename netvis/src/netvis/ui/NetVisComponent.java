@@ -24,6 +24,9 @@ import java.util.Vector;
 
 import javax.swing.JComponent;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import netvis.NetVisMain;
 import netvis.model.Model;
 import netvis.model.Node;
@@ -33,6 +36,8 @@ public class NetVisComponent extends JComponent implements
    MouseListener, MouseWheelListener, MouseMotionListener, KeyListener,
    ActionListener
 {
+   private static final Logger logger = LoggerFactory.getLogger(NetVisComponent.class);
+
    
    public class ReverseIterator<T> implements Iterator<T>, Iterable<T> 
    {
@@ -70,26 +75,26 @@ public class NetVisComponent extends JComponent implements
     */
    private static final long serialVersionUID = -5194156817975062007L;
 
-   transient Image           offscreen;
-   transient Toolkit         mToolkit;
+   transient Image                     offscreen;
+   transient Toolkit                   mToolkit;
    
-   private final NetVisMain  mMain;
-   private final Model       mModel;
+   private final NetVisMain            mMain;
+   private final Model                 mModel;
    
-   int                       mWidth            = 300;                   // 1500;
-   int                       mHeight           = 200;                    // 1000;
+   int                                 mWidth            = 300;                   // 1500;
+   int                                 mHeight           = 200;                    // 1000;
 
    public Font                         myPlain10Font;
    public int                          mLineHeight;
   
-   public transient BasicStroke                  mStroke8;          
-   public transient BasicStroke                  mStroke7;
-   public transient BasicStroke                  mStroke6;
-   public transient BasicStroke                  mStroke5;
-   public transient BasicStroke                  mStroke4;
-   public transient BasicStroke                  mStroke3;
-   public transient BasicStroke                  mStroke2;
-   public transient BasicStroke                  mStroke1;
+   public transient BasicStroke        mStroke8;          
+   public transient BasicStroke        mStroke7;
+   public transient BasicStroke        mStroke6;
+   public transient BasicStroke        mStroke5;
+   public transient BasicStroke        mStroke4;
+   public transient BasicStroke        mStroke3;
+   public transient BasicStroke        mStroke2;
+   public transient BasicStroke        mStroke1;
    
    
    private Node mSelectedNode = null;
@@ -106,7 +111,7 @@ public class NetVisComponent extends JComponent implements
    
    public NetVisComponent( NetVisMain main, Model m )
    {
-      System.out.println("NetVisComponent<ctor> called.");
+      logger.debug("NetVisComponent<ctor> called.");
       mMain = main;
       mModel = m;
       addMouseListener(this);
@@ -232,7 +237,7 @@ public class NetVisComponent extends JComponent implements
       g2.setFont(this.myPlain10Font);
       String s = "g2.paint(): " + (paintend - paintstart) + " ms/"+paintCounter; //$NON-NLS-1$ //$NON-NLS-2$
       g2.drawString(s, this.mWidth - 200, this.mHeight - 8);
-      // System.out.println("paint() done.");
+      // logger.debug("paint() done.");
    }
    
    private class MyLayouter implements Runnable
@@ -246,7 +251,7 @@ public class NetVisComponent extends JComponent implements
       
       public void run()
       {
-         System.out.println("MyLayouter.run() called.");
+         logger.debug("MyLayouter.run() called.");
          
          try
          {
@@ -256,7 +261,7 @@ public class NetVisComponent extends JComponent implements
          {
             //...
          }
-         System.out.println("MyLayouter.run() start layouting, "+mModel);
+         logger.debug("MyLayouter.run() start layouting, "+mModel);
        
          
          while ( mHost.doLayouting )
@@ -274,14 +279,14 @@ public class NetVisComponent extends JComponent implements
             {
                if( mModel.getAllNodes() != null  )
                {
-                  // System.out.println("MyLayouter.run() start layouting "+mModel.getAllNodes().size()+" nodes");
+                  // logger.debug("MyLayouter.run() start layouting "+mModel.getAllNodes().size()+" nodes");
                                     
                   synchronized( mModel.getAllNodes() )
                   {
 
                      Vector<Node> mAllNodes = mModel.getAllNodes();
 
-                     // System.out.println("...MyLayouter.run() got Mutex,  layouting "+mAllNodes.size()+" nodes");
+                     // logger.debug("...MyLayouter.run() got Mutex,  layouting "+mAllNodes.size()+" nodes");
 
                      // new ReverseIterator<String>(mAllNodes)
                      // for (Node n : mAllNodes )
@@ -330,7 +335,7 @@ public class NetVisComponent extends JComponent implements
                               }
                            }
 
-                           // System.out.println("fx="+n.fx+" fy="+n.fy);
+                           // logger.debug("fx="+n.fx+" fy="+n.fy);
 
 
                            double spring = standardSpring;
@@ -415,7 +420,7 @@ public class NetVisComponent extends JComponent implements
                               n.y = (mHeight - 10);
                            }
 
-                           // System.out.println(" -----> fx="+n.fx+" fy="+n.fy+", vx="+n.vx+" "+"vy="+n.vy+", x="+n.x+" "+n.y);
+                           // logger.debug(" -----> fx="+n.fx+" fy="+n.fy+", vx="+n.vx+" "+"vy="+n.vy+", x="+n.x+" "+n.y);
                         }
                      }
                   }
@@ -623,7 +628,7 @@ public class NetVisComponent extends JComponent implements
                      String[] lines = s4.split("\\r?\\n", -1);
                      int nr = 4;
                      for(String line : lines) {
-                         // System.out.printf("\tLine %02d \"%s\"%n", nr++, line);
+                         // logger.debug("\tLine %02d \"%s\"%n", nr++, line);
                         
                         g2.drawString(line, n.mx, n.my+ nr*this.mLineHeight - 1);
                         nr++;
@@ -717,7 +722,7 @@ public class NetVisComponent extends JComponent implements
          }
 
          float hue = (float) 0.0;
-         double fsFract =  Math.exp( -(double)millis / 10000.0 );
+         double fsFract =  Math.exp( -(double)millis / 100000.0 );
          hue = (float) ( 0.6666 - fsFract * 2.0 / 3.0);   // 0.000(red) - 0.33333(green);
          double b  = fsFract * 0.5 +0.5;
 
@@ -893,7 +898,7 @@ public class NetVisComponent extends JComponent implements
       }
       
       
-      System.out.println("Charge: "+standardCharge + ", Spring: "+standardSpring);
+      logger.debug("Charge: "+standardCharge + ", Spring: "+standardSpring);
 
    }
 
@@ -954,7 +959,7 @@ public class NetVisComponent extends JComponent implements
          int x = arg0.getX();
          int y = arg0.getY();
          
-         // System.out.println("dragged to "+x+", "+y+" node="+mDraggingNode.mDisplayName);
+         // logger.debug("dragged to "+x+", "+y+" node="+mDraggingNode.mDisplayName);
          this.mDraggingNode.mx = x - mDraggingNodeDx;
          this.mDraggingNode.my = y - mDraggingNodeDy;
          

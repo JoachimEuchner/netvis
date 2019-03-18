@@ -12,13 +12,18 @@ import org.pcap4j.packet.IcmpV4TimeExceededPacket;
 import org.pcap4j.packet.IpV4Packet;
 import org.pcap4j.packet.LinuxSllPacket;
 import org.pcap4j.packet.Packet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import netvis.model.Model;
 import netvis.traceroute.TraceRouteMsg;
 import netvis.traceroute.TraceRouteNode;
 
+
 public class NetVisPackageListener implements PacketListener
 { 
+   private static final Logger logger = LoggerFactory.getLogger(NetVisPackageListener.class);
+
    
    private NetVisMain mMain;
    private Model mModel;
@@ -39,12 +44,12 @@ public class NetVisPackageListener implements PacketListener
    {
       counter++;
       timeOfLastPackage = System.currentTimeMillis();
-      System.out.print(".");
+      // logger.debug.print(".");
       
-      // System.out.println("got Packet @"+mPcapHandle.getTimestamp());
+      // logger.debug("got Packet @"+mPcapHandle.getTimestamp());
 
       // String s = packet.toString();
-      // System.out.println("received [nr.: "+counter+"]");
+      // logger.debug("received [nr.: "+counter+"]");
 
       if( true )
       {
@@ -53,7 +58,7 @@ public class NetVisPackageListener implements PacketListener
          {
             // Inet4Address destAddr = ipv4p.getHeader().getDstAddr();
 
-//            System.out.println("received: [nr.: " +counter +"]----> IPV4: "+ 
+//            logger.debug("received: [nr.: " +counter +"]----> IPV4: "+ 
 //                     ipv4p.getHeader().getSrcAddr() + " --> " +
 //                     ipv4p.getHeader().getDstAddr() + ": len " +
 //                     ipv4p.length());
@@ -65,29 +70,34 @@ public class NetVisPackageListener implements PacketListener
                // tarceroute reply.
                
                IcmpV4TimeExceededPacket icmpTEp = packet.get(IcmpV4TimeExceededPacket.class);
-               // System.out.println("received [nr.: " +counter +"] : "+packet);
-               // System.out.println("received [nr.: " +counter +"] TTLEx: "+icmpTEp);
+               // logger.debug("received [nr.: " +counter +"] : "+packet);
+               // logger.debug("received [nr.: " +counter +"] TTLEx: "+icmpTEp);
                // int depth = icmpTEp.get(IpV4Packet.class).getHeader().getTtl();
                // int depth  = icmpTEp.get(IpV4Packet.class).getPayload().getRawData()[0];
                Inet4Address origSrcAddr = (icmpTEp.get(IpV4Packet.class)).getHeader().getSrcAddr();
                Inet4Address origDstAddr = (icmpTEp.get(IpV4Packet.class)).getHeader().getDstAddr();
                int depth  = -1;
+               
                try
                {
-                  depth = icmpTEp.get(IcmpV4EchoPacket.class).getPayload().getRawData()[0];
+                  if( ( icmpTEp.get(IcmpV4EchoPacket.class).getPayload() != null ) && 
+                      ( icmpTEp.get(IcmpV4EchoPacket.class).getPayload().getRawData() != null ) )
+                  {
+                     depth = icmpTEp.get(IcmpV4EchoPacket.class).getPayload().getRawData()[0];
+                  }
+                  else
+                  {
+                     depth = mMain.mTraceRouter.getLastSentDepth();
+                     logger.debug("received [nr.: " +counter +"]: no data[] in IcmpV4EchoPacket from "
+                              +ipv4p.getHeader().getSrcAddr()+" using "+depth);
+                  }
                }
                catch (Exception e )
                {
-                  // System.out.println("received [nr.: " +counter +"] : cought: "+e);
-                  System.out.println("received [nr.: " +counter +"]: no data[] in IcmpV4EchoPacket from "+ipv4p.getHeader().getSrcAddr());
+                  logger.error("received [nr.: " +counter +"] : cought: "+e);
                }
-                              
-               if( depth == -1 )
-               {
-                  depth = mMain.mTraceRouter.getLastSentDepth();
-               }
-               
-               System.out.println("received: [nr.: " +counter +"] src="+origSrcAddr +" reply from " + 
+                                             
+               logger.debug("received: [nr.: " +counter +"] src="+origSrcAddr +" reply from " + 
                         ipv4p.getHeader().getSrcAddr()  +", at depth: " + depth +", sent to "+origDstAddr);
                
                TraceRouteMsg trm = new TraceRouteMsg(mMain.mTraceRouter, ipv4p.getHeader().getSrcAddr(), depth+1);
@@ -105,7 +115,7 @@ public class NetVisPackageListener implements PacketListener
                                                      mMain.mTraceRouter.getLastSentDepth()+1 );
                mMain.sendMsg ( trm );
                
-               System.out.println("received: [nr.: " +counter +"] IcmpV4CommonPacket reply from " + 
+               logger.debug("received: [nr.: " +counter +"] IcmpV4CommonPacket reply from " + 
                         ipv4p.getHeader().getSrcAddr());
                
             }
@@ -127,7 +137,7 @@ public class NetVisPackageListener implements PacketListener
 
                if( (dstAddressBytes[0] == -64) && (dstAddressBytes[1] == -88) && (dstAddressBytes[2] == 1) && (dstAddressBytes[3] == 44))
                {
-                  // System.out.println("received [nr.: " +counter +"] IPv4: "+packet);
+                  // logger.debug("received [nr.: " +counter +"] IPv4: "+packet);
                }
                
                if( accept )
@@ -145,7 +155,7 @@ public class NetVisPackageListener implements PacketListener
             if( arpp != null )
             {                               
                // dunno
-//               System.out.println("[nr.:" +counter +"]----> ARP: "+ 
+//               logger.debug("[nr.:" +counter +"]----> ARP: "+ 
 //                        arpp.getHeader().getSrcProtocolAddr() + " --> " +
 //                        arpp.getHeader().getDstProtocolAddr() + ": len" + 
 //                        arpp.length());
@@ -166,9 +176,9 @@ public class NetVisPackageListener implements PacketListener
                   }
                   else
                   {
-                     System.out.println("[ "+counter +"] unsorted package:");
+                     logger.debug("[ "+counter +"] unsorted package:");
                      String s = packet.toString();
-                     System.out.println(s);
+                     logger.debug(s);
                   }
                }
             }
@@ -176,7 +186,7 @@ public class NetVisPackageListener implements PacketListener
       }
 
       mModel.mMain.mNetVisFrame.getNetVisComponent().repaint();
-      // System.out.println("gotPacket() done, packets="+counter);
+      // logger.debug("gotPacket() done, packets="+counter);
    }
    
    

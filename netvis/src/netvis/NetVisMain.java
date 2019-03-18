@@ -89,9 +89,9 @@ public class NetVisMain
          {
             while ( true ) 
             { 
-               // System.out.println("MainCallable: going to call take()");
+               // logger.debug("MainCallable: going to call take()");
                NetVisMsg msg = (NetVisMsg) mQueue.take();
-               // System.out.println("MainCallable: got "+msg);
+               // logger.debug("MainCallable: got "+msg);
                NetVisMsgReceiver receiver = msg.getMsgReceiver();
                try
                {
@@ -99,13 +99,13 @@ public class NetVisMain
                }
                catch( Exception e)
                {
-                  System.out.println("MainCallable: cought: "+e);
+                  logger.error("MainCallable: cought: "+e);
                }
             }
          } 
          catch (InterruptedException e) 
          {
-            System.out.println("MainCallable: exiting call().");
+            logger.error("MainCallable: exiting call().");
             // Allow our thread to be interrupted
             Thread.currentThread().interrupt();
             return ( null ); // this will never run, but the compiler needs it
@@ -117,9 +117,9 @@ public class NetVisMain
       BlockingQueue<NetVisMsg> theQueue = this.getQueue();
       try
       {
-         // System.out.println("MainCallable: going to call theQueue.put(msg)");
+         // logger.debug("MainCallable: going to call theQueue.put(msg)");
          theQueue.put(msg);
-         // System.out.println("MainCallable: returned from theQueue.put(msg)");
+         // logger.debug("MainCallable: returned from theQueue.put(msg)");
       } 
       catch (InterruptedException e)
       {
@@ -132,7 +132,6 @@ public class NetVisMain
    private NetVisMain(String[] args) 
    {
       logger.info("info:NetVisMain.<ctor>() called.");
-      // System.out.println("System.out.println:NetVisMain.<ctor>() called.");
       
       mNetVisModel = new Model( this );
       mNetVisFrame = new NetVisFrame( this );
@@ -140,7 +139,7 @@ public class NetVisMain
 
       this.mQueue = new ArrayBlockingQueue<>(100);
       ExecutorService threadPool = Executors.newFixedThreadPool(1); 
-      Future<NetVisMsg> sum = threadPool.submit(new MainCallable()); 
+      /*Future<NetVisMsg> sum =*/ threadPool.submit(new MainCallable()); 
       
       mTraceRouter = new Traceroute( this );
       mTracerouteScheduler = new TracerouteScheduler( this, mTraceRouter );
@@ -161,14 +160,14 @@ public class NetVisMain
             MacAddress srcMac = MacAddress.getByName("00:e0:4c:69:13:c7");
             MacAddress dstMac = MacAddress.getByName("34:31:c4:33:ce:ee");
             mTraceRouter.initialize(srcAddress, srcMac, dstMac );
-            
-//            mTracerouteScheduler.addTargetName( "www.yahoo.com" );
-//            mTracerouteScheduler.addTargetName( "blog.fefe.de" );
-//            mTracerouteScheduler.addTargetName( "www.google.com" );
-//            mTracerouteScheduler.addTargetName( "www.spiegel.de" );
-//            mTracerouteScheduler.addTargetName( "www.taz.de" );
-//            mTracerouteScheduler.addTargetName( "www.9gag.com" );
-//            mTracerouteScheduler.traceNextTarget();
+
+            //            mTracerouteScheduler.addTargetName( "www.yahoo.com" );
+            //            mTracerouteScheduler.addTargetName( "blog.fefe.de" );
+            //            mTracerouteScheduler.addTargetName( "www.google.com" );
+            //            mTracerouteScheduler.addTargetName( "www.spiegel.de" );
+            //            mTracerouteScheduler.addTargetName( "www.taz.de" );
+            //            mTracerouteScheduler.addTargetName( "www.9gag.com" );
+            //            mTracerouteScheduler.traceNextTarget();
          } 
          catch (UnknownHostException e)
          {
@@ -205,7 +204,7 @@ public class NetVisMain
       
       public void run()
       {
-         System.out.println("FileReader.run() called");
+         logger.debug("FileReader.run() called");
          
          try 
          {
@@ -235,7 +234,7 @@ public class NetVisMain
                } 
                catch (EOFException e) 
                {
-                  System.out.println("EOF");
+                  logger.debug("EOF");
                   break;
                } 
                catch (NotOpenException e)
@@ -245,7 +244,7 @@ public class NetVisMain
                }
             }
          } catch (PcapNativeException e) {
-            System.out.println("cought "+e);
+            logger.error("cought "+e);
          }
          
       }
@@ -256,7 +255,7 @@ public class NetVisMain
    {
       public void run()
       {
-         System.out.println("Watchdog.run() called");
+         logger.debug("Watchdog.run() called");
          boolean watching = true;
          
          while ( watching )
@@ -268,13 +267,13 @@ public class NetVisMain
                long now = System.currentTimeMillis();
                if ( ( nvpl.timeOfLastPackage + 5000 ) < now )
                {
-                  System.out.println("Watchdog.run() last package["+ nvpl.counter +"] received " 
+                  logger.debug("Watchdog.run() last package["+ nvpl.counter +"] received " 
                            + (now - nvpl.timeOfLastPackage) + " ms ago..");
                      
                   StackTraceElement[] stackTrace = mListeningStartThread.getStackTrace();
-                  System.out.println("getStackTrace()");
+                  logger.debug("getStackTrace()");
                   for (int i = 1; i < stackTrace.length; i++)
-                      System.out.println("\tat " + stackTrace[i]);
+                      logger.debug("\tat " + stackTrace[i]);
                
                   mListeningStartThread.interrupt();
                }
@@ -295,12 +294,12 @@ public class NetVisMain
    
       public void run()
       {
-         System.out.println("MyListeningStarter.run() called");
+         logger.debug("MyListeningStarter.run() called");
          
          boolean keepReentring = true;
          while( keepReentring )
          {
-            System.out.println("startListening to " + COUNT +" packages.");
+            logger.debug("startListening to " + COUNT +" packages.");
 
             List<PcapNetworkInterface> allDevs = null;
             try 
@@ -315,7 +314,7 @@ public class NetVisMain
             // int nifIdx = 0;
             int nifIdx = 2;
             nif = allDevs.get(nifIdx);
-            System.out.println("MyListeningStarter.run(): nifIdx:"+nifIdx+", got nif "+nif.getName());
+            logger.debug("MyListeningStarter.run(): nifIdx:"+nifIdx+", got nif "+nif.getName());
 
             try
             {
@@ -331,7 +330,7 @@ public class NetVisMain
                noe.printStackTrace();
             }
 
-            System.out.println("MyListeningStarter.run(): nifIdx:"+nifIdx+", start  pcapHandle.loop()");
+            logger.debug("MyListeningStarter.run(): nifIdx:"+nifIdx+", start  pcapHandle.loop()");
             
             try
             {
@@ -356,7 +355,7 @@ public class NetVisMain
             pcapHandle.close();      
          }
          
-         System.out.println("startListening() done.");
+         logger.debug("startListening() done.");
       }
    }
    
