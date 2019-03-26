@@ -148,7 +148,7 @@ public class Route
             if( previousNode != null )
             {
                logger.trace("Route <{}, {}>: found {} @depth={} in {} trns.",
-                        mSrcAddr, mDstAddr, previousNode, searchDepth, mTraceRouteNodes.size());
+                        mSrcAddr, mDstAddr, previousNode.getReplyingAddr(), searchDepth, mTraceRouteNodes.size());
             }
             searchDepth--;
          }
@@ -158,7 +158,7 @@ public class Route
       {
          
          logger.debug("Route <{}, {}>: found {} @depth={} in {} trns.",
-                  mSrcAddr, mDstAddr, previousNode, previousNode.getDepth(), mTraceRouteNodes.size());
+                  mSrcAddr, mDstAddr, previousNode.getReplyingAddr(), previousNode.getDepth(), mTraceRouteNodes.size());
         
 
          if ( mMain.findNode(previousNode.getReplyingAddr()) == null )

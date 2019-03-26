@@ -169,7 +169,6 @@ public class NetVisMain
          {
             logger.error( "cought: {}.", e);
          }
-       
          
          Watchdog wd = new Watchdog();
          Thread watchdogThread = new Thread( wd );
@@ -229,11 +228,13 @@ public class NetVisMain
                } 
                catch (NotOpenException e)
                {
-                  logger.error("cought {}.", e);
+                  logger.error("cought not open: {}.", e);
                }
             }
-         } catch (PcapNativeException e) {
-            logger.error("cought {}.", e);
+         } 
+         catch (PcapNativeException e) 
+         {
+            logger.error("cought native: {}.", e);
          }
          
       }

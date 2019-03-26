@@ -27,9 +27,7 @@ public class Node
    public IpV4Packet getLastSeenIpv4p() { return lastSeenIpv4p; };
    
    protected String mDisplayName;
-   public String getDisplayName() {return mDisplayName;}
-   // private int mDisplayNameXoffset;
-   
+   public String getDisplayName() {return mDisplayName;}   
    
    public static final int TYPE_ENDPOINT = 1;
    public static final int TYPE_ROUTEPOINT = 2; 
@@ -52,7 +50,10 @@ public class Node
    public int getHeight() { return mHeight; }
    public void setHeight( int height ) { mHeight = height; }
    
-   public boolean mbIsInitialLayouted;
+   private boolean mbIsInitialLayouted;
+   public boolean isInitialLayouted() { return mbIsInitialLayouted; }
+   public void setInitialLayouted( boolean b ) { mbIsInitialLayouted = b; }
+   
    private boolean mbCanFlow;
    public boolean canFlow() { return mbCanFlow; }
    public void setCanFlow(Boolean s) { mbCanFlow = s; }
@@ -120,7 +121,7 @@ public class Node
       
       timeOfLastSeenPacket = 0;
       
-      logger.debug("Node.<ctor> done: {}'", mDisplayName);
+      logger.debug("Node.<ctor> done: {} {}", mDisplayName, mAddr);
    }
    
    public Inet4Address getAddr()
@@ -219,7 +220,7 @@ public class Node
          catch (final javax.naming.NamingException e)
          {
             // No reverse DNS that we could find, try with InetAddress
-            logger.debug("cought: {}",e); // NO-OP
+            logger.trace("cought NamingException: {}", e); // NO-OP
          }
       }
 
@@ -231,11 +232,12 @@ public class Node
          }
          catch (final java.net.UnknownHostException e1)
          {
+            logger.trace("cought UnknownHostException: {}", e1); // NO-OP
             retVal = ip;
          }
       }
 
-      logger.debug("getHostNameFromIp({}) got: {}", ip, retVal);
+      logger.trace("getHostNameFromIp({}) got: {}", ip, retVal);
       
       return retVal;
    }

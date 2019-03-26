@@ -436,7 +436,7 @@ public class NetVisComponent extends JComponent implements
          {
             for (Node n : allNodes )
             {
-               if( !n.mbIsInitialLayouted ) 
+               if( !n.isInitialLayouted() ) 
                {
                   double angle = 2* Math.PI / nrOfNodesToLayout * i;
 
@@ -447,7 +447,7 @@ public class NetVisComponent extends JComponent implements
                   n.sety( n.getMy() );
                }
                i += 1.0;
-               n.mbIsInitialLayouted = true;
+               n.setInitialLayouted( true );
             }
          }
       }
@@ -1012,8 +1012,8 @@ public class NetVisComponent extends JComponent implements
          {
             mDraggingNode = n;
             mDraggingNodeDx = ev.getX() - n.getMx();
-            mDraggingNodeDy = ev.getY() - n.getMy();   // 0...11
-            n.mbIsInitialLayouted = true; 
+            mDraggingNodeDy = ev.getY() - n.getMy();   // 0...mHeight
+            n.setInitialLayouted( true ); 
          }
       }
    }

@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import netvis.NetVisMain;
+import netvis.traceroute.TraceRouteNode;
 
 public class Model
 {
@@ -299,17 +300,6 @@ public class Model
          }
       }
       link.incPacketNr();
-
-      //      byte[] srcAddressBytes = src.getAddress();
-      //      byte[] dstAddressBytes = dst.getAddress();
-      //      if( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 1) )
-      //      {
-      //         mMain.mTracerouteScheduler.addTargetAddress( dst );
-      //      }
-      //      else
-      //      {
-      //         mMain.mTracerouteScheduler.addTargetAddress( src );
-      //      }
    }
    
    
@@ -357,35 +347,50 @@ public class Model
    }
    
    
-   public void addTraceRouteNode( netvis.traceroute.TraceRouteNode trn )
+   public void addTraceRouteNode( Inet4Address srcAddr, Inet4Address origDstAddr, Inet4Address replyingAddr, int depth )
    {
-      this.mTraceRouteNodes.add( trn );
+      TraceRouteNode trn = null;
+      synchronized( mTraceRouteNodes )
+      {
+         for ( TraceRouteNode n : mTraceRouteNodes )
+         {
+            if ( equalsAddr ( n.getAddr(), replyingAddr ) )
+            {
+               trn = n;
+               break;
+            }
+         }
+      }
+      if( trn == null )
+      {
+         trn = new TraceRouteNode( srcAddr, origDstAddr, replyingAddr, depth);
+         this.mTraceRouteNodes.add( trn );
+      }
       
-      Route r = findRouteForTraceRouteNode( trn );
-      
+      Route r = findRouteForTraceRouteNode( srcAddr, origDstAddr );
       if( r != null )
       {
          r.addTraceRouteNode(trn);
       }
       else
       {
-         r = new Route( this, trn.getSrc(),  trn.getDst() );
+         r = new Route( this, srcAddr,  origDstAddr );
          mRoutes.add(r);
          r.addTraceRouteNode(trn);
       }
    }
    
-   private Route findRouteForTraceRouteNode( netvis.traceroute.TraceRouteNode trn )
+   private Route findRouteForTraceRouteNode( Inet4Address src, Inet4Address dst )
    {
       Route retVal = null;
       synchronized( mRoutes )
       {
          for ( Route r : mRoutes )
          {
-            logger.trace("trn:<{}->{}> ?= <{}->{}>", trn.getSrc(), trn.getDst(), r.mSrcAddr, r.mDstAddr);
+            logger.trace("findRouteForTraceRouteNode:<{}->{}> ?= <{}->{}>", src, dst, r.mSrcAddr, r.mDstAddr);
             
-            if( equalsAddr ( trn.getSrc(), r.mSrcAddr ) 
-                && equalsAddr ( trn.getDst(), r.mDstAddr ) )
+            if( equalsAddr ( src, r.mSrcAddr ) 
+                && equalsAddr ( dst, r.mDstAddr ) )
             {
                retVal = r;
                break;
@@ -393,7 +398,7 @@ public class Model
          }
       }
       
-      logger.trace("trn:<{}->{}> found {} as route", trn.getSrc(), trn.getDst(), retVal);
+      logger.trace("trn:<{}->{}> found {} as route", src, dst, retVal);
       
       return ( retVal );
    }
