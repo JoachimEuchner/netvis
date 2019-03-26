@@ -84,7 +84,6 @@ public class Node
    public Node( Inet4Address addr )
    {
       mDisplayName = "";
-      // mDisplayNameXoffset = 0;
       mbIsActive = true;
       mLoD = 1;
 
@@ -121,7 +120,7 @@ public class Node
       
       timeOfLastSeenPacket = 0;
       
-      logger.debug("Node.<ctor> done: {0}'", mDisplayName);
+      logger.debug("Node.<ctor> done: {}'", mDisplayName);
    }
    
    public Inet4Address getAddr()
@@ -220,7 +219,7 @@ public class Node
          catch (final javax.naming.NamingException e)
          {
             // No reverse DNS that we could find, try with InetAddress
-            logger.debug("cought: {0}",e); // NO-OP
+            logger.debug("cought: {}",e); // NO-OP
          }
       }
 
@@ -236,7 +235,7 @@ public class Node
          }
       }
 
-      logger.debug("getHostNameFromIp("+ip+") got: "+retVal);
+      logger.debug("getHostNameFromIp({}) got: {}", ip, retVal);
       
       return retVal;
    }

@@ -49,7 +49,7 @@ public class Traceroute
          }
          catch ( Exception e )
          {
-            logger.warn("TraceRouteTimerReceiver.run(): cought: {0}", e);
+            logger.warn("TraceRouteTimerReceiver.run(): cought: {}", e);
          }
       }
    }
@@ -104,7 +104,7 @@ public class Traceroute
    boolean targetAddressLocked = false;
    public void setTargetAddess( Inet4Address t )
    {
-      // logger.debug("tr.setTarget: "+t+" called, locked: "+targetAddressLocked);
+      logger.trace("tr.setTarget: {} called, locked: {}", t, targetAddressLocked);
       if( !targetAddressLocked )
       {
          byte[] srcAddressBytes = t.getAddress();
@@ -117,15 +117,16 @@ public class Traceroute
                {
                   if ( !Model.equalsAddr(t, mTargetAddress))
                   {
-                     logger.debug("tr.setTarget: "+t);
+                     logger.debug("tr.setTarget: {}", t);
                   }
                   mTargetAddress = t;
                }
             }
          }
       }
-      // logger.debug("tr.setTarget: "+t+", now: "+mTargetAddress);
+      logger.trace("tr.setTarget({}), now: {}", t, mTargetAddress);
    }
+   
    public Inet4Address getTargetAddress()
    {
       return mTargetAddress;

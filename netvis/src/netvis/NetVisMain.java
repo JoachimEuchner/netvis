@@ -10,7 +10,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
 import org.pcap4j.core.NotOpenException;
@@ -105,7 +104,7 @@ public class NetVisMain
                catch( Exception e)
                {
                   receive=false;
-                  logger.error("MainCallable: cought: {0}.",e);
+                  logger.error("MainCallable: cought: {}.",e);
                }
             }
          } 
@@ -124,13 +123,11 @@ public class NetVisMain
       BlockingQueue<NetVisMsg> theQueue = this.getQueue();
       try
       {
-         // logger.debug("MainCallable: going to call theQueue.put(msg)");
          theQueue.put(msg);
-         // logger.debug("MainCallable: returned from theQueue.put(msg)");
       } 
       catch (InterruptedException e)
       {
-         logger.error("sendMsg() cought {0}.", e);
+         logger.error("sendMsg() cought {}.", e);
       }
    }
    
@@ -167,18 +164,10 @@ public class NetVisMain
             MacAddress srcMac = MacAddress.getByName("00:e0:4c:69:13:c7");
             MacAddress dstMac = MacAddress.getByName("34:31:c4:33:ce:ee");
             mTraceRouter.initialize(srcAddress, srcMac, dstMac );
-
-            //            mTracerouteScheduler.addTargetName( "www.yahoo.com" );
-            //            mTracerouteScheduler.addTargetName( "blog.fefe.de" );
-            //            mTracerouteScheduler.addTargetName( "www.google.com" );
-            //            mTracerouteScheduler.addTargetName( "www.spiegel.de" );
-            //            mTracerouteScheduler.addTargetName( "www.taz.de" );
-            //            mTracerouteScheduler.addTargetName( "www.9gag.com" );
-            //            mTracerouteScheduler.traceNextTarget();
          } 
          catch (UnknownHostException e)
          {
-            logger.error( "cought: {0}.", e);
+            logger.error( "cought: {}.", e);
          }
        
          
@@ -227,9 +216,7 @@ public class NetVisMain
                try 
                {
                   Packet packet = pcapHandle.getNextPacketEx();
-                             
                   nvpl.gotPacket( packet );
-                  
                } 
                catch (TimeoutException e) 
                {
@@ -242,11 +229,11 @@ public class NetVisMain
                } 
                catch (NotOpenException e)
                {
-                  logger.error("cought {0}.", e);
+                  logger.error("cought {}.", e);
                }
             }
          } catch (PcapNativeException e) {
-            logger.error("cought {0}.", e);
+            logger.error("cought {}.", e);
          }
          
       }
@@ -255,10 +242,12 @@ public class NetVisMain
    
    private class Watchdog implements Runnable
    {
+      private boolean watching;
+      
       public void run()
       {
          logger.debug("Watchdog.run() called");
-         boolean watching = true;
+         watching = true;
          
          while ( watching )
          {
@@ -269,20 +258,19 @@ public class NetVisMain
                long now = System.currentTimeMillis();
                if ( ( nvpl.timeOfLastPackage + 5000 ) < now )
                {
-                  logger.debug("Watchdog.run() last package["+ nvpl.counter +"] received " 
-                           + (now - nvpl.timeOfLastPackage) + " ms ago..");
+                  logger.trace("Watchdog.run() last package[{}] received {} ms ago..", nvpl.counter, (now - nvpl.timeOfLastPackage));
                      
                   StackTraceElement[] stackTrace = mListeningStartThread.getStackTrace();
-                  logger.debug("getStackTrace()");
+                  logger.trace("getStackTrace()");
                   for (int i = 1; i < stackTrace.length; i++)
-                      logger.debug("\tat " + stackTrace[i]);
+                      logger.trace("\tat {}",stackTrace[i]);
                
                   mListeningStartThread.interrupt();
                }
             }
             catch( InterruptedException ie )
             {
-               //...
+               logger.error("cought {}.", ie);
             }
          }
       }
@@ -301,7 +289,7 @@ public class NetVisMain
          boolean keepReentring = true;
          while( keepReentring )
          {
-            logger.debug("startListening to " + COUNT +" packages.");
+            logger.debug("startListening to {} packages.", COUNT);
 
             List<PcapNetworkInterface> allDevs = null;
             try 
@@ -313,48 +301,60 @@ public class NetVisMain
                e.printStackTrace();
             }
 
-            // int nifIdx = 0;
             int nifIdx = 2;
-            nif = allDevs.get(nifIdx);
-            logger.debug("MyListeningStarter.run(): nifIdx:"+nifIdx+", got nif "+nif.getName());
+            if( allDevs != null )
+            {
+               nif = allDevs.get(nifIdx);
+               if ( nif != null )
+               {
+                  logger.debug("MyListeningStarter.run(): nifIdx:{}, got nif {}", nifIdx, nif.getName());
 
-            try
-            {
-               pcapHandle = nif.openLive(SNAPLEN, PromiscuousMode.PROMISCUOUS, READ_TIMEOUT);
-               pcapHandle.setBlockingMode(BlockingMode.NONBLOCKING);
-            } 
-            catch (PcapNativeException e1)
-            {
-               e1.printStackTrace();
+                  try
+                  {
+                     pcapHandle = nif.openLive(SNAPLEN, PromiscuousMode.PROMISCUOUS, READ_TIMEOUT);
+                     pcapHandle.setBlockingMode(BlockingMode.NONBLOCKING);
+                  } 
+                  catch (PcapNativeException e1)
+                  {
+                     e1.printStackTrace();
+                  }
+                  catch (NotOpenException noe )
+                  {
+                     noe.printStackTrace();
+                  }
+
+                  if( pcapHandle.isOpen() )
+                  {
+                     logger.debug("MyListeningStarter.run(): nifIdx:{}, start pcapHandle.loop()", nifIdx);
+
+                     try
+                     {
+                        pcapHandle.loop(COUNT, nvpl);
+                     } 
+                     catch (PcapNativeException e)
+                     {
+                        e.printStackTrace();
+                        keepReentring = false;
+                     } 
+                     catch (NotOpenException e)
+                     {
+                        e.printStackTrace();
+                        keepReentring = false;
+                     } 
+                     catch (InterruptedException e) 
+                     {
+                        e.printStackTrace();
+                        keepReentring = true;
+                     } 
+                  }
+                  else
+                  {
+                     logger.debug("MyListeningStarter.run(): unable to open nifIdx:{}", nifIdx);
+                  }
+
+                  pcapHandle.close();
+               }
             }
-            catch (NotOpenException noe )
-            {
-               noe.printStackTrace();
-            }
-
-            logger.debug("MyListeningStarter.run(): nifIdx:"+nifIdx+", start  pcapHandle.loop()");
-            
-            try
-            {
-               pcapHandle.loop(COUNT, nvpl);
-            } 
-            catch (PcapNativeException e)
-            {
-               e.printStackTrace();
-               keepReentring = false;
-            } 
-            catch (NotOpenException e)
-            {
-               e.printStackTrace();
-               keepReentring = false;
-            } 
-            catch (InterruptedException e) 
-            {
-               e.printStackTrace();
-               keepReentring = true;
-            }  
-
-            pcapHandle.close();      
          }
          
          logger.debug("startListening() done.");

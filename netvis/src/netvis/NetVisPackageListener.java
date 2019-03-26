@@ -184,7 +184,7 @@ public class NetVisPackageListener implements PacketListener
          }
       }
 
-      mModel.mMain.getNetVisFrame().getNetVisComponent().repaint();
+     mMain.getNetVisFrame().getNetVisComponent().repaint();
       // logger.debug("gotPacket() done, packets="+counter);
    }
    

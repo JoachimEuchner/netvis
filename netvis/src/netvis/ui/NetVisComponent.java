@@ -20,7 +20,6 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
 
 import javax.swing.JComponent;
 
@@ -81,33 +80,33 @@ public class NetVisComponent extends JComponent implements
    private final NetVisMain            mMain;
    private final Model                 mModel;
    
-   int                                 mWidth            = 300;                   // 1500;
-   int                                 mHeight           = 200;                    // 1000;
+   int                                 mWidth;
+   int                                 mHeight;
 
-   public Font                         myPlain10Font;
-   public int                          mLineHeight;
+   private Font                        myPlain10Font;
+   private int                         mLineHeight;
   
-   public transient BasicStroke        mStroke8;          
-   public transient BasicStroke        mStroke7;
-   public transient BasicStroke        mStroke6;
-   public transient BasicStroke        mStroke5;
-   public transient BasicStroke        mStroke4;
-   public transient BasicStroke        mStroke3;
-   public transient BasicStroke        mStroke2;
-   public transient BasicStroke        mStroke1;
+   private final transient BasicStroke mStroke8;          
+   private final transient BasicStroke mStroke7;
+   private final transient BasicStroke mStroke6;
+   private final transient BasicStroke mStroke5;
+   private final transient BasicStroke mStroke4;
+   private final transient BasicStroke mStroke3;
+   private final transient BasicStroke mStroke2;
+   private final transient BasicStroke mStroke1;
    
    
-   private Node mSelectedNode = null;
-   private Node mDraggingNode = null;
+   private transient Node mSelectedNode = null;
+   private transient Node mDraggingNode = null;
    private int mDraggingNodeDx = 0;
    private int mDraggingNodeDy = 0;
    
    
-   public boolean doLayouting;
-   public int paintCounter;
+   private boolean doLayouting;
+   private int paintCounter;
    
-   double standardCharge;
-   double standardSpring;
+   private double standardCharge;
+   private double standardSpring;
    
    public NetVisComponent( NetVisMain main, Model m )
    {
@@ -233,7 +232,6 @@ public class NetVisComponent extends JComponent implements
       g2.setFont(this.myPlain10Font);
       String s = "g2.paint(): " + (paintend - paintstart) + " ms/"+paintCounter; //$NON-NLS-1$ //$NON-NLS-2$
       g2.drawString(s, this.mWidth - 200, this.mHeight - 8);
-      // logger.debug("paint() done.");
    }
    
    private class MyLayouter implements Runnable
@@ -275,11 +273,10 @@ public class NetVisComponent extends JComponent implements
             {
                if( mModel.getAllNodes() != null  )
                {
-                  logger.debug("MyLayouter.run() start layouting {0} nodes", mModel.getAllNodes().size());
+                  logger.trace("MyLayouter.run() start layouting {} nodes", mModel.getAllNodes().size());
                                     
                   synchronized( mModel.getAllNodes() )
                   {
-
                      List<Node> allNodes = mModel.getAllNodes();
                      
                      for( Node n: new ReverseIterator<Node>(allNodes) )
@@ -537,7 +534,7 @@ public class NetVisComponent extends JComponent implements
                   }
                   catch (ClassCastException cce )
                   {
-                     logger.error("cought {0}", cce);
+                     logger.error("cought {}", cce);
                   }
                }
             }
@@ -627,11 +624,11 @@ public class NetVisComponent extends JComponent implements
       }
    }
    
-   
+  
    private class ShortestPair
    {
-      public int s1;
-      public int s2;
+      private int s1;
+      private int s2;
       ShortestPair(int tmps1, int tmps2)
       {
          s1 = tmps1;
@@ -675,7 +672,7 @@ public class NetVisComponent extends JComponent implements
    { 
       if( isActive )
       {
-         if ( !mModel.mMain.isOnline() )
+         if ( !mMain.isOnline() )
          {
             millis = 1000;
          }
@@ -845,7 +842,7 @@ public class NetVisComponent extends JComponent implements
       }
       
       
-      logger.debug("Charge: {0}, Spring: {1}", standardCharge, standardSpring);
+      logger.trace("Charge: {}, Spring: {}", standardCharge, standardSpring);
 
    }
 
@@ -857,28 +854,25 @@ public class NetVisComponent extends JComponent implements
       switch (code)
       {
          case KeyEvent.VK_SPACE:
-         {
-            // start/stop layouting
-         }
-         break;
+            // start/stop layout
+            break;
          
          case KeyEvent.VK_A:
-         {
             if ( mSelectedNode != null )
             {
                mSelectedNode.setActive( !mSelectedNode.isActive() );
             }
-         }
+            break;
          
          case KeyEvent.VK_T:
-         {
             if ( mSelectedNode != null )
             {
-               // mSelectedNode.isActive = !mSelectedNode.isActive;
                mMain.getTRScheduler().addTargetAddress(mSelectedNode.getAddr());
-               // mMain.mTracerouteScheduler.traceNextTarget();
             }
-         }
+            break;
+         
+         default:
+            break;
       
       }
 
@@ -887,13 +881,13 @@ public class NetVisComponent extends JComponent implements
    @Override
    public void keyReleased(KeyEvent e)
    {
-   
+      // tbd.
    }
 
    @Override
    public void keyTyped(KeyEvent e)
    {
-   
+      // tbd.
    }
 
    @Override
@@ -916,14 +910,13 @@ public class NetVisComponent extends JComponent implements
    @Override
    public void mouseMoved(MouseEvent arg0)
    {
-    
+      // tbd.
    }
 
    @Override
    public void mouseWheelMoved(MouseWheelEvent arg0)
    {
-     
-
+     // tbd.
    }
 
    @Override
@@ -989,15 +982,13 @@ public class NetVisComponent extends JComponent implements
    @Override
    public void mouseEntered(MouseEvent arg0)
    {
-    
-
+      // tbd.
    }
 
    @Override
    public void mouseExited(MouseEvent arg0)
    {
-   
-
+      // tbd.
    }
 
    @Override

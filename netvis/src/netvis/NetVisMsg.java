@@ -3,9 +3,9 @@ package netvis;
 public class NetVisMsg
 {
    private NetVisMsgReceiver rec;
-   public NetVisMsg(NetVisMsgReceiver _rec)
+   public NetVisMsg(NetVisMsgReceiver localRec)
    {
-      rec = _rec;
+      rec = localRec;
    }
    public NetVisMsgReceiver getMsgReceiver()
    {

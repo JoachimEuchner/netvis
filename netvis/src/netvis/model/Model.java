@@ -4,7 +4,6 @@ import java.net.Inet4Address;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
 
 import org.pcap4j.packet.IpV4Packet;
 import org.slf4j.Logger;
@@ -16,7 +15,7 @@ public class Model
 {
    private static final Logger logger = LoggerFactory.getLogger(Model.class);
 
-   public NetVisMain mMain;
+   private NetVisMain mMain;
    
    private final ArrayList<netvis.model.Link> mAllLinks;
    private final ArrayList<netvis.model.Node> mAllNodes;
@@ -155,11 +154,11 @@ public class Model
       return ( retVal );
    }
    
+   
    public Route findRoute( Node src, Node dst )
    {
       Route retVal = null;
-      
-      
+            
       byte[] srcAddressBytes = src.getAddressBytes();
       byte[] dstAddressBytes = dst.getAddressBytes();
       
@@ -243,13 +242,11 @@ public class Model
    }
    
    
-   public void addIPv4Packet( /*Timestamp ts,*/ IpV4Packet ipv4p)
+   public void addIPv4Packet( IpV4Packet ipv4p )
    {
       Inet4Address src = ipv4p.getHeader().getSrcAddr();
       Inet4Address dst = ipv4p.getHeader().getDstAddr();  
       
-    
-
       long now = System.currentTimeMillis();
       
       Node srcNode = findNode( src );
@@ -335,7 +332,7 @@ public class Model
          }
          else
          {
-            logger.warn("Model.addLink(): tried to add l with {0} -> {1} ", l.getSrc(), l.getDst());
+            logger.warn("Model.addLink(): tried to add l with {} -> {} ", l.getSrc(), l.getDst());
          }
       }
    }
@@ -385,7 +382,7 @@ public class Model
       {
          for ( Route r : mRoutes )
          {
-            // logger.debug("trn:<"+ trn.mSrcAddr + "->" +trn.mOrigDstAddr+"> ?= <"+ r.mSrcAddr+ "->" + r.mDstAddr +">");
+            logger.trace("trn:<{}->{}> ?= <{}->{}>", trn.getSrc(), trn.getDst(), r.mSrcAddr, r.mDstAddr);
             
             if( equalsAddr ( trn.getSrc(), r.mSrcAddr ) 
                 && equalsAddr ( trn.getDst(), r.mDstAddr ) )
@@ -396,7 +393,7 @@ public class Model
          }
       }
       
-      // logger.debug("trn:<"+ trn.mSrcAddr + "->" +trn.mOrigDstAddr+"> found "+retVal+" as route");
+      logger.trace("trn:<{}->{}> found {} as route", trn.getSrc(), trn.getDst(), retVal);
       
       return ( retVal );
    }

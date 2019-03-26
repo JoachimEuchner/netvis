@@ -17,23 +17,23 @@ public class TraceRouteMsg
    private Inet4Address ipV4Addr;
    private int receivedDepth;
    
-   public TraceRouteMsg( NetVisMsgReceiver _rec, Inet4Address addr, int depth )
+   public TraceRouteMsg( NetVisMsgReceiver localRec, Inet4Address addr, int depth )
    {
-      super( _rec );
+      super( localRec );
       ipV4Addr = addr;
       receivedDepth = depth;
    }
    
-   public TraceRouteMsg( NetVisMsgReceiver _rec, Inet4Address addr )
+   public TraceRouteMsg( NetVisMsgReceiver localRec, Inet4Address addr )
    {
-      super( _rec );
+      super( localRec );
       ipV4Addr = addr;
       receivedDepth = -1;
    }
    
-   public TraceRouteMsg( NetVisMsgReceiver _rec, String targetName )
+   public TraceRouteMsg( NetVisMsgReceiver localRec, String targetName )
    {
-      super( _rec );
+      super( localRec );
       
       try 
       {
@@ -41,7 +41,7 @@ public class TraceRouteMsg
       } 
       catch (UnknownHostException e1) 
       {
-         logger.debug("TraceRouteMsg<ctor>: " + targetName + " got "+e1);
+         logger.debug("TraceRouteMsg<ctor>: {} cought {} ", targetName, e1);
       }
       
       receivedDepth = -1;
