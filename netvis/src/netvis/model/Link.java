@@ -2,10 +2,10 @@ package netvis.model;
 
 public class Link
 {
-   private Node mSrc;
+   private final Node mSrc;
    public Node getSrc() { return mSrc; }
    
-   private Node mDst;
+   private final Node mDst;
    public Node getDst() { return mDst; }
    
    private int seenPackets;

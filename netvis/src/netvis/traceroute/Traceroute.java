@@ -55,8 +55,8 @@ public class Traceroute
    }
    TraceRouteTimerReceiver mTimerReceiver;
   
-   public final static int TRACEROUTE_STATE_IDLE = 0;
-   public final static int TRACEROUTE_STATE_TRACING_ACTIVE = 1;
+   public static final int TRACEROUTE_STATE_IDLE = 0;
+   public static final int TRACEROUTE_STATE_TRACING_ACTIVE = 1;
    private int mState = TRACEROUTE_STATE_IDLE;
    public int getState() {return mState;};
    
@@ -181,16 +181,15 @@ public class Traceroute
          noe.printStackTrace();
       } 
       
-      logger.info("tr.initialize() done, got: nifIdx:"+nifIdx+" and nif "+nif.getName());
+      logger.info("tr.initialize() done, got: nifIdx: {} and nif {}", nifIdx, nif.getName());
       mState = TRACEROUTE_STATE_IDLE;
-      // logger.debug();
    }
    
    
    private void sendICMPPackage( Inet4Address dst, int ttl )
    {
-      // logger.info("tr.sendICMPPackage("+dst+", "+ttl+") called.");
-      
+      logger.info("tr.sendICMPPackage({}, {}) called.", dst, ttl);
+                   
       byte[] echoData = new byte[TU - 28];
       for (int i = 0; i < echoData.length; i++) {
          echoData[i] = (byte) i;
@@ -239,30 +238,30 @@ public class Traceroute
          }
          catch ( java.lang.IllegalStateException ise )
          {
-           logger.warn("sendICMPPackage() 1. cought: "+ ise);
+           logger.warn("sendICMPPackage() 1. cought: {} ", ise);
          }
          
          try
          {
             long timeForOneProbe = 3500;
             timer.schedule(mTimerReceiver, timeForOneProbe);
-            logger.info("sendICMPPackage("+dst+", "+ttl+") started timer with "+timeForOneProbe+"ms");
+            logger.info("sendICMPPackage({}, {}) started timer with {} ms", dst, ttl, timeForOneProbe);
          }
          catch ( java.lang.IllegalStateException ise )
          {
-            logger.warn("sendICMPPackage() 2. cought: "+ ise);
+            logger.warn("sendICMPPackage() 2. cought: {}", ise);
          }            
       } 
       catch (PcapNativeException e1)
       { 
-         logger.error( "sendPacket: cought:"+ e1 );
+         logger.error( "sendPacket: cought native: {}", e1 );
       } 
       catch (NotOpenException e2)
       {
-         logger.error( "sendPacket: cought:"+ e2 );
+         logger.error( "sendPacket: cought not open: {}", e2 );
       }
          
-      //  logger.info("sendICMPPackage("+dst+", "+ttl+") done.");
+      logger.info("sendICMPPackage({}, {}) done.", dst, ttl);
    }
    
   
@@ -273,14 +272,14 @@ public class Traceroute
       if( ( trm.getDepth() == -1 ) && ( trm.getAddr() != null ) )
       {
          // start new traceroute.
-         logger.debug("##### tr.msgReceived() got TraceRouteMsg(): start new traceroute to "+trm.getAddr());
+         logger.debug("##### tr.msgReceived() got TraceRouteMsg(): start new traceroute to {}", trm.getAddr());
          setTargetAddess( trm.getAddr() );
          mState = TRACEROUTE_STATE_TRACING_ACTIVE;
          sendICMPPackage( mTargetAddress, 1 );
       }
       else
       {
-         if( /*( trm.getDepth() < 21 ) &&*/ ( mTargetAddress != null ) )
+         if( mTargetAddress != null ) 
          {
             if( !Model.equalsAddr(mTargetAddress, trm.getAddr()) )
             {
@@ -300,7 +299,7 @@ public class Traceroute
    
    public void timeoutOccured(int id)
    {
-      logger.info("tr.timeoutOccured("+id+") called. mTargetAddress="+mTargetAddress+", lastDepth:"+ getLastSentDepth());
+      logger.info("tr.timeoutOccured({}) called. mTargetAddress={}, lastDepth:{}", id, mTargetAddress, getLastSentDepth());
       
       if( mTargetAddress != null )
       {
@@ -312,7 +311,7 @@ public class Traceroute
          else
          {
             // giving up on mTargetHost.
-            logger.debug("tr.timeoutOccured() giving up on: "+ mTargetAddress);
+            logger.debug("tr.timeoutOccured() giving up on: {}", mTargetAddress);
             mState = TRACEROUTE_STATE_IDLE;
             main.getTRScheduler().traceNextTarget();
          }

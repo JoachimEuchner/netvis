@@ -257,9 +257,9 @@ public class NetVisMain
                Thread.sleep(10000);
                
                long now = System.currentTimeMillis();
-               if ( ( nvpl.timeOfLastPackage + 5000 ) < now )
+               if ( ( nvpl.getTimeOfLatsPackage() + 5000 ) < now )
                {
-                  logger.trace("Watchdog.run() last package[{}] received {} ms ago..", nvpl.counter, (now - nvpl.timeOfLastPackage));
+                  logger.trace("Watchdog.run() last package[{}] received {} ms ago..", nvpl.counter, (now - nvpl.getTimeOfLatsPackage()));
                      
                   StackTraceElement[] stackTrace = mListeningStartThread.getStackTrace();
                   logger.trace("getStackTrace()");
@@ -275,14 +275,11 @@ public class NetVisMain
             }
          }
       }
-      
    }
-   
    
    
    private class MyListeningStarter implements Runnable
    {
-   
       public void run()
       {
          logger.debug("MyListeningStarter.run() called");

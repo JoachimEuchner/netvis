@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import netvis.model.Model;
 import netvis.traceroute.TraceRouteMsg;
-import netvis.traceroute.TraceRouteNode;
 
 
 public class NetVisPackageListener implements PacketListener
@@ -39,7 +38,9 @@ public class NetVisPackageListener implements PacketListener
    
    int counter = 0;
    
-   public long timeOfLastPackage;
+   private long timeOfLastPackage;
+   public long getTimeOfLatsPackage() { return timeOfLastPackage; }
+   
    
    public void gotPacket(Packet packet) 
    {
@@ -110,13 +111,15 @@ public class NetVisPackageListener implements PacketListener
                       ( Model.equalsAddr( ipv4p.getHeader().getSrcAddr(), mMain.getTracerouter().getTargetAddress()))  ) )
        
             {
+               // traceroute completed.
                TraceRouteMsg trm = new TraceRouteMsg(mMain.getTracerouter(), 
                                                      ipv4p.getHeader().getSrcAddr(), 
                                                      mMain.getTracerouter().getLastSentDepth()+1 );
                mMain.sendMsg ( trm );
                
-               logger.debug("received: [nr.: " +counter +"] IcmpV4CommonPacket reply from " + 
-                        ipv4p.getHeader().getSrcAddr());
+               logger.debug("received: [nr.:{}] IcmpV4CommonPacket reply from {}"
+                        , counter
+                        , ipv4p.getHeader().getSrcAddr());
                
             }
             else
@@ -137,14 +140,14 @@ public class NetVisPackageListener implements PacketListener
 
                if( (dstAddressBytes[0] == -64) && (dstAddressBytes[1] == -88) && (dstAddressBytes[2] == 1) && (dstAddressBytes[3] == 44))
                {
-                  // logger.debug("received [nr.: " +counter +"] IPv4: "+packet);
+                  logger.trace("received [nr.:{}] IPv4: {}", counter, packet);
                }
                
                if( accept )
                {
                   synchronized( mModel  )
                   {
-                     mModel.addIPv4Packet( /*pcapHandle.getTimestamp(),*/ ipv4p  );
+                     mModel.addIPv4Packet( ipv4p  );
                   }
                }
             }
@@ -154,10 +157,11 @@ public class NetVisPackageListener implements PacketListener
             ArpPacket arpp = packet.get(ArpPacket.class);
             if( arpp != null )
             {                                             
-               logger.debug("[nr.:" +counter +"]----> ARP: "+ 
-                            arpp.getHeader().getSrcProtocolAddr() + " --> " +
-                            arpp.getHeader().getDstProtocolAddr() + ": len" + 
-                            arpp.length());
+               logger.debug("[nr.:{}]----> ARP: {} --> {}: len {}"
+                           , counter
+                           , arpp.getHeader().getSrcProtocolAddr()
+                           , arpp.getHeader().getDstProtocolAddr()
+                           , arpp.length());
             }
             else
             {
@@ -175,9 +179,9 @@ public class NetVisPackageListener implements PacketListener
                   }
                   else
                   {
-                     logger.debug("[ "+counter +"] unsorted package:");
-                     String s = packet.toString();
-                     logger.debug(s);
+                     logger.debug("[nr:{}] unsorted package: {}"
+                               , counter
+                               , packet);
                   }
                }
             }
@@ -185,7 +189,7 @@ public class NetVisPackageListener implements PacketListener
       }
 
      mMain.getNetVisFrame().getNetVisComponent().repaint();
-      // logger.debug("gotPacket() done, packets="+counter);
+     logger.trace("gotPacket() done, packets={}",counter);
    }
    
    
