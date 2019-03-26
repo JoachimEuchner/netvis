@@ -2,17 +2,20 @@ package netvis.model;
 
 public class Link
 {
-   public Node src;
-   public Node dst;
+   private Node mSrc;
+   public Node getSrc() { return mSrc; }
+   
+   private Node mDst;
+   public Node getDst() { return mDst; }
    
    private int seenPackets;
    
    private long timeOfLastSeenPacket = 0;
    
-   public Link( Node _src, Node _dst )
+   public Link( Node src, Node dst )
    {
-      src = _src;
-      dst = _dst;
+      mSrc = src;
+      mDst = dst;
       seenPackets = 0;
    }
    

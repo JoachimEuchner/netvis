@@ -87,7 +87,7 @@ public class NetVisPackageListener implements PacketListener
                   }
                   else
                   {
-                     depth = mMain.mTraceRouter.getLastSentDepth();
+                     depth = mMain.getTracerouter().getLastSentDepth();
                      logger.debug("received [nr.: " +counter +"]: no data[] in IcmpV4EchoPacket from "
                               +ipv4p.getHeader().getSrcAddr()+" using "+depth);
                   }
@@ -100,19 +100,19 @@ public class NetVisPackageListener implements PacketListener
                logger.debug("received: [nr.: " +counter +"] src="+origSrcAddr +" reply from " + 
                         ipv4p.getHeader().getSrcAddr()  +", at depth: " + depth +", sent to "+origDstAddr);
                
-               TraceRouteMsg trm = new TraceRouteMsg(mMain.mTraceRouter, ipv4p.getHeader().getSrcAddr(), depth+1);
+               TraceRouteMsg trm = new TraceRouteMsg(mMain.getTracerouter(), ipv4p.getHeader().getSrcAddr(), depth+1);
                mMain.sendMsg ( trm );
                              
                TraceRouteNode trn = new TraceRouteNode(origSrcAddr, origDstAddr, ipv4p.getHeader().getSrcAddr(), depth);
                mModel.addTraceRouteNode(trn);
             }
             else if ( ( packet.contains(IcmpV4CommonPacket.class) && 
-                      ( Model.equalsAddr( ipv4p.getHeader().getSrcAddr(), mMain.mTraceRouter.getTargetAddress()))  ) )
+                      ( Model.equalsAddr( ipv4p.getHeader().getSrcAddr(), mMain.getTracerouter().getTargetAddress()))  ) )
        
             {
-               TraceRouteMsg trm = new TraceRouteMsg(mMain.mTraceRouter, 
+               TraceRouteMsg trm = new TraceRouteMsg(mMain.getTracerouter(), 
                                                      ipv4p.getHeader().getSrcAddr(), 
-                                                     mMain.mTraceRouter.getLastSentDepth()+1 );
+                                                     mMain.getTracerouter().getLastSentDepth()+1 );
                mMain.sendMsg ( trm );
                
                logger.debug("received: [nr.: " +counter +"] IcmpV4CommonPacket reply from " + 
@@ -153,12 +153,11 @@ public class NetVisPackageListener implements PacketListener
          {
             ArpPacket arpp = packet.get(ArpPacket.class);
             if( arpp != null )
-            {                               
-               // dunno
-//               logger.debug("[nr.:" +counter +"]----> ARP: "+ 
-//                        arpp.getHeader().getSrcProtocolAddr() + " --> " +
-//                        arpp.getHeader().getDstProtocolAddr() + ": len" + 
-//                        arpp.length());
+            {                                             
+               logger.debug("[nr.:" +counter +"]----> ARP: "+ 
+                            arpp.getHeader().getSrcProtocolAddr() + " --> " +
+                            arpp.getHeader().getDstProtocolAddr() + ": len" + 
+                            arpp.length());
             }
             else
             {
@@ -185,7 +184,7 @@ public class NetVisPackageListener implements PacketListener
          }
       }
 
-      mModel.mMain.mNetVisFrame.getNetVisComponent().repaint();
+      mModel.mMain.getNetVisFrame().getNetVisComponent().repaint();
       // logger.debug("gotPacket() done, packets="+counter);
    }
    

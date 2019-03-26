@@ -18,7 +18,7 @@ public class Route
    Inet4Address mSrcAddr;
    Inet4Address mDstAddr;
    
-   private final Vector<netvis.traceroute.TraceRouteNode> mTraceRouteNodes;
+   private final Vector<TraceRouteNode> mTraceRouteNodes;
    private final Vector<Link> mLinks;
    public class ReverseIterator<T> implements Iterator<T>, Iterable<T> 
    {
@@ -54,11 +54,11 @@ public class Route
    
    public Route( Model m, Inet4Address src, Inet4Address dst )
    {
-      logger.debug("##new Route: from "+src+" to " +dst);
+      logger.debug("##new Route: from {0} to {0}", src, dst);
       mMain = m;
       mSrcAddr = src;
       mDstAddr = dst;
-      this.mTraceRouteNodes = new Vector<netvis.traceroute.TraceRouteNode>(30,30);
+      this.mTraceRouteNodes = new Vector<TraceRouteNode>(30,30);
       TraceRouteNode trn = new TraceRouteNode(src, dst, src, 0);
       this.mTraceRouteNodes.add(trn);
       
@@ -72,10 +72,10 @@ public class Route
       {
          for( Link l: new ReverseIterator<Link>(mLinks) )
          {
-            if( ( l!= null) && ( l.src != null ) && ( l.dst != null ))
+            if( ( l!= null) && ( l.getSrc() != null ) && ( l.getDst() != null ))
             {
-               if( ( Model.equalsAddr( l.src.getAddr(), src) )
-                        && Model.equalsAddr( l.dst.getAddr(), dst ) ) 
+               if( ( Model.equalsAddr( l.getSrc().getAddr(), src) )
+                        && Model.equalsAddr( l.getDst().getAddr(), dst ) ) 
                {
                   mLinks.remove( l );
                }
@@ -92,7 +92,7 @@ public class Route
          for ( TraceRouteNode trn : mTraceRouteNodes )
          {
             logger.debug(".... Route <"+mSrcAddr+", "+mDstAddr+">, have: "
-                     + trn.mReplyingAddr +" @depth="+trn.mDepth );
+                     + trn.getReplyingAddr() +" @depth="+trn.getDepth() );
          }
       }      
    }
@@ -105,10 +105,10 @@ public class Route
       {
          for ( TraceRouteNode _trn : mTraceRouteNodes )
          {
-            if( Model.equalsAddr ( _trn.mReplyingAddr, newTrn.mReplyingAddr ) 
-                     && Model.equalsAddr ( _trn.mSrcAddr, newTrn.mSrcAddr ) 
-                     && Model.equalsAddr ( _trn.mOrigDstAddr, newTrn.mOrigDstAddr ) 
-                     && (_trn.mDepth == newTrn.mDepth) )
+            if( Model.equalsAddr ( _trn.getReplyingAddr(), newTrn.getReplyingAddr() ) 
+                     && Model.equalsAddr ( _trn.getSrc(), newTrn.getSrc() ) 
+                     && Model.equalsAddr ( _trn.getDst(), newTrn.getDst() ) 
+                     && (_trn.getDepth() == newTrn.getDepth()) )
             {
                trn = _trn;
                break;
@@ -131,7 +131,7 @@ public class Route
       }
 
       // find previous node along route:
-      int depth = trn.mDepth;
+      int depth = trn.getDepth();
       TraceRouteNode previousNode = null;
       if( depth > 0 )
       {
@@ -145,7 +145,7 @@ public class Route
             {
                for ( TraceRouteNode _trn : mTraceRouteNodes )
                {
-                  if ( _trn.mDepth == searchDepth )
+                  if ( _trn.getDepth() == searchDepth )
                   {
                      previousNode = _trn;
                      break;
@@ -167,30 +167,30 @@ public class Route
          // logger.debug("Route <"+mSrcAddr+", "+mDstAddr+">: found previous node="+
          //          previousNode.mReplyingAddr + "@depth=" + previousNode.mDepth);
 
-         if ( mMain.findNode(previousNode.mReplyingAddr) == null )
+         if ( mMain.findNode(previousNode.getReplyingAddr()) == null )
          {
             mMain.addNode( previousNode );
          }
-         if ( mMain.findNode(trn.mReplyingAddr) == null )
+         
+         if ( mMain.findNode(trn.getReplyingAddr()) == null )
          {
             mMain.addNode( trn );
          }
          
-         // Link l = mMain.findLink(previousNode, trn);
-         Link l = mMain.findLink(previousNode.mReplyingAddr, trn.mReplyingAddr);
+         Link l = mMain.findLink(previousNode.getReplyingAddr(), trn.getReplyingAddr());
          if( l == null )
          {
-            l = new Link( mMain.findNode(previousNode.mReplyingAddr), mMain.findNode(trn.mReplyingAddr)); 
+            l = new Link( mMain.findNode(previousNode.getReplyingAddr()), mMain.findNode(trn.getReplyingAddr())); 
             mMain.addLink( l );
             mLinks.add(l);
          }
          l.setTimeSeenLastPacket( System.currentTimeMillis() );
     
          
-         mMain.removeLink( previousNode.getAddr(), trn.mOrigDstAddr );
-         removeLink(previousNode.getAddr(), trn.mOrigDstAddr );
-         Node finalNode =  mMain.findNodeAndAdd( trn.mOrigDstAddr );
-         Link finalLink = new Link(mMain.findNode(trn.mReplyingAddr), finalNode);
+         mMain.removeLink( previousNode.getAddr(), trn.getDst() );
+         removeLink(previousNode.getAddr(), trn.getDst() );
+         Node finalNode =  mMain.findNodeAndAdd( trn.getDst() );
+         Link finalLink = new Link( mMain.findNode(trn.getReplyingAddr()), finalNode);
          finalLink.setTimeSeenLastPacket( System.currentTimeMillis() );
          mMain.addLink( finalLink );
          mLinks.add(finalLink);
@@ -206,7 +206,7 @@ public class Route
       // dumpRoute();
 
       logger.debug("Route <"+mSrcAddr+", "+mDstAddr+">.added( trn: "+ 
-               trn.mReplyingAddr+" at depth "+ trn.mDepth  +") got "+mTraceRouteNodes.size()+" nodes.");
+               trn.getReplyingAddr()+" at depth "+ trn.getDepth()  +") got "+mTraceRouteNodes.size()+" nodes.");
 
    }
    

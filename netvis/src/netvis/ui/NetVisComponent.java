@@ -217,12 +217,8 @@ public class NetVisComponent extends JComponent implements
       {
          return;
       }
-      // g2.setTransform(mAffineTransform);
-      // g2d.drawString("aString", x, y);
-
 
       g2.setColor(Color.BLACK);
-      // g2.setColor(Color.GREEN.darker().darker().darker());
       g2.fillRect(0, 0, this.mWidth, this.mHeight);
       
       
@@ -261,7 +257,7 @@ public class NetVisComponent extends JComponent implements
          {
             //...
          }
-         logger.debug("MyLayouter.run() start layouting, "+mModel);
+         logger.debug("MyLayouter.run() start layouting.");
        
          
          while ( mHost.doLayouting )
@@ -279,42 +275,38 @@ public class NetVisComponent extends JComponent implements
             {
                if( mModel.getAllNodes() != null  )
                {
-                  // logger.debug("MyLayouter.run() start layouting "+mModel.getAllNodes().size()+" nodes");
+                  logger.debug("MyLayouter.run() start layouting {0} nodes", mModel.getAllNodes().size());
                                     
                   synchronized( mModel.getAllNodes() )
                   {
 
-                     Vector<Node> mAllNodes = mModel.getAllNodes();
-
-                     // logger.debug("...MyLayouter.run() got Mutex,  layouting "+mAllNodes.size()+" nodes");
-
-                     // new ReverseIterator<String>(mAllNodes)
-                     // for (Node n : mAllNodes )
-                     for( Node n: new ReverseIterator<Node>(mAllNodes) )
+                     List<Node> allNodes = mModel.getAllNodes();
+                     
+                     for( Node n: new ReverseIterator<Node>(allNodes) )
                      {
                         n.fx = 0.0;
                         n.fy = 0.0;
 
-                        if ( n.mbCanFlow )
+                        if ( n.canFlow() )
                         {
 
                            double charge = standardCharge;
-                           for (Node m : mAllNodes )
+                           for (Node m : allNodes )
                            {
                               if( n != m )
                               {
-                                 if( ( n.isActive ) && ( m.isActive ) )
+                                 if( ( n.isActive() ) && ( m.isActive() ) )
                                  {
-                                    double d2 = (n.x - m.x)*(n.x - m.x) + (n.y - m.y)*(n.y - m.y);
+                                    double d2 = (n.getX() - m.getX())*(n.getX() - m.getX()) + (n.getY() - m.getY())*(n.getY() - m.getY());
 
                                     double localCharge = charge;
-                                    if ( n.addressBytes[0] == m.addressBytes[0] ) 
+                                    if ( n.getAddressBytes()[0] == m.getAddressBytes()[0] ) 
                                     { 
                                        localCharge = standardCharge / 2.0;
-                                       if  ( n.addressBytes[1] == m.addressBytes[1] ) 
+                                       if  ( n.getAddressBytes()[1] == m.getAddressBytes()[1] ) 
                                        {
                                           localCharge = standardCharge / 10.0;
-                                          if  ( n.addressBytes[2] == m.addressBytes[2] ) 
+                                          if  ( n.getAddressBytes()[2] == m.getAddressBytes()[2] ) 
                                           {
                                              localCharge = standardCharge / 50.0;
                                           }
@@ -326,8 +318,8 @@ public class NetVisComponent extends JComponent implements
                                     {
                                        double d = Math.sqrt ( d2 );
 
-                                       double nx = (n.x - m.x) / d;
-                                       double ny = (n.y - m.y) / d;
+                                       double nx = (n.getX() - m.getX()) / d;
+                                       double ny = (n.getY() - m.getY()) / d;
                                        n.fx += localCharge * nx / d2;
                                        n.fy += localCharge * ny / d2;
                                     }
@@ -335,22 +327,20 @@ public class NetVisComponent extends JComponent implements
                               }
                            }
 
-                           // logger.debug("fx="+n.fx+" fy="+n.fy);
-
 
                            double spring = standardSpring;
                            synchronized( mModel.getAllLinks() )
                            {
-                              Vector<netvis.model.Link> mAllLinks = mModel.getAllLinks();
+                              List<netvis.model.Link> mAllLinks = mModel.getAllLinks();
 
                               for (netvis.model.Link l : mAllLinks )
                               {
-                                 Node s = l.src;
-                                 Node d = l.dst;
+                                 Node s = l.getSrc();
+                                 Node d = l.getDst();
 
                                  if( ( s!= null ) && (d!= null ))
                                  {
-                                    if( ( s.isActive ) && ( d.isActive ) )
+                                    if( ( s.isActive() ) && ( d.isActive() ) )
                                     {
                                        double mySpring = spring * (1.0 + l.getNrOfSeenPackets() / 1000.0 );
                                        if( mySpring > 0.5)
@@ -359,23 +349,21 @@ public class NetVisComponent extends JComponent implements
                                        }
                                        if( n == s ) 
                                        {
-                                          n.fx -=  mySpring * (n.x - d.x) ;
-                                          n.fy -=  mySpring * (n.y - d.y) ;
+                                          n.fx -=  mySpring * (n.getX() - d.getX()) ;
+                                          n.fy -=  mySpring * (n.getY() - d.getY()) ;
                                        }
 
 
                                        if ( n == d )
                                        {
-                                          n.fx -= mySpring * (n.x - s.x) ;
-                                          n.fy -= mySpring * (n.y - s.y) ;
+                                          n.fx -= mySpring * (n.getX() - s.getX()) ;
+                                          n.fy -= mySpring * (n.getY() - s.getY()) ;
                                        }
                                     }
                                  }
                               }
                            }
 
-                           // n.vx += n.fx;
-                           // n.vy += n.fy;
                            if( n.fx > 50.0 )
                            {
                               n.fx = 50.0;
@@ -385,17 +373,17 @@ public class NetVisComponent extends JComponent implements
                               n.fx = -50.0;
                            }
 
-                           n.x += n.fx ;
-                           n.mx = (int)( n.x + 0.5);
-                           if( n.mx < 0 )
+                           n.setx( n.getX() + n.fx ) ;
+                           n.setMx( (int)( n.getX() + 0.5) );
+                           if( n.getMx() < 0 )
                            {
-                              n.mx = 0;
-                              n.x = 0;
+                              n.setMx( 0 );
+                              n.setx( 0.0 );
                            }
-                           if( n.mx > (mWidth - 100)  )
+                           if( n.getMx() > (mWidth - 100)  )
                            {
-                              n.mx = (mWidth - 100);
-                              n.x = (mWidth - 100);
+                              n.setMx( mWidth - 100) ;
+                              n.setx( mWidth - 100.0 );
                            }
 
                            if( n.fy > 50.0 )
@@ -407,27 +395,23 @@ public class NetVisComponent extends JComponent implements
                               n.fy = -50.0;
                            }
 
-                           n.y += n.fy;
-                           n.my = (int)( n.y +0.5);
-                           if( n.my < 0 )
+                           n.sety( n.getY() + n.fy );
+                           n.setMy( (int)( n.getY() + 0.5) );
+                           if( n.getMy() < 0 )
                            {
-                              n.my = 0;
-                              n.y = 0;
+                              n.setMy( 0 );
+                              n.sety( 0.0 );
                            }
-                           if( n.my > (mHeight - 10)  )
+                           if( n.getMy() > (mHeight - 10)  )
                            {
-                              n.my = (mHeight - 10);
-                              n.y = (mHeight - 10);
+                              n.setMy( mHeight - 10);
+                              n.sety( mHeight - 10.0 );
                            }
-
-                           // logger.debug(" -----> fx="+n.fx+" fy="+n.fy+", vx="+n.vx+" "+"vy="+n.vy+", x="+n.x+" "+n.y);
                         }
                      }
                   }
                }
             }
-
-
 
             mHost.repaint();
          }
@@ -441,9 +425,9 @@ public class NetVisComponent extends JComponent implements
    {
       synchronized( mModel.getAllNodes() )
       {
-         Vector<Node> mAllNodes = mModel.getAllNodes();
+         List<Node> allNodes = mModel.getAllNodes();
          
-         int nrOfNodesToLayout = mAllNodes.size();
+         int nrOfNodesToLayout = allNodes.size();
          
          int xCenter = mWidth / 2;
          int yCenter = mHeight / 2;
@@ -453,17 +437,17 @@ public class NetVisComponent extends JComponent implements
          double i = 0.0;
          if( nrOfNodesToLayout > 0 )
          {
-            for (Node n : mAllNodes )
+            for (Node n : allNodes )
             {
                if( !n.mbIsInitialLayouted ) 
                {
                   double angle = 2* Math.PI / nrOfNodesToLayout * i;
 
-                  n.mx = (int)( xCenter + radius * Math.sin ( angle ));
-                  n.my = (int)( yCenter + radius * Math.cos ( angle ));
+                  n.setMx( (int)( xCenter + radius * Math.sin ( angle )) );
+                  n.setMy( (int)( yCenter + radius * Math.cos ( angle )) );
 
-                  n.x = n.mx;
-                  n.y = n.my;
+                  n.setx( n.getMx() );
+                  n.sety( n.getMy() );
                }
                i += 1.0;
                n.mbIsInitialLayouted = true;
@@ -479,7 +463,7 @@ public class NetVisComponent extends JComponent implements
       {
          g2.setFont(this.myPlain10Font);
          
-         Vector<netvis.model.Node> allNodes = mModel.getAllNodes();
+         List<netvis.model.Node> allNodes = mModel.getAllNodes();
          
          
          int timeDiagramWidth = 300;
@@ -489,36 +473,32 @@ public class NetVisComponent extends JComponent implements
          g2.setColor(Color.WHITE);
          for ( netvis.model.Node n : allNodes )
          {
-            String s = n.mDisplayName; 
+            String s = n.getDisplayName(); 
            
             if( true )//  !n.mbIsUserMoved  )
             {
                int width = g2.getFontMetrics().stringWidth(s);
 
-               if( n.mLoD == 0 )
+               if( n.getLoD() == 0 )
                {
-                  n.mWidth = 5;
-                  n.mHeight = 5;
+                  n.setWidth( 5 );
+                  n.setHeight( 5 );
                }
-               else if( n.mLoD == 1 )
+               else if( n.getLoD() == 1 )
                {
-                  n.mWidth = width;
-                  n.mHeight = 1 * this.mLineHeight;
+                  n.setWidth ( width );
+                  n.setHeight ( 1 * this.mLineHeight );
                } 
-               else if( n.mLoD == 2 )
+               else if( n.getLoD() == 2 )
                {
-                  n.mWidth = width;
-                  n.mHeight = 3 * this.mLineHeight;
+                  n.setWidth( width );
+                  n.setHeight( 3 * this.mLineHeight );
                }
-               else if( n.mLoD == 3 )
+               else if( n.getLoD() == 3 )
                {
-                  n.mHeight = timeDiagramHeight + 3 * this.mLineHeight ;//35 * this.mLineHeight;
-                  n.mWidth = timeDiagramWidth;
+                  n.setHeight( timeDiagramHeight + 3 * this.mLineHeight);
+                  n.setWidth( timeDiagramWidth );
                }
-
-               n.mDisplayNameXoffset = width/2;
-
-               // n.mx -= n.mDisplayNameXoffset;
             }
             
             Color mainColor = Color.BLACK;
@@ -526,7 +506,7 @@ public class NetVisComponent extends JComponent implements
             Color borderColor = Color.GRAY.darker();
          
             
-            if( n.type == Node.TYPE_ENDPOINT )
+            if( n.getType() == Node.TYPE_ENDPOINT )
             {
                mainColor = Color.BLACK;
                borderColor = Color.YELLOW;
@@ -539,51 +519,51 @@ public class NetVisComponent extends JComponent implements
             }
             
             g2.setColor(mainColor);
-            g2.fillRect(n.mx,n.my,n.mWidth,n.mHeight);
+            g2.fillRect(n.getMx(),n.getMy(),n.getWidth(),n.getHeight());
 
        
-            if( n.mLoD == 0 )
+            if( n.getLoD() == 0 )
             {
-               if( n.type == Node.TYPE_ROUTEPOINT) 
+               if( n.getType() == Node.TYPE_ROUTEPOINT) 
                {
                   try 
                   {
                      if( n instanceof TraceRouteNode)
                      {
-                        int depth = ((TraceRouteNode)n).mDepth;
+                        int depth = ((TraceRouteNode)n).getDepth();
                         g2.setColor(textColor);
-                        g2.drawString( Integer.toString(depth), n.mx+5, n.my+ this.mLineHeight - 1);
+                        g2.drawString( Integer.toString(depth), n.getMx()+5, n.getMy()+ this.mLineHeight - 1);
                      }
                   }
                   catch (ClassCastException cce )
                   {
-                     
+                     logger.error("cought {0}", cce);
                   }
                }
             }
-            else if( n.mLoD > 0)
+            else if( n.getLoD() > 0)
             {
                g2.setColor(textColor);
-               g2.drawString(s, n.mx, n.my+ this.mLineHeight - 1);
+               g2.drawString(s, n.getMx(), n.getMy()+ this.mLineHeight - 1);
             }
             
-            if( n.mLoD > 1 )
+            if( n.getLoD() > 1 )
             {
                String s2 = n.getAddr().toString();
                if( s2.startsWith("/"))
                {
                   s2 = s2.substring( 1, s2.length());
                }
-               g2.drawString(s2, n.mx, n.my+2*this.mLineHeight - 1);
+               g2.drawString(s2, n.getMx(), n.getMy()+2*this.mLineHeight - 1);
                
-               String s3 = "s"+n.sentPackets + ",r" + n.receivedPackets;
-               g2.drawString(s3, n.mx, n.my+3*this.mLineHeight - 1);
+               String s3 = "s" + n.getSentPackets() + ",r" + n.getReceivedPackets();
+               g2.drawString(s3, n.getMx(), n.getMy()+3*this.mLineHeight - 1);
                
-               if( n.mLoD > 2 )
+               if( n.getLoD() > 2 )
                {
 
                   g2.setColor(Color.CYAN.darker().darker().darker());
-                  g2.fillRect(n.mx, n.my + 3 * this.mLineHeight, timeDiagramWidth, timeDiagramHeight);
+                  g2.fillRect(n.getMx(), n.getMy() + 3 * this.mLineHeight, timeDiagramWidth, timeDiagramHeight);
                                     
                   synchronized ( mModel.getAllPackets() )
                   {  
@@ -592,76 +572,55 @@ public class NetVisComponent extends JComponent implements
                      long diagramDuration = 300000;
                      for (netvis.model.Packet p : mModel.getAllPackets() )
                      {
-                        if( ( p.src == n ) || ( p.dst == n ))
+                        if( ( p.getSrc() == n ) || ( p.getDst() == n ))
                         {
                            long now = System.currentTimeMillis();
-                           long age = now - p.ts;
+                           long age = now - p.getTs();
 
                            if( age < diagramDuration )
                            {  
-                              int x = (timeDiagramWidth - (int)(age * timeDiagramWidth / diagramDuration)) + n.mx;
-                              int yTop = timeDiagramHeight - p.size/5;
+                              int x = (timeDiagramWidth - (int)(age * timeDiagramWidth / diagramDuration)) + n.getMx();
+                              int yTop = timeDiagramHeight - p.getSize()/5;
                               if( yTop <  0 )
                               {
                                  yTop = 0;
                               }
-                              yTop += n.my + 3*this.mLineHeight ;
-                              if( yTop < n.my)
+                              yTop += n.getMy() + 3*this.mLineHeight ;
+                              if( yTop < n.getMy())
                               {
-                                 yTop = n.my;
+                                 yTop = n.getMy();
                               }
 
-                              int yBottom = timeDiagramHeight + n.my  + 3*this.mLineHeight;
+                              int yBottom = timeDiagramHeight + n.getMy()  + 3*this.mLineHeight;
 
                               g2.drawLine( x, yTop, x, yBottom );  
                            }
                         }
                      }
                   }
-                  
-                  /*
-                  g2.setColor(textColor);
-                  if( n.lastSeenIpv4p != null )
-                  {
-                     String s4 = n.lastSeenIpv4p.toString();
-                     
-                     String[] lines = s4.split("\\r?\\n", -1);
-                     int nr = 4;
-                     for(String line : lines) {
-                         // logger.debug("\tLine %02d \"%s\"%n", nr++, line);
-                        
-                        g2.drawString(line, n.mx, n.my+ nr*this.mLineHeight - 1);
-                        nr++;
-                        if ( nr > 35 )
-                        {
-                           break;
-                        }
-                     }
-                  }
-                  */
                }
             }
             
             g2.setStroke(mStroke1);
             g2.setColor(borderColor);
-            g2.drawRect(n.mx,n.my,n.mWidth,n.mHeight);
+            g2.drawRect(n.getMx(),n.getMy(),n.getWidth(),n.getHeight());
             if( n == mSelectedNode )
             {
                g2.setColor(borderColor);
-               g2.drawRect(n.mx,n.my,n.mWidth,n.mHeight);
-               g2.drawRect(n.mx-1,n.my-1,n.mWidth+2,n.mHeight+2);
-               g2.drawRect(n.mx-2,n.my-2,n.mWidth+4,n.mHeight+4);
+               g2.drawRect(n.getMx(),n.getMy(),n.getWidth(),n.getHeight());
+               g2.drawRect(n.getMx()-1, n.getMy()-1, n.getWidth()+2, n.getHeight()+2);
+               g2.drawRect(n.getMx()-2, n.getMy()-2, n.getWidth()+4, n.getHeight()+4);
             }
             
-            if ( !n.mbCanFlow )
+            if ( !n.canFlow() )
             {
                g2.setColor(borderColor);
-               g2.fillRect(n.mx,n.my,3,3);
+               g2.fillRect(n.getMx(),n.getMy(),3,3);
             }
             
-            if( !n.isActive )
+            if( !n.isActive() )
             {
-               g2.drawLine( n.mx, n.my + n.mHeight, n.mx+n.mWidth, n.my);
+               g2.drawLine( n.getMx(), n.getMy() + n.getHeight(), n.getMx()+n.getWidth(), n.getMy());
             }
             
          }
@@ -673,10 +632,10 @@ public class NetVisComponent extends JComponent implements
    {
       public int s1;
       public int s2;
-      ShortestPair(int _s1, int _s2)
+      ShortestPair(int tmps1, int tmps2)
       {
-         s1 = _s1;
-         s2 = _s2;
+         s1 = tmps1;
+         s2 = tmps2;
       }
    }
    
@@ -691,7 +650,7 @@ public class NetVisComponent extends JComponent implements
       int d2 = Math.abs(p1 - q2);
       if( d2 < d1 )
       {
-         r1 = p1;
+         // r1 is already p1
          r2 = q2;
       }
       int d3 = Math.abs(p2 - q1);
@@ -716,14 +675,14 @@ public class NetVisComponent extends JComponent implements
    { 
       if( isActive )
       {
-         if ( !mModel.mMain.isOnline )
+         if ( !mModel.mMain.isOnline() )
          {
             millis = 1000;
          }
 
-         float hue = (float) 0.0;
+         float hue;
          double fsFract =  Math.exp( -(double)millis / 100000.0 );
-         hue = (float) ( 0.6666 - fsFract * 2.0 / 3.0);   // 0.000(red) - 0.33333(green);
+         hue = (float) ( 0.6666 - fsFract * 2.0 / 3.0);
          double b  = fsFract * 0.5 +0.5;
 
          Color bgc = Color.getHSBColor(hue, (float)1.0, (float)b);
@@ -742,21 +701,21 @@ public class NetVisComponent extends JComponent implements
    {
       synchronized( mModel.getAllLinks() )
       {
-         Vector<netvis.model.Link> mAllLinks = mModel.getAllLinks();
+         List<netvis.model.Link> allLinks = mModel.getAllLinks();
          
          g2.setColor(Color.BLACK);
                  
-         for (netvis.model.Link l : mAllLinks )
+         for (netvis.model.Link l : allLinks )
          {
-            Node s = l.src;
-            Node d = l.dst;
+            Node s = l.getSrc();
+            Node d = l.getDst();
 
             if(( s!=null) && ( d!=null ))
             {
                int packets = l.getNrOfSeenPackets();
 
                g2.setStroke(mStroke1);
-               if( ( packets > 2 ) && ( s.isActive ) && ( d.isActive ) )
+               if( ( packets > 2 ) && ( s.isActive() ) && ( d.isActive() ) )
                {
                   g2.setStroke(mStroke2);
                   if( packets > 5 ) 
@@ -786,13 +745,12 @@ public class NetVisComponent extends JComponent implements
                }
 
 
-               ShortestPair xp = getShortestPair(s.mx,  s.mx + s.mWidth, d.mx,  d.mx + d.mWidth); 
-               ShortestPair yp = getShortestPair(s.my,  s.my + s.mHeight, d.my, d.my + d.mHeight); 
+               ShortestPair xp = getShortestPair(s.getMx(),  s.getMx() + s.getWidth(), d.getMx(),  d.getMx() + d.getWidth()); 
+               ShortestPair yp = getShortestPair(s.getMy(),  s.getMy() + s.getHeight(), d.getMy(), d.getMy() + d.getHeight()); 
 
-               Color c = getColorOfLinkAge( l.getTimeSinceLastSeenPacket(), (s.isActive && d.isActive) );
+               Color c = getColorOfLinkAge( l.getTimeSinceLastSeenPacket(), (s.isActive() && d.isActive()) );
                g2.setColor(c);
 
-               // g2.drawLine( xp.s1, yp.s1, xp.s2, yp.s2 );
                drawParabel( g2, xp.s1, yp.s1, xp.s2, yp.s2, 10 );
             }
          }
@@ -805,9 +763,7 @@ public class NetVisComponent extends JComponent implements
       Node resultNode = null;
       synchronized ( mModel.getAllNodes() )
       {
-         Vector<Node> allNodes = mModel.getAllNodes();
-         // new ReverseIterator<String>(mAllNodes)
-         // for (Node n : mAllNodes )
+         List<Node> allNodes = mModel.getAllNodes();
          for( Node n: new ReverseIterator<Node>(allNodes) )
          {
             if ( n.contains(x, y) )
@@ -827,15 +783,6 @@ public class NetVisComponent extends JComponent implements
       {
          return;
       }
-
-      // double length = Math.sqrt((xStart - xEnd) * (xStart - xEnd) + (yStart -
-      // yEnd) * (yStart - yEnd));
-      // double nSteps = length / 10.0; // 10Pixel long lines.
-
-      // if( length > 10.0 )
-      // {
-      // vStep = 1.0 / nSteps;
-      // }
 
       int x1 = xStart;
       int y1 = yStart;
@@ -898,7 +845,7 @@ public class NetVisComponent extends JComponent implements
       }
       
       
-      logger.debug("Charge: "+standardCharge + ", Spring: "+standardSpring);
+      logger.debug("Charge: {0}, Spring: {1}", standardCharge, standardSpring);
 
    }
 
@@ -919,7 +866,7 @@ public class NetVisComponent extends JComponent implements
          {
             if ( mSelectedNode != null )
             {
-               mSelectedNode.isActive = !mSelectedNode.isActive;
+               mSelectedNode.setActive( !mSelectedNode.isActive() );
             }
          }
          
@@ -928,7 +875,7 @@ public class NetVisComponent extends JComponent implements
             if ( mSelectedNode != null )
             {
                // mSelectedNode.isActive = !mSelectedNode.isActive;
-               mMain.mTracerouteScheduler.addTargetAddress(mSelectedNode.getAddr());
+               mMain.getTRScheduler().addTargetAddress(mSelectedNode.getAddr());
                // mMain.mTracerouteScheduler.traceNextTarget();
             }
          }
@@ -941,14 +888,12 @@ public class NetVisComponent extends JComponent implements
    public void keyReleased(KeyEvent e)
    {
    
-
    }
 
    @Override
    public void keyTyped(KeyEvent e)
    {
    
-
    }
 
    @Override
@@ -959,12 +904,11 @@ public class NetVisComponent extends JComponent implements
          int x = arg0.getX();
          int y = arg0.getY();
          
-         // logger.debug("dragged to "+x+", "+y+" node="+mDraggingNode.mDisplayName);
-         this.mDraggingNode.mx = x - mDraggingNodeDx;
-         this.mDraggingNode.my = y - mDraggingNodeDy;
+         this.mDraggingNode.setMx( x - mDraggingNodeDx );
+         this.mDraggingNode.setMy( y - mDraggingNodeDy );
          
-         this.mDraggingNode.x = this.mDraggingNode.mx;
-         this.mDraggingNode.y = this.mDraggingNode.my;
+         this.mDraggingNode.setx( this.mDraggingNode.getMx() );
+         this.mDraggingNode.sety( this.mDraggingNode.getMy() );
       }
       repaint();
    }
@@ -1003,24 +947,24 @@ public class NetVisComponent extends JComponent implements
             if( n != null )
             {
                mSelectedNode = n;
-               n.mLoD++; 
-               if ( n.mLoD > 3 )
+               n.setLoD( n.getLoD() +1 ); 
+               if ( n.getLoD() > 3 )
                {
-                  n.mLoD = 0;
+                  n.setLoD( 0 );
                }
                
-               if( n.mLoD == 1 )
+               if( n.getLoD() == 1 )
                {
-                  n.mHeight = 1 * this.mLineHeight;
+                  n.setHeight( 1 * this.mLineHeight );
                }
-               else if ( n.mLoD == 2 )
+               else if ( n.getLoD() == 2 )
                {
-                  n.mHeight = 3 * this.mLineHeight;
+                  n.setHeight( 3 * this.mLineHeight );
                }
-               else if ( n.mLoD == 3 )
+               else if ( n.getLoD() == 3 )
                {
-                  n.mHeight = 200; //35 * this.mLineHeight;
-                  n.mWidth = 300;
+                  n.setHeight( 200 ); 
+                  n.setWidth( 300 );
                }
                
             }
@@ -1035,7 +979,7 @@ public class NetVisComponent extends JComponent implements
             if( n != null )
             {
                mSelectedNode = n;
-               n.mbCanFlow = !n.mbCanFlow;
+               n.setCanFlow( !n.canFlow() );
             }
          }
       }
@@ -1076,8 +1020,8 @@ public class NetVisComponent extends JComponent implements
          if( n != null )
          {
             mDraggingNode = n;
-            mDraggingNodeDx = ev.getX() - n.mx;
-            mDraggingNodeDy = ev.getY() - n.my;   // 0...11
+            mDraggingNodeDx = ev.getX() - n.getMx();
+            mDraggingNodeDy = ev.getY() - n.getMy();   // 0...11
             n.mbIsInitialLayouted = true; 
          }
       }

@@ -47,7 +47,7 @@ public class NetVisFrame extends  JFrame implements FocusListener, KeyListener
       this.mNetVisPanel = new JPanel();
       this.mNetVisPanel.setLayout(new BorderLayout());
       
-      mLVComponent = new NetVisComponent( m, m.mNetVisModel );
+      mLVComponent = new NetVisComponent( m, m.getNetVisModel() );
       this.mNetVisPanel.add( mLVComponent );
       
       this.add(mNetVisPanel, BorderLayout.CENTER);
@@ -55,7 +55,7 @@ public class NetVisFrame extends  JFrame implements FocusListener, KeyListener
       
       
       this.mGraphCtrlPanel = new JPanel();
-      this.mGraphCtrlPanel.setLayout(new GridBagLayout()); //new GridLayout(2, 16, 5, 5));
+      this.mGraphCtrlPanel.setLayout(new GridBagLayout());
       GridBagConstraints graphCtrlPanelConstraints = new GridBagConstraints();
       graphCtrlPanelConstraints.weightx = 1;
       graphCtrlPanelConstraints.weighty = 1;

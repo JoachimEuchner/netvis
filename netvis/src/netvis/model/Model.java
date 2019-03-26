@@ -1,6 +1,7 @@
 package netvis.model;
 
 import java.net.Inet4Address;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
@@ -17,12 +18,12 @@ public class Model
 
    public NetVisMain mMain;
    
-   private final Vector<netvis.model.Link> mAllLinks;
-   private final Vector<netvis.model.Node> mAllNodes;
-   private final Vector<netvis.model.Packet> mAllPackets;   
+   private final ArrayList<netvis.model.Link> mAllLinks;
+   private final ArrayList<netvis.model.Node> mAllNodes;
+   private final ArrayList<netvis.model.Packet> mAllPackets;   
    
-   private final Vector<netvis.model.Route> mRoutes;
-   private final Vector<netvis.traceroute.TraceRouteNode> mTraceRouteNodes;
+   private final ArrayList<netvis.model.Route> mRoutes;
+   private final ArrayList<netvis.traceroute.TraceRouteNode> mTraceRouteNodes;
    
    private CondoCleaner myCondoCleaner;
    
@@ -118,10 +119,10 @@ public class Model
       {
          for ( Link l : mAllLinks )
          {
-            if( ( l!= null) && ( l.src != null ) && ( l.dst != null ))
+            if( ( l!= null) && ( l.getSrc() != null ) && ( l.getDst() != null ))
             {
-               if( equalsAddr ( l.src.getAddr(), src ) 
-                        && equalsAddr ( l.dst.getAddr(), dst ) )
+               if( equalsAddr ( l.getSrc().getAddr(), src ) 
+                        && equalsAddr ( l.getDst().getAddr(), dst ) )
                {
                   retVal = l;
                   break;
@@ -140,10 +141,10 @@ public class Model
       {
          for ( Link l : mAllLinks )
          {
-            if( ( l!= null) && ( l.src != null ) && ( l.dst != null ))
+            if( ( l!= null) && ( l.getSrc() != null ) && ( l.getDst() != null ))
             {
-               if( equalsAddr ( l.src.getAddr(), src.getAddr() ) 
-                        && equalsAddr ( l.dst.getAddr(), dst.getAddr() ) )
+               if( equalsAddr ( l.getSrc().getAddr(), src.getAddr() ) 
+                        && equalsAddr ( l.getDst().getAddr(), dst.getAddr() ) )
                {
                   retVal = l;
                   break;
@@ -159,14 +160,14 @@ public class Model
       Route retVal = null;
       
       
-      byte[] srcAddressBytes = src.addressBytes;
-      byte[] dstAddressBytes = dst.addressBytes;
+      byte[] srcAddressBytes = src.getAddressBytes();
+      byte[] dstAddressBytes = dst.getAddressBytes();
       
       if( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 2) )
       {
          // src=192.168.2.0/8, dst=X
          // --> search for 192.168.1.44 <--> X
-         Node routeSrc = findNode( mMain.mTraceRouter.getSrcAddress() );
+         Node routeSrc = findNode( mMain.getTracerouter().getSrcAddress() );
          synchronized( mRoutes )
          {
             for ( Route r : mRoutes )
@@ -185,7 +186,7 @@ public class Model
       }
       else  if ( (dstAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 2) )
       {
-         Node routeDst = findNode( mMain.mTraceRouter.getSrcAddress() );
+         Node routeDst = findNode( mMain.getTracerouter().getSrcAddress() );
          // dst=192.168.2.0/8, src=X
          // --> search for 192.168.1.44 <--> X
          synchronized( mRoutes )
@@ -213,12 +214,12 @@ public class Model
       
       mMain = m;
       
-      this.mAllLinks = new Vector<Link>(100, 100);
-      this.mAllNodes = new Vector<Node>(1000, 1000);
-      this.mAllPackets = new Vector<Packet>(1000,1000);
+      this.mAllLinks = new ArrayList<>(100);
+      this.mAllNodes = new ArrayList<>(1000);
+      this.mAllPackets = new ArrayList<>(1000);
       
-      this.mRoutes = new Vector<netvis.model.Route>(100,100);
-      this.mTraceRouteNodes = new Vector<netvis.traceroute.TraceRouteNode>(1000,1000);
+      this.mRoutes = new ArrayList<>(100);
+      this.mTraceRouteNodes = new ArrayList<>(1000);
             
       myCondoCleaner = new CondoCleaner();
       Thread cleanerThread = new Thread( myCondoCleaner );
@@ -226,17 +227,17 @@ public class Model
       
    }
    
-   public Vector<Node> getAllNodes()
+   public List<Node> getAllNodes()
    {
       return mAllNodes;
    }
    
-   public Vector<Link> getAllLinks()
+   public List<Link> getAllLinks()
    {
       return mAllLinks;
    }
    
-   public Vector<netvis.model.Packet> getAllPackets()
+   public List<netvis.model.Packet> getAllPackets()
    {
       return mAllPackets;
    }
@@ -262,9 +263,9 @@ public class Model
       }
       else
       {
-         srcNode.sentPackets++;        
+         srcNode.incSentPackets();        
       }
-      srcNode.lastSeenIpv4p = ipv4p;
+      srcNode.setLastSeenIpv4Packet( ipv4p );
       srcNode.timeOfLastSeenPacket = now;
 
       Node dstNode = findNode( dst );
@@ -278,9 +279,9 @@ public class Model
       }
       else
       {
-         dstNode.receivedPackets++;
+         dstNode.incReceivedPackets();
       }
-      dstNode.lastSeenIpv4p = ipv4p;
+      dstNode.setLastSeenIpv4Packet( ipv4p );
       dstNode.timeOfLastSeenPacket = now;
       
       Packet p = new Packet ( now, srcNode, dstNode, ipv4p.length()); 
@@ -328,14 +329,13 @@ public class Model
    {
       synchronized( mAllLinks )
       {
-         // logger.debug("addLink("+l.src.getAddr()+"->"+l.dst.getAddr()+")");
-         if(( l.src != null ) && ( l.dst != null ))
+         if(( l.getSrc() != null ) && ( l.getDst() != null ))
          {
             mAllLinks.add(l);
          }
          else
          {
-            logger.warn("Model.addLink(): tried to add l with "+l.src+" -> "+l.dst);
+            logger.warn("Model.addLink(): tried to add l with {0} -> {1} ", l.getSrc(), l.getDst());
          }
       }
    }
@@ -347,10 +347,10 @@ public class Model
       {
          for( Link l: new ReverseIterator<Link>(mAllLinks) )
          {
-            if( ( l!= null) && ( l.src != null ) && ( l.dst != null ))
+            if( ( l!= null) && ( l.getSrc() != null ) && ( l.getDst() != null ))
             {
-               if( ( Model.equalsAddr( l.src.getAddr(), src) )
-                        && Model.equalsAddr( l.dst.getAddr(), dst ) ) 
+               if( ( Model.equalsAddr( l.getSrc().getAddr(), src) )
+                        && Model.equalsAddr( l.getDst().getAddr(), dst ) ) 
                {
                   mAllLinks.remove( l );
                }
@@ -372,7 +372,7 @@ public class Model
       }
       else
       {
-         r = new Route( this, trn.mSrcAddr,  trn.mOrigDstAddr );
+         r = new Route( this, trn.getSrc(),  trn.getDst() );
          mRoutes.add(r);
          r.addTraceRouteNode(trn);
       }
@@ -387,8 +387,8 @@ public class Model
          {
             // logger.debug("trn:<"+ trn.mSrcAddr + "->" +trn.mOrigDstAddr+"> ?= <"+ r.mSrcAddr+ "->" + r.mDstAddr +">");
             
-            if( equalsAddr ( trn.mSrcAddr, r.mSrcAddr ) 
-             && equalsAddr ( trn.mOrigDstAddr, r.mDstAddr ) )
+            if( equalsAddr ( trn.getSrc(), r.mSrcAddr ) 
+                && equalsAddr ( trn.getDst(), r.mDstAddr ) )
             {
                retVal = r;
                break;
@@ -422,23 +422,24 @@ public class Model
             {
                //...
             }
+            
             long now = System.currentTimeMillis();
 
             synchronized( mAllNodes ) 
             {
                for( Node n: new ReverseIterator<Node>(mAllNodes) )
                {
-                  if ( false ) // n.timeOfLastSeenPacket < ( now - (300000000) ))
+                  if ( n.timeOfLastSeenPacket < ( now - (300000000) ))
                   {                        
                      synchronized( mAllLinks )
                      {
                         for( Link l: new ReverseIterator<Link>(mAllLinks) )
                         {
-                           if( l.src == n )
+                           if( l.getSrc() == n )
                            {
                               mAllLinks.remove( l );
                            }
-                           if( l.dst == n )
+                           if( l.getDst() == n )
                            {
                               mAllLinks.remove( l );
                            }
@@ -448,7 +449,6 @@ public class Model
                   }
                }
             }
-
          }
       }
    }

@@ -2,17 +2,21 @@ package netvis.model;
 
 public class Packet
 {
-   public long ts;
-   public Node src;
-   public Node dst;
-   public int size;
+   private final long mTs;
+   public long getTs() { return mTs; }
+   private final Node mSrc;
+   public Node getSrc() { return mSrc; }
+   private final Node mDst;
+   public Node getDst() { return mDst; }
+   private final int mSize ;
+   public int getSize() { return mSize; }
    
-   public Packet( long _ts, Node _src, Node _dst, int _size )
+   public Packet( long ts, Node src, Node dst, int size )
    {
-      ts = _ts;
-      src = _src;
-      dst = _dst;
-      size = _size;
+      mTs = ts;
+      mSrc = src;
+      mDst = dst;
+      mSize = size;
    }  
 }
 

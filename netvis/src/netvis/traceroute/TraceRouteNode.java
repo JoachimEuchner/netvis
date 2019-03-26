@@ -4,13 +4,19 @@ import java.net.Inet4Address;
 
 public class TraceRouteNode extends netvis.model.Node
 {
-   public Inet4Address mSrcAddr;
-   public Inet4Address mOrigDstAddr;
-   public Inet4Address mReplyingAddr;
+   private final Inet4Address mSrcAddr;
+   public Inet4Address getSrc() { return mSrcAddr; }
+   private final Inet4Address mOrigDstAddr;
+   public Inet4Address getDst() { return mOrigDstAddr; }
+   private final Inet4Address mReplyingAddr;
+   public Inet4Address getReplyingAddr() { return mReplyingAddr; }
   
-   public int          mDepth;
+   private final int mDepth;
+   public int getDepth() { return mDepth; }
    
-   public int          mObservedTimes;
+   private int          mObservedTimes;
+   public int getObservedTimes() { return mObservedTimes; }
+   public void incObservedTimes() { mObservedTimes++; }
    
    public TraceRouteNode( Inet4Address srcAddr, Inet4Address origDstAddr, Inet4Address replyingAddr, int depth )
    {
@@ -21,9 +27,9 @@ public class TraceRouteNode extends netvis.model.Node
       mDepth = depth;      
       mObservedTimes = 1;
       
-      type = TYPE_ROUTEPOINT;
+      super.mType = TYPE_ROUTEPOINT;
       
-      timeOfLastSeenPacket = System.currentTimeMillis();
+      super.timeOfLastSeenPacket = System.currentTimeMillis();
       
       mDisplayName = mDisplayName+"@"+depth;
    }

@@ -10,31 +10,60 @@ public class Node
 {
    private static final Logger logger = LoggerFactory.getLogger(Node.class);
    
-   private Inet4Address addr;
-   public byte[] addressBytes;
+   private Inet4Address mAddr;
+   private final byte[] addressBytes;
+   public byte[] getAddressBytes() { return addressBytes; }
    
-   public int receivedPackets;
-   public int sentPackets;
+   private int receivedPackets;
+   public void incReceivedPackets() { receivedPackets++; }
+   public int getReceivedPackets() { return receivedPackets; }
+
+   private int sentPackets;
+   public void incSentPackets() { sentPackets++; }
+   public int getSentPackets() { return sentPackets; }
    
-   public IpV4Packet lastSeenIpv4p;
+   private IpV4Packet lastSeenIpv4p;
+   public void setLastSeenIpv4Packet( IpV4Packet p ) { lastSeenIpv4p = p;}
+   public IpV4Packet getLastSeenIpv4p() { return lastSeenIpv4p; };
    
-   public String mDisplayName;
-   public int mDisplayNameXoffset;
+   protected String mDisplayName;
+   public String getDisplayName() {return mDisplayName;}
+   // private int mDisplayNameXoffset;
    
    
-   public final static int TYPE_ENDPOINT = 1;
-   public final static int TYPE_ROUTEPOINT = 2; 
-   public int type;
+   public static final int TYPE_ENDPOINT = 1;
+   public static final int TYPE_ROUTEPOINT = 2; 
+   protected int mType;
+   public int getType() { return mType; }
    
-   public int mx;
-   public int my;
-   public int mWidth;
-   public int mHeight;
+   private int mx;
+   public int getMx() { return mx; }
+   public void setMx( int x) { mx = x; }
+   
+   private int my;
+   public int getMy() { return my; }
+   public void setMy( int y) { my = y; }
+   
+   private int mWidth;
+   public int getWidth() { return mWidth; }
+   public void setWidth( int width ) { mWidth = width; }
+   
+   private int mHeight;
+   public int getHeight() { return mHeight; }
+   public void setHeight( int height ) { mHeight = height; }
+   
    public boolean mbIsInitialLayouted;
-   public boolean mbCanFlow;
+   private boolean mbCanFlow;
+   public boolean canFlow() { return mbCanFlow; }
+   public void setCanFlow(Boolean s) { mbCanFlow = s; }
    
-   public double x;
-   public double y;
+   private double x;
+   public double getX() {return x;}
+   public void setx( double tmpX ) { x = tmpX; }
+   private double y;
+   public void sety( double tmpY ) { y = tmpY; }
+   public double getY() {return y;}
+
    public double fx;
    public double fy;
    public double vx;
@@ -42,25 +71,30 @@ public class Node
    
    public boolean isLocal;
   
-   public boolean isActive;  
-   public int mLoD;
+   private boolean mbIsActive;
+   public boolean isActive() { return mbIsActive; }
+   public void setActive( boolean a ) { mbIsActive = a; }
+   private int mLoD;
+   public int getLoD() { return mLoD; }
+   public void setLoD( int l ) { mLoD=l; }
    
-   public long timeOfLastSeenPacket;
+   protected long timeOfLastSeenPacket;
+   public long getTimeOfLastSeenPacket() { return timeOfLastSeenPacket; }
    
-   public Node( Inet4Address _addr )
+   public Node( Inet4Address addr )
    {
       mDisplayName = "";
-      mDisplayNameXoffset = 0;
-      isActive = true;
+      // mDisplayNameXoffset = 0;
+      mbIsActive = true;
       mLoD = 1;
 
-      type = TYPE_ENDPOINT;
+      mType = TYPE_ENDPOINT;
       
       receivedPackets = 0;
       sentPackets = 0;
-      setInet4Address(_addr );
+      setInet4Address( addr );
       
-      addressBytes = addr.getAddress();      
+      addressBytes = mAddr.getAddress();      
       
       if ( (addressBytes[0] == -64) && (addressBytes[1] == -88) && (addressBytes[2] == 2) )
       {
@@ -87,23 +121,19 @@ public class Node
       
       timeOfLastSeenPacket = 0;
       
-      // logger.debug("Node.<ctor> done: " + mDisplayName);
+      logger.debug("Node.<ctor> done: {0}'", mDisplayName);
    }
    
    public Inet4Address getAddr()
    {
-      return ( addr );
+      return ( mAddr );
    }
    
-   
-   
-   
-   
-   public void setInet4Address( Inet4Address _addr )
+   public void setInet4Address( Inet4Address addr )
    {
-      addr = _addr;
+      mAddr = addr;
       
-      String name4Numbers = addr.toString();
+      String name4Numbers = mAddr.toString();
       if( name4Numbers.startsWith("/"))
       {
          name4Numbers = name4Numbers.substring(1, name4Numbers.length());
@@ -172,7 +202,6 @@ public class Node
                for (final java.util.Enumeration<?> vals = attr.getAll(); vals.hasMoreElements();)
                {
                   String value = vals.nextElement().toString();
-                  // logger.debug(attrId + ": " + value);
 
                   if ("PTR".equals(attrId))
                   {
@@ -191,7 +220,7 @@ public class Node
          catch (final javax.naming.NamingException e)
          {
             // No reverse DNS that we could find, try with InetAddress
-            logger.debug("cought: "+e); // NO-OP
+            logger.debug("cought: {0}",e); // NO-OP
          }
       }
 

@@ -49,7 +49,7 @@ public class Traceroute
          }
          catch ( Exception e )
          {
-            logger.warn("TraceRouteTimerReceiver.run(): cought: "+e);
+            logger.warn("TraceRouteTimerReceiver.run(): cought: {0}", e);
          }
       }
    }
@@ -290,7 +290,7 @@ public class Traceroute
             {
                logger.debug("tr.msgReceived() found targetHost, this traceroute completed.");
                mState = TRACEROUTE_STATE_IDLE;
-               main.mTracerouteScheduler.traceNextTarget();
+               main.getTRScheduler().traceNextTarget();
             }
          }
       }
@@ -313,7 +313,7 @@ public class Traceroute
             // giving up on mTargetHost.
             logger.debug("tr.timeoutOccured() giving up on: "+ mTargetAddress);
             mState = TRACEROUTE_STATE_IDLE;
-            main.mTracerouteScheduler.traceNextTarget();
+            main.getTRScheduler().traceNextTarget();
          }
       }
    }

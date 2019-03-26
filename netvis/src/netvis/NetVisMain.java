@@ -38,13 +38,17 @@ public class NetVisMain
    PcapNetworkInterface nif;
    
    static NetVisMain handle;
-   public NetVisPackageListener nvpl;
+   private NetVisPackageListener nvpl;
    
-   public Model mNetVisModel;
-   public NetVisFrame mNetVisFrame;
+   private Model mNetVisModel;
+   public Model getNetVisModel() { return mNetVisModel; }
+   private NetVisFrame mNetVisFrame;
+   public NetVisFrame getNetVisFrame() { return mNetVisFrame; }
    
-   public Traceroute mTraceRouter;
-   public TracerouteScheduler mTracerouteScheduler;
+   private Traceroute mTraceRouter;
+   public Traceroute getTracerouter() { return mTraceRouter; }
+   private TracerouteScheduler mTracerouteScheduler;
+   public TracerouteScheduler getTRScheduler() { return mTracerouteScheduler; }
    
    
    private static final String COUNT_KEY = NetVisMain.class.getName() + ".count";
@@ -68,7 +72,8 @@ public class NetVisMain
       return nif;
    }
    
-   public boolean isOnline;
+   private boolean mIsOnline;
+   public boolean isOnline() {return mIsOnline;}
    
    MyListeningStarter mLs;
   
@@ -85,13 +90,13 @@ public class NetVisMain
       @Override
       public NetVisMsg call()
       {
+         NetVisMsg msg = null;
          try 
          {
-            while ( true ) 
+            boolean receive = true;          
+            while ( receive ) 
             { 
-               // logger.debug("MainCallable: going to call take()");
-               NetVisMsg msg = (NetVisMsg) mQueue.take();
-               // logger.debug("MainCallable: got "+msg);
+               msg = mQueue.take();
                NetVisMsgReceiver receiver = msg.getMsgReceiver();
                try
                {
@@ -99,7 +104,8 @@ public class NetVisMain
                }
                catch( Exception e)
                {
-                  logger.error("MainCallable: cought: "+e);
+                  receive=false;
+                  logger.error("MainCallable: cought: {0}.",e);
                }
             }
          } 
@@ -110,6 +116,7 @@ public class NetVisMain
             Thread.currentThread().interrupt();
             return ( null ); // this will never run, but the compiler needs it
          }
+         return ( msg );
       }
    }
    public void sendMsg( NetVisMsg msg )
@@ -123,7 +130,7 @@ public class NetVisMain
       } 
       catch (InterruptedException e)
       {
-         logger.error("sendMsg() cought: " + e);
+         logger.error("sendMsg() cought {0}.", e);
       }
    }
    
@@ -146,7 +153,7 @@ public class NetVisMain
       
       if( args.length == 0 )
       {
-         isOnline = true;
+         mIsOnline = true;
 
          nvpl = new NetVisPackageListener( this, pcapHandle, mNetVisModel );
          mLs = new MyListeningStarter();
@@ -171,7 +178,7 @@ public class NetVisMain
          } 
          catch (UnknownHostException e)
          {
-            e.printStackTrace();
+            logger.error( "cought: {0}.", e);
          }
        
          
@@ -182,11 +189,10 @@ public class NetVisMain
       else
       {
          FileReader fr = new FileReader();
-         // fr.filename = args[0];
          
          nvpl = new NetVisPackageListener( this, pcapHandle, mNetVisModel );
          
-         isOnline = false;
+         mIsOnline = false;
          mFileReaderThread = new Thread( fr );
          
          mFileReaderThread.start();
@@ -198,10 +204,7 @@ public class NetVisMain
      
    
    private class FileReader implements Runnable
-   {
-
-      // public String filename;
-      
+   {      
       public void run()
       {
          logger.debug("FileReader.run() called");
@@ -239,12 +242,11 @@ public class NetVisMain
                } 
                catch (NotOpenException e)
                {
-                  // TODO Auto-generated catch block
-                  e.printStackTrace();
+                  logger.error("cought {0}.", e);
                }
             }
          } catch (PcapNativeException e) {
-            logger.error("cought "+e);
+            logger.error("cought {0}.", e);
          }
          
       }
