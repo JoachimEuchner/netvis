@@ -51,7 +51,7 @@ public class NetVisMain
    
    
    private static final String COUNT_KEY = NetVisMain.class.getName() + ".count";
-   private static final int COUNT = Integer.getInteger(COUNT_KEY, 1000);
+   private static final int COUNT = Integer.getInteger(COUNT_KEY, 10000);
 
    private static final String READ_TIMEOUT_KEY = NetVisMain.class.getName() + ".readTimeout";
    private static final int READ_TIMEOUT = Integer.getInteger(READ_TIMEOUT_KEY, 100); // [ms]
@@ -140,7 +140,6 @@ public class NetVisMain
       mNetVisModel = new Model( this );
       mNetVisFrame = new NetVisFrame( this );
       
-
       this.mQueue = new ArrayBlockingQueue<>(100);
       ExecutorService threadPool = Executors.newFixedThreadPool(1); 
       /*Future<NetVisMsg> sum =*/ threadPool.submit(new MainCallable()); 
@@ -171,6 +170,7 @@ public class NetVisMain
          }
          
          Watchdog wd = new Watchdog();
+         wd.setWatching(true);
          Thread watchdogThread = new Thread( wd );
          watchdogThread.start();
       }
@@ -244,6 +244,11 @@ public class NetVisMain
    private class Watchdog implements Runnable
    {
       private boolean watching;
+      
+      public void setWatching( boolean w )
+      {
+         watching = w;
+      }
       
       public void run()
       {

@@ -92,7 +92,7 @@ public class NetVisPackageListener implements PacketListener
                }
                catch (Exception e )
                {
-                  logger.error("received [nr.:{}] : cought: "+e, counter, e);
+                  logger.error("received [nr.:{}] : cought: {}", counter, e);
                }
                                              
                logger.debug("received: [nr.:{}] src={} reply from {}, at depth: {}, sent to {}"
@@ -111,7 +111,7 @@ public class NetVisPackageListener implements PacketListener
                       ( Model.equalsAddr( ipv4p.getHeader().getSrcAddr(), mMain.getTracerouter().getTargetAddress()))  ) )
        
             {
-               // traceroute completed.
+               // found targethost, traceroute completed.
                TraceRouteMsg trm = new TraceRouteMsg(mMain.getTracerouter(), 
                                                      ipv4p.getHeader().getSrcAddr(), 
                                                      mMain.getTracerouter().getLastSentDepth()+1 );

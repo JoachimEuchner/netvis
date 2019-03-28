@@ -60,6 +60,7 @@ public class Traceroute
    private int mState = TRACEROUTE_STATE_IDLE;
    public int getState() {return mState;};
    
+   public static final int TRACEROUTE_MAXDEPTH = 32;
    
    private static final String READ_TIMEOUT_KEY =
             Traceroute.class.getName() + ".readTimeout";
@@ -102,26 +103,41 @@ public class Traceroute
    }
    
    boolean targetAddressLocked = false;
+   private boolean acceptTarget( Inet4Address t )
+   {
+      boolean accept = true;
+      byte[] srcAddressBytes = t.getAddress();
+      
+      if( (srcAddressBytes[0] == 127) && (srcAddressBytes[1] == 0) && (srcAddressBytes[2] == 0) ) 
+      { 
+         // localhost
+         accept = false;
+      }
+      else if( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 1) )
+      {
+         // 192.168.1.0/24
+         accept = false;
+      }
+      else  if ( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 2) ) 
+      {
+         // 192.168.2.0/24
+         accept = false;
+      }
+      return accept;
+   }
+   
    public void setTargetAddess( Inet4Address t )
    {
       logger.trace("tr.setTarget: {} called, locked: {}", t, targetAddressLocked);
       if( !targetAddressLocked )
       {
-         byte[] srcAddressBytes = t.getAddress();
-         
-         if(!( (srcAddressBytes[0] == 127) && (srcAddressBytes[1] == 0) && (srcAddressBytes[2] == 0) ) )
+         if( acceptTarget( t ) )
          {
-            if(!( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 1) ) )
+            if ( !Model.equalsAddr(t, mTargetAddress))
             {
-               if(!( (srcAddressBytes[0] == -64) && (srcAddressBytes[1] == -88) && (srcAddressBytes[2] == 2) ) )
-               {
-                  if ( !Model.equalsAddr(t, mTargetAddress))
-                  {
-                     logger.debug("tr.setTarget: {}", t);
-                  }
-                  mTargetAddress = t;
-               }
+               logger.debug("tr.setTarget: {}", t);
             }
+            mTargetAddress = t;
          }
       }
       logger.trace("tr.setTarget({}), now: {}", t, mTargetAddress);
@@ -146,13 +162,13 @@ public class Traceroute
      
    }
    
-   public void initialize(Inet4Address _srcAddr,
-                          MacAddress _srcMac, 
-                          MacAddress _dstMac )
+   public void initialize(Inet4Address tmpSrcAddr,
+                          MacAddress tmpSrcMac, 
+                          MacAddress tmpDstMac )
    {
-      srcAddress = _srcAddr;
-      srcMac = _srcMac;
-      dstMac = _dstMac;
+      srcAddress = tmpSrcAddr;
+      srcMac = tmpSrcMac;
+      dstMac = tmpDstMac;
       
       List<PcapNetworkInterface> allDevs = null;
       try 
@@ -188,7 +204,7 @@ public class Traceroute
    
    private void sendICMPPackage( Inet4Address dst, int ttl )
    {
-      logger.info("tr.sendICMPPackage({}, {}) called.", dst, ttl);
+      logger.debug("tr.sendICMPPackage({}, {}) called.", dst, ttl);
                    
       byte[] echoData = new byte[TU - 28];
       for (int i = 0; i < echoData.length; i++) {
@@ -229,6 +245,8 @@ public class Traceroute
       try
       {
          sendHandle.sendPacket(p);
+         logger.trace("sendICMPPackage({}, {}) sent icmp-package.", dst, ttl);
+         
          setLastSentDepth( ttl );
          
          try
@@ -245,7 +263,7 @@ public class Traceroute
          {
             long timeForOneProbe = 3500;
             timer.schedule(mTimerReceiver, timeForOneProbe);
-            logger.info("sendICMPPackage({}, {}) started timer with {} ms", dst, ttl, timeForOneProbe);
+            logger.trace("sendICMPPackage({}, {}) started timer with {} ms", dst, ttl, timeForOneProbe);
          }
          catch ( java.lang.IllegalStateException ise )
          {
@@ -261,7 +279,7 @@ public class Traceroute
          logger.error( "sendPacket: cought not open: {}", e2 );
       }
          
-      logger.info("sendICMPPackage({}, {}) done.", dst, ttl);
+      logger.trace("sendICMPPackage({}, {}) done.", dst, ttl);
    }
    
   
@@ -299,11 +317,11 @@ public class Traceroute
    
    public void timeoutOccured(int id)
    {
-      logger.info("tr.timeoutOccured({}) called. mTargetAddress={}, lastDepth:{}", id, mTargetAddress, getLastSentDepth());
+      logger.info("tr.timeoutOccured({}) called. mTargetAddress={}, lastDepth:{}, mState={}", id, mTargetAddress, getLastSentDepth(), mState);
       
       if( mTargetAddress != null )
       {
-         if( getLastSentDepth() < 20 )
+         if( ( getLastSentDepth() < TRACEROUTE_MAXDEPTH ) && ( TRACEROUTE_STATE_TRACING_ACTIVE == mState ) )
          {
             TraceRouteMsg trm = new TraceRouteMsg(this, null, getLastSentDepth()+1);
             main.sendMsg ( trm );
