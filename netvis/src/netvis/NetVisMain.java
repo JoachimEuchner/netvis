@@ -129,9 +129,7 @@ public class NetVisMain
       {
          logger.error("sendMsg() cought {}.", e);
       }
-   }
-   
-  
+   }  
  
    private NetVisMain(String[] args) 
    {
@@ -151,7 +149,7 @@ public class NetVisMain
       {
          mIsOnline = true;
 
-         nvpl = new NetVisPackageListener( this, pcapHandle, mNetVisModel );
+         nvpl = new NetVisPackageListener( this, mNetVisModel );
          mLs = new MyListeningStarter();
 
          mListeningStartThread = new Thread(mLs );
@@ -162,7 +160,7 @@ public class NetVisMain
             Inet4Address srcAddress = (Inet4Address) InetAddress.getByName("192.168.1.44");
             MacAddress srcMac = MacAddress.getByName("00:e0:4c:69:13:c7");
             MacAddress dstMac = MacAddress.getByName("34:31:c4:33:ce:ee");
-            mTraceRouter.initialize(srcAddress, srcMac, dstMac );
+            mTraceRouter.initialize( srcAddress, srcMac, dstMac );
          } 
          catch (UnknownHostException e)
          {
@@ -178,7 +176,7 @@ public class NetVisMain
       {
          FileReader fr = new FileReader();
          
-         nvpl = new NetVisPackageListener( this, pcapHandle, mNetVisModel );
+         nvpl = new NetVisPackageListener( this, mNetVisModel );
          
          mIsOnline = false;
          mFileReaderThread = new Thread( fr );

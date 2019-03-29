@@ -96,6 +96,64 @@ public class Route
          }
       }      
    }
+   
+   private TraceRouteNode getNodeAtDepth(int depth, boolean forward)
+   {
+      TraceRouteNode trn = null;
+      synchronized( mTraceRouteNodes )
+      {
+         if( forward )
+         {
+            for ( TraceRouteNode _trn : mTraceRouteNodes )
+            {
+               if ( _trn.getDepth() == depth )
+               {
+                  trn = _trn;
+                  break;
+               }
+            }
+         }
+         else
+         {
+            for(  TraceRouteNode _trn : new ReverseIterator<TraceRouteNode>(mTraceRouteNodes) )
+            {
+               if ( _trn.getDepth() == depth )
+               {
+                  trn = _trn;
+                  break;
+               }
+            }
+         }
+      }
+      return trn;
+   }
+   
+   private TraceRouteNode getPreviousNode(int depth )
+   {
+      TraceRouteNode trn = null;
+      
+      if( depth > 0 )
+      {
+         int searchDepth = depth - 1;
+         while ( searchDepth >= 0 )
+         {
+            logger.trace("Route <{}, {}>: searching @depth={} in {} trns.",
+                  mSrcAddr, mDstAddr, searchDepth, mTraceRouteNodes.size());
+          
+            trn = getNodeAtDepth(searchDepth, false);
+            if( trn != null )
+            {
+               logger.trace("Route <{}, {}>: found {} @depth={} in {} trns.",
+                        mSrcAddr, mDstAddr, trn.getReplyingAddr(), searchDepth, mTraceRouteNodes.size());
+               break;
+            }
+            searchDepth--;
+         }
+      }
+      
+      return trn;
+   }
+   
   
    public void addTraceRouteNode( TraceRouteNode newTrn )
    {  
@@ -105,13 +163,21 @@ public class Route
       {
          for ( TraceRouteNode _trn : mTraceRouteNodes )
          {
-            if( Model.equalsAddr ( _trn.getReplyingAddr(), newTrn.getReplyingAddr() ) 
-                     && Model.equalsAddr ( _trn.getSrc(), newTrn.getSrc() ) 
-                     && Model.equalsAddr ( _trn.getDst(), newTrn.getDst() ) 
-                     && (_trn.getDepth() == newTrn.getDepth()) )
+            if ( Model.equalsAddr ( _trn.getSrc(), newTrn.getSrc() ) 
+                 && Model.equalsAddr ( _trn.getDst(), newTrn.getDst() ) )
             {
-               trn = _trn;
-               break;
+               if( Model.equalsAddr ( _trn.getReplyingAddr(), newTrn.getReplyingAddr() ) 
+                        && (_trn.getDepth() == newTrn.getDepth()) )
+               {
+                  trn = _trn;
+                  break;
+               }
+            }
+            else
+            {
+               logger.error("addTraceRouteNode({}, {}->{}) should not have been added here: ({}->{})",
+                        newTrn.getReplyingAddr(), newTrn.getSrc(), newTrn.getDst(),
+                        _trn.getSrc(), _trn.getDst());
             }
          }
       }     
@@ -125,41 +191,12 @@ public class Route
 
       // find previous node along route:
       int depth = trn.getDepth();
-      TraceRouteNode previousNode = null;
-      if( depth > 0 )
-      {
-         int searchDepth = depth - 1;
-
-         while ( ( searchDepth >= 0 ) && ( previousNode == null ))
-         {
-            logger.trace("Route <{}, {}>: searching @depth={} in {} trns.",
-                  mSrcAddr, mDstAddr, searchDepth, mTraceRouteNodes.size());
-            synchronized( mTraceRouteNodes )
-            {
-               for ( TraceRouteNode _trn : mTraceRouteNodes )
-               {
-                  if ( _trn.getDepth() == searchDepth )
-                  {
-                     previousNode = _trn;
-                     break;
-                  }
-               }
-            }
-            if( previousNode != null )
-            {
-               logger.trace("Route <{}, {}>: found {} @depth={} in {} trns.",
-                        mSrcAddr, mDstAddr, previousNode.getReplyingAddr(), searchDepth, mTraceRouteNodes.size());
-            }
-            searchDepth--;
-         }
-      }
+      TraceRouteNode previousNode =  getPreviousNode( depth );
 
       if( previousNode != null )
       {
-         
          logger.debug("Route <{}, {}>: found {} @depth={} in {} trns.",
-                  mSrcAddr, mDstAddr, previousNode.getReplyingAddr(), previousNode.getDepth(), mTraceRouteNodes.size());
-        
+                  mSrcAddr, mDstAddr, previousNode.getReplyingAddr(), previousNode.getDepth(), mTraceRouteNodes.size()); 
 
          if ( mMain.findNode(previousNode.getReplyingAddr()) == null )
          {

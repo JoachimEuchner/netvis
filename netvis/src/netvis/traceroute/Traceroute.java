@@ -83,20 +83,22 @@ public class Traceroute
    private final NetVisMain main;
    private PcapHandle sendHandle;
  
-   private Integer mLastSentDepth = -1;
+   private Object mLastSentDepthObject;
+   private int mLastSentDepth; 
     
+   
    public int getLastSentDepth()
    {
       int depth;
-      synchronized ( mLastSentDepth )
+      synchronized ( mLastSentDepthObject )
       {
-         depth = mLastSentDepth.intValue();
+         depth = mLastSentDepth;
       }
       return depth;
    }
    private void setLastSentDepth( int depth )
    {
-      synchronized ( mLastSentDepth )
+      synchronized ( mLastSentDepthObject )
       {
          mLastSentDepth = depth ;
       }
@@ -155,6 +157,9 @@ public class Traceroute
           
       mState = TRACEROUTE_STATE_IDLE;
       
+      mLastSentDepthObject = new Object();
+      mLastSentDepth = -1;
+      
       mTimerReceiver = new TraceRouteTimerReceiver();
       timer = new Timer("TraceRouteTimer", false);
       // Schedule task to start immediately and re-fire every second...
@@ -180,25 +185,42 @@ public class Traceroute
          e.printStackTrace();
       }
 
-      int nifIdx = 0;
-      PcapNetworkInterface nif = allDevs.get(nifIdx);
-   
-      try
+      if( allDevs != null )
       {
-         sendHandle = nif.openLive(SNAPLEN, PromiscuousMode.PROMISCUOUS, READ_TIMEOUT);
-         sendHandle.setBlockingMode(BlockingMode.NONBLOCKING);
-      } 
-      catch (PcapNativeException e1)
-      {
-         e1.printStackTrace();
+         int nifIdx = 0;
+         PcapNetworkInterface nif = allDevs.get(nifIdx);
+
+         if( nif != null )
+         {
+            try
+            {
+               sendHandle = nif.openLive(SNAPLEN, PromiscuousMode.PROMISCUOUS, READ_TIMEOUT);
+               sendHandle.setBlockingMode(BlockingMode.NONBLOCKING);
+            } 
+            catch (PcapNativeException e1)
+            {
+               e1.printStackTrace();
+            }
+            catch (NotOpenException noe )
+            {
+               noe.printStackTrace();
+            }
+            
+            logger.info("tr.initialize() done, got: nifIdx: {} and nif {}", nifIdx, nif.getName());
+            mState = TRACEROUTE_STATE_IDLE;
+         }
+         else
+         {
+            logger.error("tr.initialize() got: null from  allDevs.get({})", nifIdx);
+         }
+
+        
+         
       }
-      catch (NotOpenException noe )
+      else
       {
-         noe.printStackTrace();
-      } 
-      
-      logger.info("tr.initialize() done, got: nifIdx: {} and nif {}", nifIdx, nif.getName());
-      mState = TRACEROUTE_STATE_IDLE;
+         logger.error("tr.initialize() got: allDevs = null.");
+      }
    }
    
    
@@ -329,9 +351,12 @@ public class Traceroute
          else
          {
             // giving up on mTargetHost.
-            logger.debug("tr.timeoutOccured() giving up on: {}", mTargetAddress);
-            mState = TRACEROUTE_STATE_IDLE;
-            main.getTRScheduler().traceNextTarget();
+            if( TRACEROUTE_STATE_TRACING_ACTIVE == mState )
+            {
+               logger.debug("tr.timeoutOccured() giving up on: {}", mTargetAddress);
+               mState = TRACEROUTE_STATE_IDLE;
+               main.getTRScheduler().traceNextTarget();
+            }
          }
       }
    }

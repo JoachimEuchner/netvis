@@ -329,7 +329,6 @@ public class Model
    
    public void removeLink(  Inet4Address src , Inet4Address dst )
    {
-    
       synchronized( mAllLinks )
       {
          for( Link l: new ReverseIterator<Link>(mAllLinks) )
@@ -345,8 +344,7 @@ public class Model
          }
       }
    }
-   
-   
+      
    public void addTraceRouteNode( Inet4Address srcAddr, Inet4Address origDstAddr, Inet4Address replyingAddr, int depth )
    {
       TraceRouteNode trn = null;

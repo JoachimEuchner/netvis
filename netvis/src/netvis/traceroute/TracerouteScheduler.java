@@ -62,6 +62,8 @@ public class TracerouteScheduler
          TracerouteTargetHost tth = (TracerouteTargetHost) o;
          return ( Model.equalsAddr(targetAddress, tth.targetAddress));
       }
+      
+      
    }
    
    private ArrayList<TracerouteTargetHost> mTargetHosts;

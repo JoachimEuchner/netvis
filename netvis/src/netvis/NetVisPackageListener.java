@@ -26,15 +26,13 @@ public class NetVisPackageListener implements PacketListener
    
    private NetVisMain mMain;
    private Model mModel;
-   private PcapHandle mPcH;
    
-   public NetVisPackageListener( NetVisMain main, PcapHandle pch, Model m ) 
+   public NetVisPackageListener( NetVisMain main, Model m ) 
    {
       mMain = main;
       mModel = m;
-      mPcH = pch;
       timeOfLastPackage = System.currentTimeMillis();
-   };
+   }
    
    int counter = 0;
    
@@ -47,9 +45,9 @@ public class NetVisPackageListener implements PacketListener
       counter++;
       timeOfLastPackage = System.currentTimeMillis();
       
-      if( mPcH != null )
+      if( mMain.getPcapHandle() != null )
       {
-         logger.trace("got Packet @{}", mPcH.getTimestamp());
+         logger.trace("got Packet @{}", mMain.getPcapHandle().getTimestamp());
       }
       
       if( true )
