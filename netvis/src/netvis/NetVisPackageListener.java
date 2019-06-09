@@ -155,7 +155,7 @@ public class NetVisPackageListener implements PacketListener
             ArpPacket arpp = packet.get(ArpPacket.class);
             if( arpp != null )
             {                                             
-               logger.debug("[nr.:{}]----> ARP: {} --> {}: len {}"
+               logger.trace("[nr.:{}]----> ARP: {} --> {}: len {}"
                            , counter
                            , arpp.getHeader().getSrcProtocolAddr()
                            , arpp.getHeader().getDstProtocolAddr()

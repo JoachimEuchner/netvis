@@ -182,7 +182,7 @@ public class Traceroute
       } 
       catch (PcapNativeException e) 
       {
-         e.printStackTrace();
+         logger.error("cought native {}", e );
       }
 
       if( allDevs != null )
@@ -199,11 +199,11 @@ public class Traceroute
             } 
             catch (PcapNativeException e1)
             {
-               e1.printStackTrace();
+               logger.error("cought native {}", e1 );
             }
             catch (NotOpenException noe )
             {
-               noe.printStackTrace();
+               logger.error("cought not open {}", noe );
             }
             
             logger.info("tr.initialize() done, got: nifIdx: {} and nif {}", nifIdx, nif.getName());
