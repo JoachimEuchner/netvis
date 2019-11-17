@@ -249,7 +249,7 @@ public class NetVisComponent extends JComponent implements
          
          try
          {
-            Thread.sleep(2000);
+            Thread.sleep(5000);
          }
          catch( InterruptedException ie )
          {
@@ -262,7 +262,7 @@ public class NetVisComponent extends JComponent implements
          {
             try
             {
-               Thread.sleep(200);
+               Thread.sleep(2000);
             }
             catch( InterruptedException ie )
             {
@@ -294,7 +294,7 @@ public class NetVisComponent extends JComponent implements
                               {
                                  if( ( n.isActive() ) && ( m.isActive() ) )
                                  {
-                                    double d2 = (n.getX() - m.getX())*(n.getX() - m.getX()) + (n.getY() - m.getY())*(n.getY() - m.getY());
+                                    double d2 = (n.getXCenter() - m.getXCenter())*(n.getXCenter() - m.getXCenter()) + (n.getYCenter() - m.getYCenter())*(n.getYCenter() - m.getYCenter());
 
                                     double localCharge = charge;
                                     if ( n.getAddressBytes()[0] == m.getAddressBytes()[0] ) 
@@ -346,15 +346,15 @@ public class NetVisComponent extends JComponent implements
                                        }
                                        if( n == s ) 
                                        {
-                                          n.fx -=  mySpring * (n.getX() - d.getX()) ;
-                                          n.fy -=  mySpring * (n.getY() - d.getY()) ;
+                                          n.fx -=  mySpring * (n.getXCenter() - d.getXCenter()) ;
+                                          n.fy -=  mySpring * (n.getYCenter() - d.getYCenter()) ;
                                        }
 
 
                                        if ( n == d )
                                        {
-                                          n.fx -= mySpring * (n.getX() - s.getX()) ;
-                                          n.fy -= mySpring * (n.getY() - s.getY()) ;
+                                          n.fx -= mySpring * (n.getXCenter() - s.getXCenter()) ;
+                                          n.fy -= mySpring * (n.getYCenter() - s.getYCenter()) ;
                                        }
                                     }
                                  }
@@ -566,7 +566,7 @@ public class NetVisComponent extends JComponent implements
                   {  
                      g2.setStroke(mStroke1);
                      g2.setColor(Color.CYAN);
-                     long diagramDuration = 300000;
+                     long diagramDuration = 900000;
                      for (netvis.model.Packet p : mModel.getAllPackets() )
                      {
                         if( ( p.getSrc() == n ) || ( p.getDst() == n ))

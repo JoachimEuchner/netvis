@@ -60,10 +60,12 @@ public class Node
    
    private double x;
    public double getX() {return x;}
+   public double getXCenter() {return (x + mWidth/2.0);}
    public void setx( double tmpX ) { x = tmpX; }
    private double y;
    public void sety( double tmpY ) { y = tmpY; }
    public double getY() {return y;}
+   public double getYCenter() {return (y + mHeight/2.0);}
 
    public double fx;
    public double fy;

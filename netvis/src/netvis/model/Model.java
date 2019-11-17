@@ -429,7 +429,7 @@ public class Model
             {
                for( Node n: new ReverseIterator<Node>(mAllNodes) )
                {
-                  if ( n.timeOfLastSeenPacket < ( now - (300000) ))
+                  if ( n.timeOfLastSeenPacket < ( now - (30000000) ))
                   {                        
                      synchronized( mAllLinks )
                      {
