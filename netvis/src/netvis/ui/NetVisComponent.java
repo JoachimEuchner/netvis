@@ -313,7 +313,7 @@ public class NetVisComponent extends JComponent implements
 
                                     if( d2 > 0 )
                                     {
-                                       double d = Math.sqrt ( d2 );
+                                       double d = d2/100; // Math.sqrt ( d2 );
 
                                        double nx = (n.getX() - m.getX()) / d;
                                        double ny = (n.getY() - m.getY()) / d;

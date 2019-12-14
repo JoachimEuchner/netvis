@@ -3,7 +3,6 @@ package netvis;
 import java.net.Inet4Address;
 
 import org.pcap4j.core.PacketListener;
-import org.pcap4j.core.PcapHandle;
 import org.pcap4j.packet.ArpPacket;
 import org.pcap4j.packet.EthernetPacket;
 import org.pcap4j.packet.IcmpV4CommonPacket;
@@ -37,7 +36,7 @@ public class NetVisPackageListener implements PacketListener
    int counter = 0;
    
    private long timeOfLastPackage;
-   public long getTimeOfLatsPackage() { return timeOfLastPackage; }
+   public long getTimeOfLastPackage() { return timeOfLastPackage; }
    
    
    public void gotPacket(Packet packet) 

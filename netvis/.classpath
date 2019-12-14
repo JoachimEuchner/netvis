@@ -20,5 +20,6 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="/home/joe/.m2/repository/net/java/dev/jna/jna/5.1.0/jna-5.1.0.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

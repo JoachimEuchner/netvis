@@ -260,9 +260,9 @@ public class NetVisMain
                Thread.sleep(10000);
                
                long now = System.currentTimeMillis();
-               if ( ( nvpl.getTimeOfLatsPackage() + 5000 ) < now )
+               if ( ( nvpl.getTimeOfLastPackage() + 5000 ) < now )
                {
-                  logger.trace("Watchdog.run() last package[{}] received {} ms ago..", nvpl.counter, (now - nvpl.getTimeOfLatsPackage()));
+                  logger.trace("Watchdog.run() last package[{}] received {} ms ago..", nvpl.counter, (now - nvpl.getTimeOfLastPackage()));
                      
                   StackTraceElement[] stackTrace = mListeningStartThread.getStackTrace();
                   logger.trace("getStackTrace()");
