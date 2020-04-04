@@ -313,7 +313,8 @@ public class NetVisMain
                   try
                   {
                      pcapHandle = nif.openLive(SNAPLEN, PromiscuousMode.PROMISCUOUS, READ_TIMEOUT);
-                     pcapHandle.setBlockingMode(BlockingMode.NONBLOCKING);
+                     // pcapHandle.setBlockingMode(BlockingMode.NONBLOCKING);
+                     pcapHandle.setBlockingMode(BlockingMode.BLOCKING);
                   } 
                   catch (PcapNativeException e1)
                   {
@@ -347,6 +348,8 @@ public class NetVisMain
                         e.printStackTrace();
                         keepReentring = true;
                      } 
+                     
+                     logger.debug("MyListeningStarter.run(): nifIdx:{}, pcapHandle.loop() exited", nifIdx);
                   }
                   else
                   {
@@ -354,6 +357,7 @@ public class NetVisMain
                   }
 
                   pcapHandle.close();
+                  logger.debug("MyListeningStarter.run(): pcapHandle.close(), nifIdx:{}, got nif {}", nifIdx, nif.getName());
                }
             }
          }
