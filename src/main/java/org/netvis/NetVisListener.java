@@ -26,7 +26,7 @@ public class NetVisListener implements Runnable {
      return pcapHandle;
   }
 
-  NetVisPackageListener mNVPL;
+  NetVisPacketListener mNVPL;
   
   private static final String COUNT_KEY = NetVisListener.class.getName() + ".count";
   private static final int COUNT = Integer.getInteger(COUNT_KEY, 10000);
@@ -39,7 +39,7 @@ public class NetVisListener implements Runnable {
 
   public NetVisListener()
   {
-      mNVPL = new NetVisPackageListener( this );
+      mNVPL = new NetVisPacketListener( this );
   }
   
   

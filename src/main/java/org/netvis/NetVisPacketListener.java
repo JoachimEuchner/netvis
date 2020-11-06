@@ -5,9 +5,9 @@ import org.pcap4j.core.PcapPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NetVisPackageListener implements PacketListener{
+public class NetVisPacketListener implements PacketListener{
 
-  private static final Logger logger = LoggerFactory.getLogger(NetVisPackageListener.class);
+  private static final Logger logger = LoggerFactory.getLogger(NetVisPacketListener.class);
 
   int counter = 0;
   private long timeOfLastPackage;
@@ -15,7 +15,7 @@ public class NetVisPackageListener implements PacketListener{
 
   private NetVisListener mNVL;
   
-  public NetVisPackageListener( NetVisListener nvl ) {
+  public NetVisPacketListener( NetVisListener nvl ) {
     mNVL = nvl;
     timeOfLastPackage = 0;
   }
@@ -24,6 +24,8 @@ public class NetVisPackageListener implements PacketListener{
   public void gotPacket(PcapPacket packet) {
     counter++;
     timeOfLastPackage = System.currentTimeMillis();
+    
+    System.out.print(".");
     
     if( mNVL.getPcapHandle() != null )
     {
