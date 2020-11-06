@@ -84,6 +84,7 @@ public class NetVisMain
    {
       return mQueue;
    }
+   
    private class MainCallable implements Callable<NetVisMsg>
    {
       @Override
@@ -118,6 +119,7 @@ public class NetVisMain
          return ( msg );
       }
    }
+   
    public void sendMsg( NetVisMsg msg )
    {
       BlockingQueue<NetVisMsg> theQueue = this.getQueue();

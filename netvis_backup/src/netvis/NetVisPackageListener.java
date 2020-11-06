@@ -10,7 +10,7 @@ import org.pcap4j.packet.IcmpV4EchoPacket;
 import org.pcap4j.packet.IcmpV4TimeExceededPacket;
 import org.pcap4j.packet.IpV4Packet;
 import org.pcap4j.packet.LinuxSllPacket;
-import org.pcap4j.packet.Packet;
+import org.pcap4j.core.PcapPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,14 +39,14 @@ public class NetVisPackageListener implements PacketListener
    public long getTimeOfLastPackage() { return timeOfLastPackage; }
    
    
-   public void gotPacket(Packet packet) 
+   public void gotPacket(PcapPacket packet) 
    {
       counter++;
       timeOfLastPackage = System.currentTimeMillis();
       
       if( mMain.getPcapHandle() != null )
       {
-         logger.trace("got Packet @{}", mMain.getPcapHandle().getTimestamp());
+         logger.trace("got Packet @{}", mMain.getPcapHandle().getTimestampPrecision() );
       }
       
       if( true )

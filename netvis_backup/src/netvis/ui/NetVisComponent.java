@@ -795,20 +795,20 @@ ActionListener
 
      if( len > 0 )
      {
-       double vStep = 5.0 / len ; 
-       if( vStep > 0.5 )
+       double vStep = 1.0 / ( (int)(len/10.0 + 1.0) ) ;  // always divide by a integer number > 0
+       if( vStep > 0.25 )
        {
-         vStep = 0.5;
+         vStep = 0.25;
        }
 
        xNormale /= len;
        yNormale /= len;
 
-       for (double v = 0.0; v <= 1.001; v += vStep)
+       for (double v = 0.0; v <= 1.01; v += vStep)
        {
          double u = 1.0 - 4.0 * (v - 0.5) * (v - 0.5);
-         int x = (int) ((xEnd - xStart) * v + xStart) + (int) (u * shift * xNormale);
-         int y = (int) ((yEnd - yStart) * v + yStart) + (int) (u * shift * yNormale);
+         int x = (int) ((double)(xEnd - xStart) * v + (double)xStart + u * shift * xNormale);
+         int y = (int) ((double)(yEnd - yStart) * v + (double)yStart + u * shift * yNormale);
 
          g2.drawLine(x1, y1, x, y);
 
