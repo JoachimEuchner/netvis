@@ -1,8 +1,0 @@
-
-plugins {
-   id 'java'
-}
-
-group org.netvis
-version "1.0-snapshot"
- 
