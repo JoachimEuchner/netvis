@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="org.netvis.NetVisTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2020-11-06T19:28:54" hostname="joe-Quattro-Power-Station-PRO-II" time="0.002">
+  <properties/>
+  <testcase name="testInstantiation" classname="org.netvis.NetVisTest" time="0.002"/>
+  <system-out><![CDATA[hello NetVisMain
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
