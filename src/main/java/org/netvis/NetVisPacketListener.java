@@ -25,8 +25,6 @@ public class NetVisPacketListener implements PacketListener{
     counter++;
     timeOfLastPackage = System.currentTimeMillis();
     
-    System.out.print(".");
-    
     if( mNVL.getPcapHandle() != null )
     {
        logger.trace("got Packet @{}", mNVL.getPcapHandle().getTimestampPrecision() );
