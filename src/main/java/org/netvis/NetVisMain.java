@@ -30,7 +30,6 @@ public class NetVisMain {
   
   
   public static void main(String[] args) {
-    System.out.println("NetVisMain.<ctor>() called.");
     logger.info("info:NetVisMain.<ctor>() called.");
     
     handle = new NetVisMain( args );

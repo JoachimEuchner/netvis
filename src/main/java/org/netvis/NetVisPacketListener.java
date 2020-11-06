@@ -2,6 +2,7 @@ package org.netvis;
 
 import org.pcap4j.core.PacketListener;
 import org.pcap4j.core.PcapPacket;
+import org.pcap4j.packet.IpV4Packet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +28,17 @@ public class NetVisPacketListener implements PacketListener{
     
     if( mNVL.getPcapHandle() != null )
     {
-       logger.trace("got Packet @{}", mNVL.getPcapHandle().getTimestampPrecision() );
+       logger.trace("got Packet @{}", timeOfLastPackage );
+    }
+    
+    IpV4Packet ipv4p = packet.get(IpV4Packet.class);
+    if( ipv4p != null )
+    {
+      logger.trace("received: [nr.: {}]----> IPV4: {} --> {}, len={}"
+          , counter
+          , ipv4p.getHeader().getSrcAddr()
+          , ipv4p.getHeader().getDstAddr()
+          , ipv4p.length());
     }
   }
 
