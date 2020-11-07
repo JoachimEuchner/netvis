@@ -2,20 +2,27 @@ package org.netvis.model;
 
 import java.net.Inet4Address;
 import java.util.ArrayList;
+import java.util.List;
 import org.netvis.NetVisMain;
 import org.pcap4j.packet.IpV4Packet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 public class Model {
   private static final Logger logger = LoggerFactory.getLogger(Model.class);
   private NetVisMain mMain;
-  
 
-  private final ArrayList<Packet> mAllPackets;   
-  private final ArrayList<Node> mAllNodes;
-  private final ArrayList<Connection> mAllConnections;
+  private final ArrayList<Packet> mAllPackets;
+  public List<Packet> getAllPackets() { return mAllPackets; }
   
+  private final ArrayList<Node> mAllNodes;
+  public List<Node> getAllNodes() { return mAllNodes; }
+
+  private final ArrayList<Connection> mAllConnections;
+  public List<Connection> getAllConnections() { return mAllConnections; }
+ 
+ 
   public Model( NetVisMain m ) {
     logger.info("Model<ctor> called.");
     mMain = m;
@@ -24,19 +31,17 @@ public class Model {
     this.mAllConnections =  new ArrayList<>(1000);
   }
   
-  public void addIPv4Packet( IpV4Packet ipv4p ) {
+  public void addIPv4Packet( long now, IpV4Packet ipv4p ) {
     Inet4Address src = ipv4p.getHeader().getSrcAddr();
     Inet4Address dst = ipv4p.getHeader().getDstAddr();  
-
-    long now = System.currentTimeMillis();
     
-    // for now:
     Node srcNode = findNodeAndAdd ( src );
     Node dstNode = findNodeAndAdd ( dst );
     Packet p = new Packet ( now, srcNode, dstNode, ipv4p.length()); 
     mAllPackets.add(p);
     
     Connection conn = findConnectionAndAdd( srcNode, dstNode );
+    conn.incPacketNr( now );
     
     logger.trace("addIPv4Packet, got {} packets, {} nodes, {} connections", 
         mAllPackets.size(), mAllNodes.size(), mAllConnections.size());
@@ -85,13 +90,11 @@ public class Model {
   }
 
 
-  private Connection findConnection( Node src, Node dst )
-  {
+  private Connection findConnection( Node src, Node dst ) {
     Connection retVal = null;
     synchronized( mAllConnections ) {
       for ( Connection l : mAllConnections ) {
-        if( ( l!= null) && ( l.getSrc() != null ) && ( l.getDst() != null ))
-        {
+        if( ( l!= null) && ( l.getSrc() != null ) && ( l.getDst() != null )) {
           if( equalsAddr ( l.getSrc().getAddr(), src.getAddr() ) 
               && equalsAddr ( l.getDst().getAddr(), dst.getAddr() ) ) {
             retVal = l;
@@ -104,8 +107,7 @@ public class Model {
   }
   
   
-  private Connection findConnectionAndAdd( Node src, Node dst )
-  {
+  private Connection findConnectionAndAdd( Node src, Node dst ) {
     Connection retVal = findConnection( src, dst );
     if( retVal == null ) {
       synchronized( mAllConnections ) {

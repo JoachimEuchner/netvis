@@ -17,18 +17,19 @@ public class NetVisMain {
   public Model getModel() { return mModel; }
 
   private boolean mIsOnline;
-  public boolean isOnline() {return mIsOnline;}
+  public boolean isOnline() { return mIsOnline; }
 
 
-  private NetVisMain ( String[] args )
-  {
-    if( args.length == 0 )
-    {
+  private NetVisMain ( String[] args ) {
+    if( args.length == 0 ) {
       mIsOnline = true;
       mNVL = new NetVisListener( this );
 
       mListeningStartThread = new Thread (mNVL );
       mListeningStartThread.start();
+    }
+    else {
+      // args[] will point to a pcap-file
     }
 
     mModel = new Model(this);
@@ -37,7 +38,6 @@ public class NetVisMain {
 
   public static void main(String[] args) {
     logger.info("info:NetVisMain.<ctor>() called.");
-
     handle = new NetVisMain( args );
   }
 

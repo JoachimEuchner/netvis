@@ -22,6 +22,11 @@ public class Connection {
     seenPackets++;
     timeOfLastSeenPacket = System.currentTimeMillis();
   }
+  
+  public void incPacketNr(long now) {
+    seenPackets++;
+    timeOfLastSeenPacket = now;
+  }
 
   public long getTimeSinceLastSeenPacket() {
     return ( System.currentTimeMillis() - timeOfLastSeenPacket);

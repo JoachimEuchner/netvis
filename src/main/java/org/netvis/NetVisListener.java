@@ -39,83 +39,66 @@ public class NetVisListener implements Runnable {
   private static final String READ_TIMEOUT_KEY = NetVisListener.class.getName() + ".readTimeout";
   private static final int READ_TIMEOUT = Integer.getInteger(READ_TIMEOUT_KEY, 100); // [ms]
 
-  public NetVisListener(NetVisMain main)
-  {
+  public NetVisListener(NetVisMain main) {
     mMain = main;
     mNVPL = new NetVisPacketListener( this );
   }
-  
   
   @Override
   public void run() {
     logger.debug("NetVisListener.run() called");
 
     boolean keepReentring = true;
-    while( keepReentring )
-    {
+    while( keepReentring ) {
       logger.debug("startListening to {} packages.", COUNT);
 
       List<PcapNetworkInterface> allDevs = null;
-      try 
-      {
+      try {
         allDevs = Pcaps.findAllDevs();
       } 
-      catch (PcapNativeException e) 
-      {
+      catch (PcapNativeException e) {
         e.printStackTrace();
       }
 
       int nifIdx = 2;
-      if( allDevs != null )
-      {
+      if( allDevs != null ) {
         nif = allDevs.get(nifIdx);
-        if ( nif != null )
-        {
+        if ( nif != null ) {
           logger.debug("NetVisListener.run(): nifIdx:{}, got nif {}", nifIdx, nif.getName());
 
-          try
-          {
+          try {
             pcapHandle = nif.openLive(SNAPLEN, PromiscuousMode.PROMISCUOUS, READ_TIMEOUT);
             // pcapHandle.setBlockingMode(BlockingMode.NONBLOCKING);
             pcapHandle.setBlockingMode(BlockingMode.BLOCKING);
           } 
-          catch (PcapNativeException e1)
-          {
+          catch (PcapNativeException e1) {
             e1.printStackTrace();
           }
-          catch (NotOpenException noe )
-          {
+          catch (NotOpenException noe ) {
             noe.printStackTrace();
           }
 
-          if( pcapHandle.isOpen() )
-          {
+          if( pcapHandle.isOpen() ) {
             logger.debug("NetVisListener.run(): nifIdx:{}, start pcapHandle.loop()", nifIdx);
 
-            try
-            {
+            try {
               pcapHandle.loop(COUNT, mNVPL);
             } 
-            catch (PcapNativeException e)
-            {
+            catch (PcapNativeException e) {
               e.printStackTrace();
               keepReentring = false;
             } 
-            catch (NotOpenException e)
-            {
+            catch (NotOpenException e) {
               e.printStackTrace();
               keepReentring = false;
             } 
-            catch (InterruptedException e) 
-            {
+            catch (InterruptedException e) {
               e.printStackTrace();
               keepReentring = true;
             } 
 
             logger.debug("MyListeningStarter.run(): nifIdx:{}, pcapHandle.loop() exited", nifIdx);
-          }
-          else
-          {
+          } else {
             logger.debug("MyListeningStarter.run(): unable to open nifIdx:{}", nifIdx);
           }
 
@@ -124,9 +107,6 @@ public class NetVisListener implements Runnable {
         }
       }
     }
-
     logger.debug("startListening() done.");
-
   }
-
 }

@@ -42,7 +42,7 @@ public class NetVisPacketListener implements PacketListener{
       
       synchronized( mNVL.getMain().getModel()  )
       {
-        mNVL.getMain().getModel().addIPv4Packet( ipv4p  );
+        mNVL.getMain().getModel().addIPv4Packet( timeOfLastPackage, ipv4p  );
       }
     }
   }
