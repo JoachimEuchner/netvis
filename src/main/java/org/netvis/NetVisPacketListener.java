@@ -39,6 +39,11 @@ public class NetVisPacketListener implements PacketListener{
           , ipv4p.getHeader().getSrcAddr()
           , ipv4p.getHeader().getDstAddr()
           , ipv4p.length());
+      
+      synchronized( mNVL.getMain().getModel()  )
+      {
+        mNVL.getMain().getModel().addIPv4Packet( ipv4p  );
+      }
     }
   }
 

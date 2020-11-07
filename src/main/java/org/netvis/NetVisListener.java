@@ -15,7 +15,9 @@ import org.pcap4j.core.PcapHandle.BlockingMode;
 public class NetVisListener implements Runnable {
 
   private static final  Logger logger = LoggerFactory.getLogger(NetVisListener.class);
-
+  private NetVisMain mMain;
+  public NetVisMain getMain() { return mMain; };
+  
   private PcapNetworkInterface nif;
   public PcapNetworkInterface getNif() {
      return nif;
@@ -37,9 +39,10 @@ public class NetVisListener implements Runnable {
   private static final String READ_TIMEOUT_KEY = NetVisListener.class.getName() + ".readTimeout";
   private static final int READ_TIMEOUT = Integer.getInteger(READ_TIMEOUT_KEY, 100); // [ms]
 
-  public NetVisListener()
+  public NetVisListener(NetVisMain main)
   {
-      mNVPL = new NetVisPacketListener( this );
+    mMain = main;
+    mNVPL = new NetVisPacketListener( this );
   }
   
   
