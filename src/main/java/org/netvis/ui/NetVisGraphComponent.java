@@ -7,9 +7,10 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -21,10 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JComponent;
 import org.netvis.NetVisMain;
-import org.netvis.model.Node;
+import org.netvis.util.ReverseIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 public class NetVisGraphComponent extends JComponent implements
   MouseListener, MouseWheelListener, MouseMotionListener, KeyListener,
@@ -40,7 +40,6 @@ public class NetVisGraphComponent extends JComponent implements
   private final NetVisMain mMain;
   
   private transient Image                     offscreen;
-  private transient Toolkit                   mToolkit;
   private int                                 paintCounter;
   private Font                                myPlain11Font;
   private int                                 mWidth;
@@ -65,6 +64,13 @@ public class NetVisGraphComponent extends JComponent implements
     addMouseWheelListener(this);
     addMouseMotionListener(this);
     
+    this.addComponentListener( new ComponentAdapter() {
+      @Override
+      public void componentResized(ComponentEvent e) {
+        revertAllLayoutNodes();
+      }
+    });
+    
     this.mAllGraphNodes = new ArrayList<>(1000);
     this.mAllGraphConnections =  new ArrayList<>(1000);
     
@@ -72,14 +78,21 @@ public class NetVisGraphComponent extends JComponent implements
   }
   
   
+  
+  
+  
   public void addGraphNode( NetVisGraphNode nvgn ) {
-    mAllGraphNodes.add(nvgn);
+    synchronized ( mAllGraphNodes ) {
+      mAllGraphNodes.add(nvgn);
+      revertAllLayoutNodes();
+    }
   }
   
   public void addGraphConnection( NetVisGraphConnection nvgc ) {
-    mAllGraphConnections.add(nvgc);
+    synchronized ( mAllGraphConnections ) {
+      mAllGraphConnections.add(nvgc);
+    }
   }
-  
   
   @Override
   public void invalidate() {
@@ -131,6 +144,8 @@ public class NetVisGraphComponent extends JComponent implements
     g2.setColor(Color.BLACK);
     g2.fillRect(0, 0, this.mWidth, this.mHeight);
 
+    checkInitialLayoutNodes();
+    
     paintAllNodes( g2 );
     paintAllConnections ( g2 );
     
@@ -142,13 +157,77 @@ public class NetVisGraphComponent extends JComponent implements
   }
   
   
+  private void checkInitialLayoutNodes() {
+    synchronized( mAllGraphNodes ) {
+      int nrOfNodesToLayout = mAllGraphNodes.size();
+
+      int xCenter = mWidth / 2;
+      int yCenter = mHeight / 2;
+
+      double radius = mHeight * 0.4;
+
+      double i = 0.0;
+      if( nrOfNodesToLayout > 0 ) {
+        for (NetVisGraphNode nvgn : mAllGraphNodes ) {
+          if( !nvgn.isInitiallyLayouted() ) {
+            double angle = 2* Math.PI / nrOfNodesToLayout * i;
+
+            nvgn.setMx( (int)( xCenter + radius * Math.sin ( angle )) );
+            nvgn.setMy( (int)( yCenter + radius * Math.cos ( angle )) );
+          }
+          i += 1.0;
+          nvgn.setIsInitiallyLayouted( true );
+        }
+      }
+    }
+  }
+  
+  /**
+   * resets the isLayouted for all nodes.
+   */
+  private void revertAllLayoutNodes() {
+    synchronized( mAllGraphNodes ) { 
+      for (NetVisGraphNode nvgn : mAllGraphNodes ) {
+        nvgn.setIsInitiallyLayouted( false );
+      }
+    }
+  }
+
+
+  /**
+   * get the top (z-sorted) NetVisGraphNode at x,y 
+   * @param x
+   * @param y
+   * @return
+   */
+  public NetVisGraphNode getNode( int x, int y ) {
+    NetVisGraphNode resultNode = null;
+    synchronized( mAllGraphNodes ) {
+      for (NetVisGraphNode nvgn : new ReverseIterator<NetVisGraphNode>(mAllGraphNodes )) {
+        if ( nvgn.contains(x, y) ) {
+          resultNode = nvgn;
+          break;
+        }
+      }
+    }   
+    return ( resultNode );
+  }
+  
+  
   /**
    * paintAllNodes
    * @param g2
    */
   private void paintAllNodes( Graphics2D g2 ) {
-    synchronized( mMain.getModel().getAllNodes() ) {
-      
+    g2.setColor(Color.WHITE);
+    synchronized( mAllGraphNodes ) {
+      for (NetVisGraphNode nvgn : mAllGraphNodes ) {
+        String s = nvgn.getDisplayString();
+        nvgn.setWidth(100);
+        nvgn.setHeight(13);
+        g2.drawRect(nvgn.getMx(),nvgn.getMy(),nvgn.getWidth(),nvgn.getHeight());
+        g2.drawString(s, nvgn.getMx()+2,nvgn.getMy()+11);
+      }
     }
   }
   
@@ -158,8 +237,13 @@ public class NetVisGraphComponent extends JComponent implements
    * @param g2
    */
   private void paintAllConnections( Graphics2D g2 ) {
-    synchronized( mMain.getModel().getAllConnections() ) {
-      
+    synchronized( mAllGraphConnections ) {
+      g2.setColor(Color.GREEN);
+      for (NetVisGraphConnection nvgn : mAllGraphConnections ) {
+        NetVisGraphNode src = nvgn.getSrcGraphNode();
+        NetVisGraphNode dst = nvgn.getDstGraphNode();
+        g2.drawLine(src.getMx(), src.getMy(), dst.getMx(), dst.getMy());
+      }
     }
   }
   

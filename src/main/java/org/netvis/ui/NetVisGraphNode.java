@@ -8,6 +8,10 @@ public class NetVisGraphNode {
   private final Node mNode;
   Node getNode() { return mNode; }
   
+  private boolean mIsInitiallyLayouted;
+  public boolean isInitiallyLayouted() { return mIsInitiallyLayouted; }
+  public void setIsInitiallyLayouted( boolean l ) { mIsInitiallyLayouted = l; } 
+  
   private int mx;
   public int getMx() { return mx; }
   public void setMx( int x) { mx = x; }
@@ -24,12 +28,20 @@ public class NetVisGraphNode {
   public int getHeight() { return mHeight; }
   public void setHeight( int height ) { mHeight = height; }
   
+  private String mDisplayString;
+  public String getDisplayString() { return mDisplayString; };
+  
   
   public NetVisGraphNode( Node  n )  {
     mNode = n;
+    mIsInitiallyLayouted = false;
+    
+    mDisplayString = n.getAddr().toString();
     
     NetVisGraphComponent nvgc = NetVisMain.getMain().getNetVisFrame().getNetVisGraphComponent();
     nvgc.addGraphNode( this );
+    
+    
   }
 
   

@@ -11,7 +11,7 @@ public class NetVisGraphConnection {
   private final NetVisGraphNode srcGraphNode;
   public NetVisGraphNode getSrcGraphNode() { return srcGraphNode; };
   private final NetVisGraphNode dstGraphNode;
-  public NetVisGraphNode getDstGRaphNode() { return dstGraphNode; };
+  public NetVisGraphNode getDstGraphNode() { return dstGraphNode; };
   
   public NetVisGraphConnection( Connection c ) {
     conn = c;
