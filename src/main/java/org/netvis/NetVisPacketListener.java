@@ -42,6 +42,8 @@ public class NetVisPacketListener implements PacketListener {
         mNVL.getMain().getModel().addIPv4Packet( timeOfLastPackage, ipv4p  );
       }
     }
+    
+    mNVL.getMain().getNetVisFrame().getNetVisGraphComponent().repaint();
   }
 
 }

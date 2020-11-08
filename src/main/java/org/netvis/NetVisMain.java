@@ -1,6 +1,7 @@
 package org.netvis;
 
 import org.netvis.model.Model;
+import org.netvis.ui.NetVisFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +20,10 @@ public class NetVisMain {
   private boolean mIsOnline;
   public boolean isOnline() { return mIsOnline; }
 
-
+  private NetVisFrame mNVF;
+  public NetVisFrame getNetVisFrame() { return mNVF; }
+  
+  
   private NetVisMain ( String[] args ) {
     if( args.length == 0 ) {
       mIsOnline = true;
@@ -32,7 +36,10 @@ public class NetVisMain {
       // args[] will point to a pcap-file
     }
 
-    mModel = new Model(this);
+    mModel = new Model( this );
+    
+    mNVF = new NetVisFrame( this );
+    
   }
 
 
