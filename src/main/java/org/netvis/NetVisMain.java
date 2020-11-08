@@ -12,7 +12,8 @@ public class NetVisMain {
   private static NetVisMain handle;
 
   private NetVisListener mNVL;
-  Thread mListeningStartThread; 
+  public NetVisListener getNetVisListener() { return mNVL; }
+ 
 
   private Model mModel;
   public Model getModel() { return mModel; }
@@ -26,21 +27,19 @@ public class NetVisMain {
   public static NetVisMain getMain() { return handle; };
   
   private NetVisMain ( String[] args ) {
+    
+    mModel = new Model( this );
+    
+    mNVF = new NetVisFrame( this );
+    
     if( args.length == 0 ) {
       mIsOnline = true;
       mNVL = new NetVisListener( this );
-
-      mListeningStartThread = new Thread (mNVL );
-      mListeningStartThread.start();
     }
     else {
       // args[] will point to a pcap-file
     }
 
-    mModel = new Model( this );
-    
-    mNVF = new NetVisFrame( this );
-    
   }
 
 

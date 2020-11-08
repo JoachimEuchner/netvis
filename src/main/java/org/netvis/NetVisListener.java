@@ -18,6 +18,8 @@ public class NetVisListener implements Runnable {
   private NetVisMain mMain;
   public NetVisMain getMain() { return mMain; };
   
+  Thread mListeningStartThread; 
+  
   private PcapNetworkInterface nif;
   public PcapNetworkInterface getNif() {
      return nif;
@@ -39,16 +41,42 @@ public class NetVisListener implements Runnable {
   private static final String READ_TIMEOUT_KEY = NetVisListener.class.getName() + ".readTimeout";
   private static final int READ_TIMEOUT = Integer.getInteger(READ_TIMEOUT_KEY, 100); // [ms]
 
+  private int nifIdx = 2;
+  boolean keepReentring = true;
+  
   public NetVisListener(NetVisMain main) {
     mMain = main;
     mNVPL = new NetVisPacketListener( this );
+    
+    mListeningStartThread = new Thread (this );
+    mListeningStartThread.start();
   }
+  
+  public void selectNif( int nif )
+  {
+    logger.debug("NetVisListener.selectNif( {} ) called", nif);
+    
+    nifIdx = nif;
+    
+    keepReentring = false;
+    mListeningStartThread.interrupt();
+    try {
+      mListeningStartThread.join(1000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+    
+    keepReentring = true;
+    mListeningStartThread = new Thread (this );
+    mListeningStartThread.start();
+  }
+  
   
   @Override
   public void run() {
     logger.debug("NetVisListener.run() called");
 
-    boolean keepReentring = true;
+   
     while( keepReentring ) {
       logger.debug("startListening to {} packages.", COUNT);
 
@@ -59,8 +87,7 @@ public class NetVisListener implements Runnable {
       catch (PcapNativeException e) {
         e.printStackTrace();
       }
-
-      int nifIdx = 2;
+      
       if( allDevs != null ) {
         nif = allDevs.get(nifIdx);
         if ( nif != null ) {
