@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 
 public class NetVisMenuBar extends JMenuBar implements ActionListener {
   
-  private static final Logger logger = LoggerFactory.getLogger(NetVisMain.class);
+  private static final Logger logger = LoggerFactory.getLogger(NetVisMenuBar.class);
   
   /**
    * 
@@ -35,6 +35,8 @@ public class NetVisMenuBar extends JMenuBar implements ActionListener {
   
   JMenu mCaptureMenu;
   JMenu mCaptureMenuInterfacesItem;
+  JMenuItem mCaptureMenuStartItem;
+  JMenuItem mCaptureMenuStopItem;
   
   public NetVisMenuBar( NetVisMain m )  {
     mMain = m;
@@ -78,9 +80,9 @@ public class NetVisMenuBar extends JMenuBar implements ActionListener {
     // -------------- Capture -----------------
     mCaptureMenu = new JMenu("Capture");
   
+    // Interfaces
     mCaptureMenuInterfacesItem = new JMenu("Interfaces");
     ButtonGroup groupInterfaces = new ButtonGroup();
-   
     List<PcapNetworkInterface> allDevs = null;
     try {
       allDevs = Pcaps.findAllDevs();
@@ -88,11 +90,17 @@ public class NetVisMenuBar extends JMenuBar implements ActionListener {
     catch (PcapNativeException e) {
       e.printStackTrace();
     }
+    int currentNifIdx = 2;
+    if(  mMain.getNetVisListener() != null )
+    {
+      currentNifIdx = mMain.getNetVisListener().getCurrentNifIdx();
+    }
     if( allDevs != null ) {
       int i = 0;
       for (PcapNetworkInterface nif : allDevs) {
         JRadioButtonMenuItem radioMenuItemForNif = new
-            JRadioButtonMenuItem(Integer.toString(i)+": "+nif.getName());
+            JRadioButtonMenuItem(Integer.toString(i)+": "+nif.getName(),
+                ( i == currentNifIdx ));
         radioMenuItemForNif.addActionListener( this );
         mCaptureMenuInterfacesItem.add(radioMenuItemForNif);
         groupInterfaces.add(radioMenuItemForNif);
@@ -100,6 +108,15 @@ public class NetVisMenuBar extends JMenuBar implements ActionListener {
       }
     }
     mCaptureMenu.add( mCaptureMenuInterfacesItem );
+    
+    // Start
+    mCaptureMenuStartItem = new JMenuItem("start");
+    mCaptureMenuStartItem.addActionListener(this);
+    mCaptureMenu.add(mCaptureMenuStartItem);
+    // Stop
+    mCaptureMenuStopItem = new JMenuItem("stop");
+    mCaptureMenuStopItem.addActionListener(this);
+    mCaptureMenu.add(mCaptureMenuStopItem);
     
     add( mCaptureMenu );
   }
@@ -120,6 +137,14 @@ public class NetVisMenuBar extends JMenuBar implements ActionListener {
       catch( NumberFormatException nfe ){
         nfe.printStackTrace();
       }
+    }
+    else if( cmd.equals("start"))
+    {
+      mMain.getNetVisListener().start();
+    }
+    else if( cmd.equals("stop"))
+    {
+      mMain.getNetVisListener().stop();
     }
   }
  

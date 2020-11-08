@@ -42,29 +42,40 @@ public class NetVisListener implements Runnable {
   private static final int READ_TIMEOUT = Integer.getInteger(READ_TIMEOUT_KEY, 100); // [ms]
 
   private int nifIdx = 2;
+  public int getCurrentNifIdx() {return nifIdx; };
   boolean keepReentring = true;
   
   public NetVisListener(NetVisMain main) {
     mMain = main;
     mNVPL = new NetVisPacketListener( this );
-    
+  }
+  
+  public void start() {
+    stop();
+    keepReentring = true;
     mListeningStartThread = new Thread (this );
     mListeningStartThread.start();
   }
   
-  public void selectNif( int nif )
-  {
+  
+  public void stop() {
+    keepReentring = false;
+    if( mListeningStartThread !=  null ) {
+      mListeningStartThread.interrupt();
+      try {
+        mListeningStartThread.join(1000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+  }
+  
+  
+  public void selectNif( int nif ) {
     logger.debug("NetVisListener.selectNif( {} ) called", nif);
     
     nifIdx = nif;
-    
-    keepReentring = false;
-    mListeningStartThread.interrupt();
-    try {
-      mListeningStartThread.join(1000);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
+    stop();
     
     keepReentring = true;
     mListeningStartThread = new Thread (this );
@@ -75,7 +86,6 @@ public class NetVisListener implements Runnable {
   @Override
   public void run() {
     logger.debug("NetVisListener.run() called");
-
    
     while( keepReentring ) {
       logger.debug("startListening to {} packages.", COUNT);
