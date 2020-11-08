@@ -33,7 +33,7 @@ public class NetVisListener implements Runnable {
   NetVisPacketListener mNVPL;
   
   private static final String COUNT_KEY = NetVisListener.class.getName() + ".count";
-  private static final int COUNT = Integer.getInteger(COUNT_KEY, 10000);
+  private static final int COUNT = Integer.getInteger(COUNT_KEY, 20);
   
   private static final String SNAPLEN_KEY = NetVisListener.class.getName() + ".snaplen";
   private static final int SNAPLEN = Integer.getInteger(SNAPLEN_KEY, 65536); // [bytes]

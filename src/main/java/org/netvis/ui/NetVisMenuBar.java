@@ -36,6 +36,7 @@ public class NetVisMenuBar extends JMenuBar implements ActionListener {
   JMenu mCaptureMenu;
   JMenu mCaptureMenuInterfacesItem;
   JMenuItem mCaptureMenuStartItem;
+  JMenuItem mCaptureMenuPauseItem;
   JMenuItem mCaptureMenuStopItem;
   JMenuItem mCaptureMenuClearItem;
   
@@ -113,6 +114,10 @@ public class NetVisMenuBar extends JMenuBar implements ActionListener {
     mCaptureMenuStartItem = new JMenuItem("start");
     mCaptureMenuStartItem.addActionListener(this);
     mCaptureMenu.add(mCaptureMenuStartItem);
+    // pause
+    mCaptureMenuPauseItem = new JMenuItem("pause");
+    mCaptureMenuPauseItem.addActionListener(this);
+    mCaptureMenu.add(mCaptureMenuPauseItem);
     // Stop
     mCaptureMenuStopItem = new JMenuItem("stop");
     mCaptureMenuStopItem.addActionListener(this);
@@ -146,9 +151,14 @@ public class NetVisMenuBar extends JMenuBar implements ActionListener {
     {
       mMain.getNetVisListener().start();
     }
+    else if( cmd.equals("pause"))
+    {
+      mMain.getNetVisListener().stop();
+    }
     else if( cmd.equals("stop"))
     {
       mMain.getNetVisListener().stop();
+      mMain.getNetVisListener().clear();
     }
     else if( cmd.equals("clear"))
     {
