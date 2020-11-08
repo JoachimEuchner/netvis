@@ -39,6 +39,8 @@ public class Model {
     Node dstNode = findNodeAndAdd ( dst );
     Packet p = new Packet ( now, srcNode, dstNode, ipv4p.length()); 
     mAllPackets.add(p);
+    srcNode.incSentPackets();
+    dstNode.incReceivedPackets();
     
     Connection conn = findConnectionAndAdd( srcNode, dstNode );
     conn.incPacketNr( now );

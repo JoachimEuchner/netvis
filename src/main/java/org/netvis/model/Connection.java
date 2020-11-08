@@ -1,5 +1,6 @@
 package org.netvis.model;
 
+import org.netvis.ui.NetVisGraphConnection;
 
 public class Connection {
   private final Node mSrc;
@@ -12,10 +13,13 @@ public class Connection {
 
   private long timeOfLastSeenPacket = 0;
 
+  private NetVisGraphConnection mGraphConnection;
+  
   public Connection( Node src, Node dst ) {
     mSrc = src;
     mDst = dst;
     seenPackets = 0;
+    mGraphConnection = new NetVisGraphConnection(this);
   }
 
   public void incPacketNr() {

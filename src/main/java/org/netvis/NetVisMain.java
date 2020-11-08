@@ -23,6 +23,7 @@ public class NetVisMain {
   private NetVisFrame mNVF;
   public NetVisFrame getNetVisFrame() { return mNVF; }
   
+  public static NetVisMain getMain() { return handle; };
   
   private NetVisMain ( String[] args ) {
     if( args.length == 0 ) {

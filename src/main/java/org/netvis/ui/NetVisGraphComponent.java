@@ -17,8 +17,11 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JComponent;
 import org.netvis.NetVisMain;
+import org.netvis.model.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,13 +46,17 @@ public class NetVisGraphComponent extends JComponent implements
   private int                                 mWidth;
   private int                                 mHeight;
 
+  private final ArrayList<NetVisGraphNode> mAllGraphNodes;
+  public List<NetVisGraphNode> getAllGraphNodes() { return mAllGraphNodes; }
+  
+  private final ArrayList<NetVisGraphConnection> mAllGraphConnections;
+  public List<NetVisGraphConnection> getAllGraphConnections() { return mAllGraphConnections; }
   
   /**
    * <ctor>
    * @param main
    */
-  public NetVisGraphComponent( NetVisMain main )
-  {
+  public NetVisGraphComponent( NetVisMain main ) {
     logger.debug("NetVisComponent<ctor> called.");
     mMain = main;
     
@@ -58,37 +65,45 @@ public class NetVisGraphComponent extends JComponent implements
     addMouseWheelListener(this);
     addMouseMotionListener(this);
     
+    this.mAllGraphNodes = new ArrayList<>(1000);
+    this.mAllGraphConnections =  new ArrayList<>(1000);
+    
     this.myPlain11Font = new Font("Courier", Font.PLAIN, 11);
   }
   
+  
+  public void addGraphNode( NetVisGraphNode nvgn ) {
+    mAllGraphNodes.add(nvgn);
+  }
+  
+  public void addGraphConnection( NetVisGraphConnection nvgc ) {
+    mAllGraphConnections.add(nvgc);
+  }
+  
+  
   @Override
-  public void invalidate()
-  {
+  public void invalidate() {
     super.invalidate();
     this.offscreen = null;
   }
 
   @Override
-  public void update( Graphics g)
-  {
+  public void update( Graphics g) {
     paint(g);
   }
 
   @Override
-  public void paint( Graphics g)
-  {
+  public void paint( Graphics g) {
     paintCounter++;
     Dimension currentSize = getSize();
     if ((this.mWidth != (int)currentSize.getWidth())
-        || (this.mHeight != (int)currentSize.getHeight()))
-    {
+        || (this.mHeight != (int)currentSize.getHeight())) {
       this.mWidth = (int) currentSize.getWidth();
       this.mHeight = (int) currentSize.getHeight();
       this.offscreen = createImage(this.mWidth, this.mHeight);
     }
 
-    if (this.offscreen == null)
-    {
+    if (this.offscreen == null) {
       this.offscreen = createImage(this.mWidth, this.mHeight);
     }
 
@@ -98,22 +113,18 @@ public class NetVisGraphComponent extends JComponent implements
 
     g.drawImage(this.offscreen, 0, 0, null);
     og.dispose();
-
   }
 
-  public void paintOS(Graphics g)
-  {
+  public void paintOS(Graphics g) {
     long paintstart = System.currentTimeMillis();
     Graphics2D g2 = null ;
-    if( g instanceof Graphics2D )
-    {
+    if( g instanceof Graphics2D ) {
       g2 = (Graphics2D) g;
       g2.setRenderingHint(
           RenderingHints.KEY_TEXT_ANTIALIASING,
           RenderingHints.VALUE_TEXT_ANTIALIAS_ON); 
     }
-    else
-    {
+    else {
       return;
     }
 
@@ -146,10 +157,8 @@ public class NetVisGraphComponent extends JComponent implements
    * paintAllConnections
    * @param g2
    */
-  private void paintAllConnections( Graphics2D g2 )
-  {
-    synchronized( mMain.getModel().getAllConnections() )
-    {
+  private void paintAllConnections( Graphics2D g2 ) {
+    synchronized( mMain.getModel().getAllConnections() ) {
       
     }
   }
