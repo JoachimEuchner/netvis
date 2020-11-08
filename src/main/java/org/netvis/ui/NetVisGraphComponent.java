@@ -366,7 +366,49 @@ public class NetVisGraphComponent extends JComponent implements
       for (NetVisGraphConnection nvgn : mAllGraphConnections ) {
         NetVisGraphNode src = nvgn.getSrcGraphNode();
         NetVisGraphNode dst = nvgn.getDstGraphNode();
-        g2.drawLine(src.getMx(), src.getMy(), dst.getMx(), dst.getMy());
+
+        if(( src!=null) && ( dst!=null )) {
+          int packets = nvgn.getConnection().getNrOfSeenPackets();
+
+          if( packets > 2 ) {
+            if( packets > 5 ) {
+              if( packets > 10 ) {
+                if( packets > 50 ) {
+                  if( packets > 100 ) {
+                    if( packets > 500 ) {
+                      if( packets > 1000 ) {
+                        g2.setStroke(mStroke8);
+                      } else {
+                        g2.setStroke(mStroke7);
+                      }
+                    } else {
+                      g2.setStroke(mStroke6);
+                    }
+                  } else {
+                    g2.setStroke(mStroke5);
+                  }
+                } else {
+                  g2.setStroke(mStroke4);
+                }
+              } else {
+                g2.setStroke(mStroke3);
+              }
+            } else {
+              g2.setStroke(mStroke2);
+            }
+          } else {
+            g2.setStroke(mStroke1);
+          }
+
+          ShortestPair xp = getShortestPair(src.getMx(),  src.getMx() + src.getWidth(), dst.getMx(),  dst.getMx() + dst.getWidth()); 
+          ShortestPair yp = getShortestPair(src.getMy(),  src.getMy() + src.getHeight(), dst.getMy(), dst.getMy() + dst.getHeight()); 
+
+          Color c = getColorOfLinkAge( nvgn.getConnection().getTimeSinceLastSeenPacket(), true );
+          g2.setColor(c);
+
+          drawParabel( g2, xp.s1, yp.s1, xp.s2, yp.s2, 10 );
+
+        }
       }
     }
   }
@@ -489,5 +531,113 @@ public class NetVisGraphComponent extends JComponent implements
     }
   }
 
+  
+  
+  
+  public static void drawParabel( Graphics2D g2, int xStart, int yStart, int xEnd, int yEnd, double shift) {
+    if ((xStart == xEnd) && (yStart == yEnd))
+    {
+      return;
+    }
+
+    int x1 = xStart;
+    int y1 = yStart;
+
+    double xNormale = (yEnd - yStart);
+    double yNormale = -(xEnd - xStart);
+    double len = Math.sqrt(xNormale * xNormale + yNormale * yNormale);
+
+    if( len > 0 )
+    {
+      int steps = (int)len/10 + 1;
+
+      xNormale /= len;
+      yNormale /= len;
+
+      // for (double v = 0.0; v <= 1.01; v += vStep)
+      for ( int step = 0; step <= steps; step++)
+      {
+        double v = (double)( step ) / (double)(steps);
+        double u = 1.0 - 4.0 * (v - 0.5) * (v - 0.5);
+        int x = (int) ((double)(xEnd - xStart) * v + (double)xStart + u * shift * xNormale);
+        int y = (int) ((double)(yEnd - yStart) * v + (double)yStart + u * shift * yNormale);
+
+        g2.drawLine(x1, y1, x, y);
+
+        x1 = x;
+        y1 = y;
+      }
+    }
+  }
+  
+  
+  private class ShortestPair
+  {
+    private int s1;
+    private int s2;
+    ShortestPair(int tmps1, int tmps2)
+    {
+      s1 = tmps1;
+      s2 = tmps2;
+    }
+  }
+  
+  private  ShortestPair getShortestPair( int p1, int p2, int q1, int q2)
+  {
+    int r1;
+    int r2;
+
+    int d1 = Math.abs(p1 - q1);
+    r1 = p1;
+    r2 = q1;
+    int d2 = Math.abs(p1 - q2);
+    if( d2 < d1 )
+    {
+      // r1 is already p1
+      r2 = q2;
+    }
+    int d3 = Math.abs(p2 - q1);
+    if(( d3 < d2 ) && ( d3 < d1 ))
+    {
+      r1 = p2;
+      r2 = q1;
+    }
+    int d4 = Math.abs(p2 - q2);
+    if( ( d4 < d3 ) && ( d4 < d2 ) && ( d4 < d1 ))
+    {
+      r1 = p2;
+      r2 = q2;
+    }
+
+    ShortestPair sp = new ShortestPair( r1, r2 );
+    return ( sp );
+  }
+
+
+  private Color getColorOfLinkAge( long millis, boolean isActive )
+  { 
+    if( isActive )
+    {
+      if ( !mMain.isOnline() )
+      {
+        millis = 1000;
+      }
+
+      float hue;
+      double fsFract =  Math.exp( -(double)millis / 100000.0 );
+      hue = (float) ( 0.6666 - fsFract * 2.0 / 3.0);
+      double b  = fsFract * 0.5 +0.5;
+
+      Color bgc = Color.getHSBColor(hue, (float)1.0, (float)b);
+
+      return ( bgc );
+    }
+    else
+    {
+      return ( Color.DARK_GRAY.darker().darker() );
+    }
+  }
+
+  
 
 }

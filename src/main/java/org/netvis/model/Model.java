@@ -33,9 +33,17 @@ public class Model {
   
   public void clear() {
     logger.info("Model.clear called.");
-    this.mAllNodes.clear();
-    this.mAllPackets.clear();
-    this.mAllConnections.clear();
+    synchronized ( this.mAllNodes ) {
+      this.mAllNodes.clear();
+    }
+    
+    synchronized ( this.mAllPackets ) {
+      this.mAllPackets.clear();
+    }
+    
+    synchronized ( this.mAllConnections ) {
+      this.mAllConnections.clear();
+    }
   }
   
   
@@ -45,8 +53,10 @@ public class Model {
     
     Node srcNode = findNodeAndAdd ( src );
     Node dstNode = findNodeAndAdd ( dst );
-    Packet p = new Packet ( now, srcNode, dstNode, ipv4p.length()); 
-    mAllPackets.add(p);
+    Packet p = new Packet ( now, srcNode, dstNode, ipv4p.length());
+    synchronized( mAllPackets ) {
+      mAllPackets.add(p);
+    }
     srcNode.incSentPackets();
     srcNode.setTimeOfLastSeenPacket( now );
     dstNode.incReceivedPackets();
