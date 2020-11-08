@@ -78,6 +78,14 @@ public class NetVisGraphComponent extends JComponent implements
   }
   
   
+  public void clear() {
+    logger.debug("NetVisComponent.clear() called.");
+    this.mAllGraphNodes.clear();
+    this.mAllGraphConnections.clear();
+    repaint();
+  }
+  
+  
   public void addGraphNode( NetVisGraphNode nvgn ) {
     synchronized ( mAllGraphNodes ) {
       mAllGraphNodes.add(nvgn);

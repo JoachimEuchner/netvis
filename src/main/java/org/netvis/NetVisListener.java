@@ -51,6 +51,8 @@ public class NetVisListener implements Runnable {
   }
   
   public void start() {
+    logger.debug("NetVisListener.start() called, nifIdx= {} ", nifIdx);
+    
     stop();
     keepReentring = true;
     mListeningStartThread = new Thread (this );
@@ -59,7 +61,9 @@ public class NetVisListener implements Runnable {
   
   
   public void stop() {
+    logger.debug("NetVisListener.stop() called, nifIdx= {} ", nifIdx);
     keepReentring = false;
+    
     if( mListeningStartThread !=  null ) {
       mListeningStartThread.interrupt();
       try {
@@ -68,6 +72,12 @@ public class NetVisListener implements Runnable {
         e.printStackTrace();
       }
     }
+  }
+  
+  public void clear() {
+    logger.debug("NetVisListener.clear() called");
+    mMain.getNetVisFrame().getNetVisGraphComponent().clear();
+    mMain.getModel().clear();
   }
   
   

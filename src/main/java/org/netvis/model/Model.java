@@ -31,6 +31,14 @@ public class Model {
     this.mAllConnections =  new ArrayList<>(1000);
   }
   
+  public void clear() {
+    logger.info("Model.clear called.");
+    this.mAllNodes.clear();
+    this.mAllPackets.clear();
+    this.mAllConnections.clear();
+  }
+  
+  
   public void addIPv4Packet( long now, IpV4Packet ipv4p ) {
     Inet4Address src = ipv4p.getHeader().getSrcAddr();
     Inet4Address dst = ipv4p.getHeader().getDstAddr();  
