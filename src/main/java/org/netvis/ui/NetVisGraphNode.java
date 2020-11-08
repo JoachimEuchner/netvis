@@ -12,6 +12,10 @@ public class NetVisGraphNode {
   public boolean isInitiallyLayouted() { return mIsInitiallyLayouted; }
   public void setIsInitiallyLayouted( boolean l ) { mIsInitiallyLayouted = l; } 
   
+  private boolean mIsManuallyMoved;
+  public boolean isManuallyMoved() { return mIsManuallyMoved; }
+  public void setIsManuallyMoved( boolean l ) { mIsManuallyMoved = l; } 
+  
   private int mx;
   public int getMx() { return mx; }
   public void setMx( int x) { mx = x; }
@@ -35,10 +39,15 @@ public class NetVisGraphNode {
   public int getStringWidth() { return mStringWidth; }
   public void setStringWidth( int w ) { mStringWidth = w; }
   
+  int mLevelOfDetail = 0;
+  public int getLod() { return mLevelOfDetail; }
+  public void increaseLod() { mLevelOfDetail++; if( mLevelOfDetail > 2 ) { mLevelOfDetail = 0;} }
+  public void resetLod() { mLevelOfDetail = 0; }
   
   public NetVisGraphNode( Node  n )  {
     mNode = n;
     mIsInitiallyLayouted = false;
+    mIsManuallyMoved = false;
     
     mDisplayString = n.getAddr().toString();
     
@@ -46,6 +55,7 @@ public class NetVisGraphNode {
     nvgc.addGraphNode( this );
     
     mStringWidth = -1;
+    mLevelOfDetail = 0;
   }
   
   

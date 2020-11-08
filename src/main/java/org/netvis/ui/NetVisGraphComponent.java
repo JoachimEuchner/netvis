@@ -1,5 +1,6 @@
 package org.netvis.ui;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JComponent;
 import org.netvis.NetVisMain;
+import org.netvis.model.Packet;
 import org.netvis.util.ReverseIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,15 +43,32 @@ public class NetVisGraphComponent extends JComponent implements
   
   private transient Image                     offscreen;
   private int                                 paintCounter;
+  private Font                                myPlain10Font;
   private Font                                myPlain11Font;
   private int                                 mWidth;
   private int                                 mHeight;
+  private final BasicStroke                   mStroke1;
+  private final BasicStroke                   mStroke2;
+  private final BasicStroke                   mStroke3;
+  private final BasicStroke                   mStroke4;
+  private final BasicStroke                   mStroke5;
+  private final BasicStroke                   mStroke6;
+  private final BasicStroke                   mStroke7;
+  private final BasicStroke                   mStroke8;
 
   private final ArrayList<NetVisGraphNode> mAllGraphNodes;
   public List<NetVisGraphNode> getAllGraphNodes() { return mAllGraphNodes; }
   
   private final ArrayList<NetVisGraphConnection> mAllGraphConnections;
   public List<NetVisGraphConnection> getAllGraphConnections() { return mAllGraphConnections; }
+  
+  // selecting
+  private transient NetVisGraphNode mSelectedNode = null;
+  
+  // dragging
+  private transient NetVisGraphNode mDraggingNode = null;
+  private int mDraggingNodeDx = 0;
+  private int mDraggingNodeDy = 0; 
   
   /**
    * <ctor>
@@ -74,14 +93,32 @@ public class NetVisGraphComponent extends JComponent implements
     this.mAllGraphNodes = new ArrayList<>(1000);
     this.mAllGraphConnections =  new ArrayList<>(1000);
     
+    mDraggingNode = null;
+    mDraggingNodeDx = 0;
+    mDraggingNodeDy = 0;
+    
+    this.myPlain10Font = new Font("Courier", Font.PLAIN, 10);
     this.myPlain11Font = new Font("Courier", Font.PLAIN, 11);
+    this.mStroke1                            = new BasicStroke( 1 );
+    this.mStroke2                            = new BasicStroke( 2 );
+    this.mStroke3                            = new BasicStroke( 3 );
+    this.mStroke4                            = new BasicStroke( 4 );
+    this.mStroke5                            = new BasicStroke( 5 );
+    this.mStroke6                            = new BasicStroke( 6 );
+    this.mStroke7                            = new BasicStroke( 7 );
+    this.mStroke8                            = new BasicStroke( 8 );
+   
   }
   
   
   public void clear() {
     logger.debug("NetVisComponent.clear() called.");
-    this.mAllGraphNodes.clear();
-    this.mAllGraphConnections.clear();
+    synchronized ( mAllGraphNodes ) {
+      this.mAllGraphNodes.clear();
+    }
+    synchronized ( mAllGraphConnections ) {
+      this.mAllGraphConnections.clear();
+    }
     repaint();
   }
   
@@ -179,7 +216,8 @@ public class NetVisGraphComponent extends JComponent implements
       double i = 0.0;
       if( nrOfNodesToLayout > 0 ) {
         for (NetVisGraphNode nvgn : mAllGraphNodes ) {
-          if( !nvgn.isInitiallyLayouted() ) {
+          if( ( !nvgn.isInitiallyLayouted() ) 
+              && ( !nvgn.isManuallyMoved() ) ) {
             double angle = 2* Math.PI / nrOfNodesToLayout * i;
 
             nvgn.setMx( (int)( xCenter + radius * Math.sin ( angle )) );
@@ -231,6 +269,7 @@ public class NetVisGraphComponent extends JComponent implements
    */
   private void paintAllNodes( Graphics2D g2 ) {
     g2.setColor(Color.WHITE);
+    g2.setFont(this.myPlain11Font);
     synchronized( mAllGraphNodes ) {
       for (NetVisGraphNode nvgn : mAllGraphNodes ) {
         String s = nvgn.getDisplayString();
@@ -240,13 +279,81 @@ public class NetVisGraphComponent extends JComponent implements
           nvgn.setStringWidth( width );
           nvgn.setWidth( width + 3);
         }
-        
-        nvgn.setHeight(13);
-        g2.drawRect(nvgn.getMx(),nvgn.getMy(),nvgn.getWidth(),nvgn.getHeight());
-        g2.drawString(s, nvgn.getMx()+2,nvgn.getMy()+11);
+
+        if( nvgn.getLod() == 0 ) {
+          // simple plain hostname
+          nvgn.setHeight(13);
+          g2.drawRect(nvgn.getMx(),nvgn.getMy(),nvgn.getWidth(),nvgn.getHeight());
+          g2.drawString(s, nvgn.getMx()+2,nvgn.getMy()+11);   // hostname
+        }
+        else if( nvgn.getLod() == 1 ) {
+          nvgn.setHeight(13+10);
+          String s2 =  nvgn.getNode().getAddr().toString();
+          g2.drawRect(nvgn.getMx(),nvgn.getMy(),nvgn.getWidth(),nvgn.getHeight());
+          g2.drawString(s, nvgn.getMx()+2,nvgn.getMy()+11); // plain hostname
+          g2.drawString(s2, nvgn.getMx()+2,nvgn.getMy()+21); // Inet4Address.toString
+        }
+        else if( nvgn.getLod() == 2 )
+        {
+          // plain hostname
+          // Inet4Address.toString
+          // small diagram
+          int timeDiagramWidth = 300;
+          int timeDiagramHeight = 100;
+
+          nvgn.setHeight(13+20);
+
+          g2.drawString(s, nvgn.getMx()+2,nvgn.getMy()+11);
+          String s2 =  nvgn.getNode().getAddr().toString();  // hostname
+          g2.drawString(s2, nvgn.getMx()+2,nvgn.getMy()+21);
+          String s3 = "tx:" + nvgn.getNode().getSentPackets() + " rx:" + nvgn.getNode().getReceivedPackets();
+          g2.drawString(s3, nvgn.getMx()+2, nvgn.getMy()+31 );
+          g2.drawRect(nvgn.getMx(),nvgn.getMy(),nvgn.getWidth(),nvgn.getHeight());
+
+          g2.setColor(Color.CYAN.darker().darker().darker());
+          g2.fillRect(nvgn.getMx(), nvgn.getMy() + 31, timeDiagramWidth, timeDiagramHeight);
+          g2.setColor(Color.CYAN);
+          g2.drawRect(nvgn.getMx(), nvgn.getMy() + 31, timeDiagramWidth, timeDiagramHeight);
+
+          synchronized ( mMain.getModel().getAllPackets() )
+          {  
+            g2.setStroke(mStroke1);
+            g2.setColor(Color.CYAN);
+            long diagramDuration = 900000;
+            for (Packet p : mMain.getModel().getAllPackets() )
+            {
+              if( ( p.getSrc() == nvgn.getNode() ) || ( p.getDst() == nvgn.getNode() ))
+              {
+                long now = System.currentTimeMillis();
+                long age = now - p.getTs();
+
+                if( age < diagramDuration )
+                {  
+                  int x = (timeDiagramWidth - (int)(age * timeDiagramWidth / diagramDuration)) + nvgn.getMx();
+                  int yTop = timeDiagramHeight - p.getSize()/5;
+                  if( yTop <  0 )
+                  {
+                    yTop = 0;
+                  }
+                  yTop += nvgn.getMy() + 31 ;
+                  if( yTop < nvgn.getMy())
+                  {
+                    yTop = nvgn.getMy();
+                  }
+
+                  int yBottom = timeDiagramHeight + nvgn.getMy()  + 31;
+
+                  g2.drawLine( x, yTop, x, yBottom );  
+                }
+              }
+            }
+          }
+          g2.setColor(Color.WHITE);
+        }
       }
     }
   }
+ 
   
   
   /**
@@ -291,8 +398,14 @@ public class NetVisGraphComponent extends JComponent implements
 
   @Override
   public void mouseDragged(MouseEvent arg0) {
-    // TODO Auto-generated method stub
-    
+    if ( this.mDraggingNode != null ) {
+      this.mDraggingNode.setIsManuallyMoved( true );
+      int x = arg0.getX();
+      int y = arg0.getY();
+      this.mDraggingNode.setMx( x - mDraggingNodeDx );
+      this.mDraggingNode.setMy( y - mDraggingNodeDy );
+    }
+    repaint();
   }
 
   @Override
@@ -309,32 +422,71 @@ public class NetVisGraphComponent extends JComponent implements
 
   @Override
   public void mouseClicked(MouseEvent e) {
-    // TODO Auto-generated method stub
-    
+
+    if (e.getButton() == MouseEvent.BUTTON1) {
+      if( e.getClickCount() == 1 ) {
+        NetVisGraphNode n = getNode( e.getX(), e.getY() );
+        if( n != null ) {
+          mSelectedNode = n;
+          n.setIsManuallyMoved(true);
+        }
+      }
+    }
+    else if (e.getButton() == MouseEvent.BUTTON3) {
+      NetVisGraphNode n = getNode( e.getX(), e.getY() );
+      if( n != null ) {
+        if( e.getClickCount() == 1 ) {
+          n.increaseLod();
+        }
+        else if(e.getClickCount() == 2 ) {
+          n.resetLod();
+        }
+        repaint();
+      }
+    }
   }
 
   @Override
   public void mouseEntered(MouseEvent e) {
-    // TODO Auto-generated method stub
-    
+    // tbd
   }
 
   @Override
   public void mouseExited(MouseEvent e) {
-    // TODO Auto-generated method stub
-    
-  }
+    // tbd
+  }    
 
+  
   @Override
-  public void mousePressed(MouseEvent e) {
-    // TODO Auto-generated method stub
+  public void mousePressed(MouseEvent ev) {
     
+    Dimension currentSize = getSize();
+    this.mWidth = (int) currentSize.getWidth();
+    this.mHeight = (int) currentSize.getHeight();
+
+    requestFocusInWindow();
+    
+    this.mDraggingNode = null;
+    this.mDraggingNodeDx = 0;
+    this.mDraggingNodeDy = 0; 
+    
+    if (ev.getButton() == MouseEvent.BUTTON1) {
+      NetVisGraphNode n = getNode( ev.getX(), ev.getY() );
+      if( n != null ) {
+        mDraggingNode = n;
+        mDraggingNodeDx = ev.getX() - n.getMx();
+        mDraggingNodeDy = ev.getY() - n.getMy();   // 0...mHeight
+      }
+    }
   }
 
   @Override
   public void mouseReleased(MouseEvent e) {
-    // TODO Auto-generated method stub
-    
+    if (e.getButton() == MouseEvent.BUTTON1) {
+      this.mDraggingNodeDx = 0;
+      this.mDraggingNodeDy = 0;
+      this.mDraggingNode = null;
+    }
   }
 
 
