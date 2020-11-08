@@ -40,7 +40,9 @@ public class Model {
     Packet p = new Packet ( now, srcNode, dstNode, ipv4p.length()); 
     mAllPackets.add(p);
     srcNode.incSentPackets();
+    srcNode.setTimeOfLastSeenPacket( now );
     dstNode.incReceivedPackets();
+    dstNode.setTimeOfLastSeenPacket( now );
     
     Connection conn = findConnectionAndAdd( srcNode, dstNode );
     conn.incPacketNr( now );

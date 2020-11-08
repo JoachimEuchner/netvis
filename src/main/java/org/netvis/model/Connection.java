@@ -20,6 +20,7 @@ public class Connection {
     mDst = dst;
     seenPackets = 0;
     mGraphConnection = new NetVisGraphConnection(this);
+    timeOfLastSeenPacket = System.currentTimeMillis();
   }
 
   public void incPacketNr() {

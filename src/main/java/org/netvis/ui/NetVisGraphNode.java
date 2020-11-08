@@ -30,6 +30,10 @@ public class NetVisGraphNode {
   
   private String mDisplayString;
   public String getDisplayString() { return mDisplayString; };
+  public void setDisplayString( String s ) { mDisplayString = s; mStringWidth = -1; };
+  private int mStringWidth;
+  public int getStringWidth() { return mStringWidth; }
+  public void setStringWidth( int w ) { mStringWidth = w; }
   
   
   public NetVisGraphNode( Node  n )  {
@@ -41,9 +45,9 @@ public class NetVisGraphNode {
     NetVisGraphComponent nvgc = NetVisMain.getMain().getNetVisFrame().getNetVisGraphComponent();
     nvgc.addGraphNode( this );
     
-    
+    mStringWidth = -1;
   }
-
+  
   
   public boolean contains ( int x, int y ) {
      boolean retval = false;

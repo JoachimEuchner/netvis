@@ -78,9 +78,6 @@ public class NetVisGraphComponent extends JComponent implements
   }
   
   
-  
-  
-  
   public void addGraphNode( NetVisGraphNode nvgn ) {
     synchronized ( mAllGraphNodes ) {
       mAllGraphNodes.add(nvgn);
@@ -88,11 +85,13 @@ public class NetVisGraphComponent extends JComponent implements
     }
   }
   
+  
   public void addGraphConnection( NetVisGraphConnection nvgc ) {
     synchronized ( mAllGraphConnections ) {
       mAllGraphConnections.add(nvgc);
     }
   }
+  
   
   @Override
   public void invalidate() {
@@ -100,11 +99,13 @@ public class NetVisGraphComponent extends JComponent implements
     this.offscreen = null;
   }
 
+  
   @Override
   public void update( Graphics g) {
     paint(g);
   }
 
+  
   @Override
   public void paint( Graphics g) {
     paintCounter++;
@@ -128,6 +129,7 @@ public class NetVisGraphComponent extends JComponent implements
     og.dispose();
   }
 
+  
   public void paintOS(Graphics g) {
     long paintstart = System.currentTimeMillis();
     Graphics2D g2 = null ;
@@ -182,6 +184,7 @@ public class NetVisGraphComponent extends JComponent implements
     }
   }
   
+  
   /**
    * resets the isLayouted for all nodes.
    */
@@ -223,7 +226,13 @@ public class NetVisGraphComponent extends JComponent implements
     synchronized( mAllGraphNodes ) {
       for (NetVisGraphNode nvgn : mAllGraphNodes ) {
         String s = nvgn.getDisplayString();
-        nvgn.setWidth(100);
+        if( nvgn.getStringWidth() == -1)
+        {
+          int width = (int) g2.getFontMetrics().getStringBounds(s, g2).getWidth();
+          nvgn.setStringWidth( width );
+          nvgn.setWidth( width + 3);
+        }
+        
         nvgn.setHeight(13);
         g2.drawRect(nvgn.getMx(),nvgn.getMy(),nvgn.getWidth(),nvgn.getHeight());
         g2.drawString(s, nvgn.getMx()+2,nvgn.getMy()+11);
