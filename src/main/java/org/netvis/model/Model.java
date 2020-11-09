@@ -138,6 +138,13 @@ public class Model {
         retVal = conn;
       }
     }
+    if( retVal.getReverseConnection() == null ) {
+      Connection rev = findConnection( dst, src );
+      retVal.setReverseConnection(rev);
+      if(( rev != null) && ( rev.getReverseConnection() == null )){
+        rev.setReverseConnection( retVal );
+      }
+    }
     return ( retVal );
   }
 

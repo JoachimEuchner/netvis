@@ -47,14 +47,17 @@ public class NetVisGraphComponent extends JComponent implements
   private Font                                myPlain11Font;
   private int                                 mWidth;
   private int                                 mHeight;
-  private final BasicStroke                   mStroke1;
-  private final BasicStroke                   mStroke2;
-  private final BasicStroke                   mStroke3;
-  private final BasicStroke                   mStroke4;
-  private final BasicStroke                   mStroke5;
-  private final BasicStroke                   mStroke6;
-  private final BasicStroke                   mStroke7;
-  private final BasicStroke                   mStroke8;
+  private static final BasicStroke       mStroke1 = new BasicStroke( 1 );
+  private static final BasicStroke       mStroke2 = new BasicStroke( 2 );
+  private static final BasicStroke       mStroke3 = new BasicStroke( 3 );
+  private static final BasicStroke       mStroke4 = new BasicStroke( 4 );
+  private static final BasicStroke       mStroke5 = new BasicStroke( 5 );
+  private static final BasicStroke       mStroke6 = new BasicStroke( 6 );
+  private static final BasicStroke       mStroke7 = new BasicStroke( 7 );
+  private static final BasicStroke       mStroke8 = new BasicStroke( 8 );;
+  private static final BasicStroke[]     mStrokes = new BasicStroke[]{ mStroke1, mStroke2, mStroke3,
+                                                      mStroke4, mStroke5, mStroke6,
+                                                      mStroke7,mStroke8 };
 
   private final ArrayList<NetVisGraphNode> mAllGraphNodes;
   public List<NetVisGraphNode> getAllGraphNodes() { return mAllGraphNodes; }
@@ -98,16 +101,7 @@ public class NetVisGraphComponent extends JComponent implements
     mDraggingNodeDy = 0;
     
     this.myPlain10Font = new Font("Courier", Font.PLAIN, 10);
-    this.myPlain11Font = new Font("Courier", Font.PLAIN, 11);
-    this.mStroke1                            = new BasicStroke( 1 );
-    this.mStroke2                            = new BasicStroke( 2 );
-    this.mStroke3                            = new BasicStroke( 3 );
-    this.mStroke4                            = new BasicStroke( 4 );
-    this.mStroke5                            = new BasicStroke( 5 );
-    this.mStroke6                            = new BasicStroke( 6 );
-    this.mStroke7                            = new BasicStroke( 7 );
-    this.mStroke8                            = new BasicStroke( 8 );
-   
+    this.myPlain11Font = new Font("Courier", Font.PLAIN, 11);   
   }
   
   
@@ -363,13 +357,14 @@ public class NetVisGraphComponent extends JComponent implements
   private void paintAllConnections( Graphics2D g2 ) {
     synchronized( mAllGraphConnections ) {
       g2.setColor(Color.GREEN);
-      for (NetVisGraphConnection nvgn : mAllGraphConnections ) {
-        NetVisGraphNode src = nvgn.getSrcGraphNode();
-        NetVisGraphNode dst = nvgn.getDstGraphNode();
+      for (NetVisGraphConnection nvgc : mAllGraphConnections ) {
+        NetVisGraphNode src = nvgc.getSrcGraphNode();
+        NetVisGraphNode dst = nvgc.getDstGraphNode();
 
         if(( src!=null) && ( dst!=null )) {
-          int packets = nvgn.getConnection().getNrOfSeenPackets();
+          int packets = nvgc.getConnection().getNrOfSeenPackets();
 
+          int size = 1;
           if( packets > 2 ) {
             if( packets > 5 ) {
               if( packets > 10 ) {
@@ -377,37 +372,41 @@ public class NetVisGraphComponent extends JComponent implements
                   if( packets > 100 ) {
                     if( packets > 500 ) {
                       if( packets > 1000 ) {
-                        g2.setStroke(mStroke8);
+                        size = 8;
                       } else {
-                        g2.setStroke(mStroke7);
+                       size = 7;
                       }
                     } else {
-                      g2.setStroke(mStroke6);
+                      size = 6;
                     }
                   } else {
-                    g2.setStroke(mStroke5);
+                    size = 5;
                   }
                 } else {
-                  g2.setStroke(mStroke4);
+                  size = 4;
                 }
               } else {
-                g2.setStroke(mStroke3);
+                size = 3;
               }
             } else {
-              g2.setStroke(mStroke2);
+              size = 2;
             }
           } else {
-            g2.setStroke(mStroke1);
+            size = 1;
           }
 
           ShortestPair xp = getShortestPair(src.getMx(),  src.getMx() + src.getWidth(), dst.getMx(),  dst.getMx() + dst.getWidth()); 
           ShortestPair yp = getShortestPair(src.getMy(),  src.getMy() + src.getHeight(), dst.getMy(), dst.getMy() + dst.getHeight()); 
 
-          Color c = getColorOfLinkAge( nvgn.getConnection().getTimeSinceLastSeenPacket(), true );
+          Color c = getColorOfLinkAge( nvgc.getConnection().getTimeSinceLastSeenPacket(), true );
           g2.setColor(c);
 
-          drawParabel( g2, xp.s1, yp.s1, xp.s2, yp.s2, 10 );
-
+          double offset = 0.0;
+          if( nvgc.getConnection().getReverseConnection() != null ){
+            offset = 10.0;
+          }
+          
+          drawParabel( g2, xp.s1, yp.s1, xp.s2, yp.s2, size, offset );
         }
       }
     }
@@ -534,42 +533,86 @@ public class NetVisGraphComponent extends JComponent implements
   
   
   
-  public static void drawParabel( Graphics2D g2, int xStart, int yStart, int xEnd, int yEnd, double shift) {
-    if ((xStart == xEnd) && (yStart == yEnd))
-    {
+  public static void drawParabel( Graphics2D g2, int xStart, int yStart, int xEnd, int yEnd, int size, double shift) {
+    if ((xStart == xEnd) && (yStart == yEnd)) {
       return;
     }
-
-    int x1 = xStart;
-    int y1 = yStart;
+    
+    if( size < mStrokes.length ) {
+      g2.setStroke( mStrokes[size] );
+    }
 
     double xNormale = (yEnd - yStart);
     double yNormale = -(xEnd - xStart);
     double len = Math.sqrt(xNormale * xNormale + yNormale * yNormale);
-
-    if( len > 0 )
-    {
-      int steps = (int)len/10 + 1;
-
+    if( len > 0 ) {
       xNormale /= len;
       yNormale /= len;
+    }
+    
+    double arrowLen = size*10.0;
+    double arrowWith = size*3.0;
+    
+    if( shift == 0.0 ) {
+      
+      // drawLine
+      g2.drawLine(xStart, yStart, xEnd, yEnd);
+      int[] x = new int[3];
+      int[] y = new int[3];
+      
+      // drawArrowTip:
+      x[0] = (int)(xEnd + yNormale * arrowLen + xNormale * arrowWith );
+      y[0] = (int)(yEnd - xNormale * arrowLen + yNormale * arrowWith );
+      x[1] = xEnd ;
+      y[1] = yEnd ;
+      x[2] = (int)(xEnd + yNormale * arrowLen - xNormale * arrowWith );
+      y[2] = (int)(yEnd - xNormale * arrowLen - yNormale * arrowWith );
+      g2.fillPolygon(x, y, 3);
+      
+    } else {
+      int x1 = xStart;
+      int y1 = yStart;
+      int x = 0;
+      int y = 0;
 
-      // for (double v = 0.0; v <= 1.01; v += vStep)
-      for ( int step = 0; step <= steps; step++)
-      {
+      // drawParabel
+      int steps = (int)len/10 + 1;
+      for ( int step = 0; step <= steps; step++) {
         double v = (double)( step ) / (double)(steps);
         double u = 1.0 - 4.0 * (v - 0.5) * (v - 0.5);
-        int x = (int) ((double)(xEnd - xStart) * v + (double)xStart + u * shift * xNormale);
-        int y = (int) ((double)(yEnd - yStart) * v + (double)yStart + u * shift * yNormale);
+        x = (int) ((double)(xEnd - xStart) * v + (double)xStart + u * shift * xNormale);
+        y = (int) ((double)(yEnd - yStart) * v + (double)yStart + u * shift * yNormale);
 
         g2.drawLine(x1, y1, x, y);
 
-        x1 = x;
-        y1 = y;
+        if( step < steps )
+        {
+          x1 = x;
+          y1 = y;
+        }
       }
+
+      // draw Arrowtip:
+      double xLastNormale = (y - y1);
+      double yLastNormale = -(x - x1);
+      double lastLen = Math.sqrt(xLastNormale * xLastNormale + yLastNormale * yLastNormale);
+      if( lastLen > 0 ) {
+        xLastNormale /= lastLen;
+        yLastNormale /= lastLen;
+      }
+      int[] xLast = new int[3];
+      int[] yLast = new int[3];
+
+      xLast[0] = (int)(xEnd + yLastNormale * arrowLen + xLastNormale * arrowWith);
+      yLast[0] = (int)(yEnd - xLastNormale * arrowLen + yLastNormale * arrowWith);
+      xLast[1] = xEnd ;
+      yLast[1] = yEnd ;
+      xLast[2] = (int)(xEnd + yLastNormale * arrowLen - xLastNormale * arrowWith);
+      yLast[2] = (int)(yEnd - xLastNormale * arrowLen - yLastNormale * arrowWith);
+
+      g2.fillPolygon(xLast, yLast, 3);
     }
   }
-  
   
   private class ShortestPair
   {

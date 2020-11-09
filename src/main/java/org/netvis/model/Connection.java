@@ -14,12 +14,18 @@ public class Connection {
   private long timeOfLastSeenPacket = 0;
 
   private NetVisGraphConnection mGraphConnection;
+  public NetVisGraphConnection getGraphConnection() { return mGraphConnection; };
+  
+  private Connection myReverseConnection;
+  public Connection getReverseConnection() { return myReverseConnection; }
+  public void setReverseConnection( Connection rev ) { myReverseConnection = rev; };
   
   public Connection( Node src, Node dst ) {
     mSrc = src;
     mDst = dst;
     seenPackets = 0;
     mGraphConnection = new NetVisGraphConnection(this);
+    myReverseConnection = null;
     timeOfLastSeenPacket = System.currentTimeMillis();
   }
 
