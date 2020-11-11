@@ -1,6 +1,8 @@
 package org.netvis.model;
 
 import org.netvis.ui.NetVisGraphConnection;
+import org.pcap4j.packet.IpV4Packet;
+import org.pcap4j.packet.namednumber.IpNumber;
 
 public class Connection {
   private final Node mSrc;
@@ -10,6 +12,9 @@ public class Connection {
   public Node getDst() { return mDst; }
 
   private int seenPackets;
+  
+  private IpNumber mProtocol;
+  
 
   private long timeOfLastSeenPacket = 0;
 
@@ -20,9 +25,10 @@ public class Connection {
   public Connection getReverseConnection() { return myReverseConnection; }
   public void setReverseConnection( Connection rev ) { myReverseConnection = rev; };
   
-  public Connection( Node src, Node dst ) {
+  public Connection( Node src, Node dst, Packet firstPacket ) {
     mSrc = src;
     mDst = dst;
+    mProtocol = firstPacket.getProtocol();
     seenPackets = 0;
     mGraphConnection = new NetVisGraphConnection(this);
     myReverseConnection = null;
@@ -34,8 +40,9 @@ public class Connection {
     timeOfLastSeenPacket = System.currentTimeMillis();
   }
   
-  public void incPacketNr(long now) {
+  public void addPacket(long now, Packet p) {
     seenPackets++;
+    mProtocol = p.getProtocol();
     timeOfLastSeenPacket = now;
   }
 

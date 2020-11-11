@@ -63,8 +63,8 @@ public class Model {
     dstNode.incReceivedPackets();
     dstNode.setTimeOfLastSeenPacket( now );
     
-    Connection conn = findConnectionAndAdd( srcNode, dstNode );
-    conn.incPacketNr( now );
+    Connection conn = findConnectionAndAdd( srcNode, dstNode, p );
+    conn.addPacket( now, p );
     
     logger.trace("addIPv4Packet, got {} packets, {} nodes, {} connections", 
         mAllPackets.size(), mAllNodes.size(), mAllConnections.size());
@@ -130,11 +130,11 @@ public class Model {
   }
   
   
-  private Connection findConnectionAndAdd( Node src, Node dst ) {
+  private Connection findConnectionAndAdd( Node src, Node dst, Packet firstPacket ) {
     Connection retVal = findConnection( src, dst );
     if( retVal == null ) {
       synchronized( mAllConnections ) {
-        Connection conn = new Connection( src, dst );
+        Connection conn = new Connection( src, dst, firstPacket );
         mAllConnections.add( conn );
         retVal = conn;
       }
