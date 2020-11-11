@@ -73,7 +73,7 @@ public class NetVisGraphComponent extends JComponent implements
   private transient NetVisGraphNode mDraggingNode = null;
   private int mDraggingNodeDx = 0;
   private int mDraggingNodeDy = 0; 
-  
+ 
   /**
    * <ctor>
    * @param main
@@ -263,17 +263,31 @@ public class NetVisGraphComponent extends JComponent implements
    * @param g2
    */
   private void paintAllNodes( Graphics2D g2 ) {
-    g2.setColor(Color.WHITE);
+   
     g2.setFont(this.myPlain11Font);
     synchronized( mAllGraphNodes ) {
       for (NetVisGraphNode nvgn : mAllGraphNodes ) {
+        
+        g2.setColor(Color.WHITE);
         String s = nvgn.getDisplayString();
-        if( nvgn.getStringWidth() == -1)
-        {
-          int width = (int) g2.getFontMetrics().getStringBounds(s, g2).getWidth();
-          nvgn.setStringWidth( width );
-          nvgn.setWidth( width + 3);
+        if( nvgn.getStringWidth() == -1) {
+          int stringWidth = (int) g2.getFontMetrics().getStringBounds(s, g2).getWidth();
+          nvgn.setStringWidth( stringWidth );
+          nvgn.setWidth( stringWidth + 3 + 11);
         }
+
+        int width = nvgn.getWidth();
+        g2.drawRect(nvgn.getMx()+width-9, nvgn.getMy()+2, 6, 9);
+        if( nvgn.isManuallyMoved() ) {
+          // pinned
+          g2.drawLine(nvgn.getMx()+width-7, nvgn.getMy()+7, nvgn.getMx()+width-5, nvgn.getMy()+7); // h
+          g2.drawLine(nvgn.getMx()+width-6, nvgn.getMy()+7, nvgn.getMx()+width-6, nvgn.getMy()+9); // v
+        } else {
+          // unpinned
+          g2.drawLine(nvgn.getMx()+width-7, nvgn.getMy()+4, nvgn.getMx()+width-5, nvgn.getMy()+4); // h
+          g2.drawLine(nvgn.getMx()+width-6, nvgn.getMy()+4, nvgn.getMx()+width-6, nvgn.getMy()+9); // v
+        }
+
 
         if( nvgn.getLod() == 0 ) {
           // simple plain hostname
@@ -288,8 +302,7 @@ public class NetVisGraphComponent extends JComponent implements
           g2.drawString(s, nvgn.getMx()+2,nvgn.getMy()+11); // plain hostname
           g2.drawString(s2, nvgn.getMx()+2,nvgn.getMy()+21); // Inet4Address.toString
         }
-        else if( nvgn.getLod() == 2 )
-        {
+        else if( nvgn.getLod() == 2 ) {
           // plain hostname
           // Inet4Address.toString
           // small diagram
@@ -306,37 +319,31 @@ public class NetVisGraphComponent extends JComponent implements
           g2.drawRect(nvgn.getMx(),nvgn.getMy(),nvgn.getWidth(),nvgn.getHeight());
 
           g2.setColor(Color.CYAN.darker().darker().darker());
-          g2.fillRect(nvgn.getMx(), nvgn.getMy() + 31, timeDiagramWidth, timeDiagramHeight);
+          g2.fillRect(nvgn.getMx(), nvgn.getMy() + 33, timeDiagramWidth, timeDiagramHeight);
           g2.setColor(Color.CYAN);
-          g2.drawRect(nvgn.getMx(), nvgn.getMy() + 31, timeDiagramWidth, timeDiagramHeight);
+          g2.drawRect(nvgn.getMx(), nvgn.getMy() + 33, timeDiagramWidth, timeDiagramHeight);
 
-          synchronized ( mMain.getModel().getAllPackets() )
-          {  
+          synchronized ( mMain.getModel().getAllPackets() ) {  
             g2.setStroke(mStroke1);
             g2.setColor(Color.CYAN);
             long diagramDuration = 900000;
-            for (Packet p : mMain.getModel().getAllPackets() )
-            {
-              if( ( p.getSrc() == nvgn.getNode() ) || ( p.getDst() == nvgn.getNode() ))
-              {
+            for (Packet p : mMain.getModel().getAllPackets() ) {
+              if( ( p.getSrc() == nvgn.getNode() ) || ( p.getDst() == nvgn.getNode() )) {
                 long now = System.currentTimeMillis();
                 long age = now - p.getTs();
 
-                if( age < diagramDuration )
-                {  
+                if( age < diagramDuration ) {  
                   int x = (timeDiagramWidth - (int)(age * timeDiagramWidth / diagramDuration)) + nvgn.getMx();
                   int yTop = timeDiagramHeight - p.getSize()/5;
-                  if( yTop <  0 )
-                  {
+                  if( yTop <  0 ) {
                     yTop = 0;
                   }
-                  yTop += nvgn.getMy() + 31 ;
-                  if( yTop < nvgn.getMy())
-                  {
+                  yTop += nvgn.getMy() + 33 ;
+                  if( yTop < nvgn.getMy()) {
                     yTop = nvgn.getMy();
                   }
 
-                  int yBottom = timeDiagramHeight + nvgn.getMy()  + 31;
+                  int yBottom = timeDiagramHeight + nvgn.getMy()  + 33;
 
                   g2.drawLine( x, yTop, x, yBottom );  
                 }
@@ -469,7 +476,18 @@ public class NetVisGraphComponent extends JComponent implements
         NetVisGraphNode n = getNode( e.getX(), e.getY() );
         if( n != null ) {
           mSelectedNode = n;
-          n.setIsManuallyMoved(true);
+          if( ( e.getX() > ( n.getMx() + n.getWidth() - 10 ) ) && 
+              ( e.getX() < ( n.getMx() + n.getWidth() - 2 ) ) &&
+              ( e.getY() > ( n.getMy() + 3  )) &&
+              ( e.getY() < ( n.getMy() + 10 ))) {
+            // pin-rectangle hit:
+            if( n.isManuallyMoved() ) {
+              n.setIsManuallyMoved( false );
+            } 
+          } else {
+            // pin-rectangle not hit
+            n.setIsManuallyMoved( true );
+          }
         }
       }
     }
