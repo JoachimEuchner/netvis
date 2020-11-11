@@ -41,12 +41,12 @@ public class NetVisGraphComponent extends JComponent implements
   
   private final NetVisMain mMain;
   
-  private transient Image                     offscreen;
-  private int                                 paintCounter;
-  private Font                                myPlain10Font;
-  private Font                                myPlain11Font;
-  private int                                 mWidth;
-  private int                                 mHeight;
+  private transient Image                offscreen;
+  private int                            paintCounter;
+  private Font                           myPlain10Font;
+  private Font                           myPlain11Font;
+  private int                            mWidth;
+  private int                            mHeight;
   private static final BasicStroke       mStroke1 = new BasicStroke( 1 );
   private static final BasicStroke       mStroke2 = new BasicStroke( 2 );
   private static final BasicStroke       mStroke3 = new BasicStroke( 3 );
@@ -55,9 +55,10 @@ public class NetVisGraphComponent extends JComponent implements
   private static final BasicStroke       mStroke6 = new BasicStroke( 6 );
   private static final BasicStroke       mStroke7 = new BasicStroke( 7 );
   private static final BasicStroke       mStroke8 = new BasicStroke( 8 );;
+  private static final BasicStroke       mStroke9 = new BasicStroke( 9 );
   private static final BasicStroke[]     mStrokes = new BasicStroke[]{ mStroke1, mStroke2, mStroke3,
                                                       mStroke4, mStroke5, mStroke6,
-                                                      mStroke7,mStroke8 };
+                                                      mStroke7, mStroke8, mStroke9 };
 
   private final ArrayList<NetVisGraphNode> mAllGraphNodes;
   public List<NetVisGraphNode> getAllGraphNodes() { return mAllGraphNodes; }
@@ -463,7 +464,6 @@ public class NetVisGraphComponent extends JComponent implements
 
   @Override
   public void mouseClicked(MouseEvent e) {
-
     if (e.getButton() == MouseEvent.BUTTON1) {
       if( e.getClickCount() == 1 ) {
         NetVisGraphNode n = getNode( e.getX(), e.getY() );
@@ -529,9 +529,6 @@ public class NetVisGraphComponent extends JComponent implements
       this.mDraggingNode = null;
     }
   }
-
-  
-  
   
   public static void drawParabel( Graphics2D g2, int xStart, int yStart, int xEnd, int yEnd, int size, double shift) {
     if ((xStart == xEnd) && (yStart == yEnd)) {
@@ -539,7 +536,13 @@ public class NetVisGraphComponent extends JComponent implements
     }
     
     if( size < mStrokes.length ) {
-      g2.setStroke( mStrokes[size] );
+      if( size > 0 ){
+        g2.setStroke( mStrokes[ size-1 ] );
+      } else {
+        g2.setStroke( mStrokes[ 0 ] );
+      }
+    } else {
+      g2.setStroke( mStrokes[ mStrokes.length-1 ] );
     }
 
     double xNormale = (yEnd - yStart);
@@ -550,25 +553,11 @@ public class NetVisGraphComponent extends JComponent implements
       yNormale /= len;
     }
     
-    double arrowLen = size*10.0;
-    double arrowWith = size*3.0;
+    double arrowLen = size*5.0;
+    double arrowWith = size*2.0;
     
     if( shift == 0.0 ) {
-      
-      // drawLine
-      g2.drawLine(xStart, yStart, xEnd, yEnd);
-      int[] x = new int[3];
-      int[] y = new int[3];
-      
-      // drawArrowTip:
-      x[0] = (int)(xEnd + yNormale * arrowLen + xNormale * arrowWith );
-      y[0] = (int)(yEnd - xNormale * arrowLen + yNormale * arrowWith );
-      x[1] = xEnd ;
-      y[1] = yEnd ;
-      x[2] = (int)(xEnd + yNormale * arrowLen - xNormale * arrowWith );
-      y[2] = (int)(yEnd - xNormale * arrowLen - yNormale * arrowWith );
-      g2.fillPolygon(x, y, 3);
-      
+      drawArrow(g2, xStart, yStart, xEnd, yEnd, size, arrowLen, arrowWith);
     } else {
       int x1 = xStart;
       int y1 = yStart;
@@ -582,51 +571,59 @@ public class NetVisGraphComponent extends JComponent implements
         double u = 1.0 - 4.0 * (v - 0.5) * (v - 0.5);
         x = (int) ((double)(xEnd - xStart) * v + (double)xStart + u * shift * xNormale);
         y = (int) ((double)(yEnd - yStart) * v + (double)yStart + u * shift * yNormale);
-
-        g2.drawLine(x1, y1, x, y);
-
-        if( step < steps )
-        {
+        if( step < steps ) {
+          // draw all segments but the last
+          g2.drawLine(x1, y1, x, y);
           x1 = x;
           y1 = y;
         }
       }
-
-      // draw Arrowtip:
-      double xLastNormale = (y - y1);
-      double yLastNormale = -(x - x1);
-      double lastLen = Math.sqrt(xLastNormale * xLastNormale + yLastNormale * yLastNormale);
-      if( lastLen > 0 ) {
-        xLastNormale /= lastLen;
-        yLastNormale /= lastLen;
-      }
-      int[] xLast = new int[3];
-      int[] yLast = new int[3];
-
-      xLast[0] = (int)(xEnd + yLastNormale * arrowLen + xLastNormale * arrowWith);
-      yLast[0] = (int)(yEnd - xLastNormale * arrowLen + yLastNormale * arrowWith);
-      xLast[1] = xEnd ;
-      yLast[1] = yEnd ;
-      xLast[2] = (int)(xEnd + yLastNormale * arrowLen - xLastNormale * arrowWith);
-      yLast[2] = (int)(yEnd - xLastNormale * arrowLen - yLastNormale * arrowWith);
-
-      g2.fillPolygon(xLast, yLast, 3);
+      // draw Arrow:
+      drawArrow(g2, x1, y1, xEnd, yEnd, size, arrowLen, arrowWith);
     }
   }
   
-  private class ShortestPair
-  {
+  private static void drawArrow( Graphics2D g2, int xStart, int yStart, int xEnd, int yEnd, 
+                                    int size,   double arrowLen, double arrowWith) {
+    double xNormale = (yEnd - yStart);
+    double yNormale = -(xEnd - xStart);
+    double len = Math.sqrt(xNormale * xNormale + yNormale * yNormale);
+    if( len > 0 ) {
+      xNormale /= len;
+      yNormale /= len;
+    }
+    
+    if( len > arrowLen ) {
+      int xShortEnd = (int)(xEnd + yNormale * arrowLen );
+      int yShortEnd = (int)(yEnd - xNormale * arrowLen );
+      g2.drawLine(xStart, yStart, xShortEnd, yShortEnd);
+    }
+        
+    int[] x = new int[3];
+    int[] y = new int[3];
+    
+    // drawArrowTip:
+    x[0] = (int)(xEnd + yNormale * arrowLen + xNormale * arrowWith );
+    y[0] = (int)(yEnd - xNormale * arrowLen + yNormale * arrowWith );
+    x[1] = xEnd ;
+    y[1] = yEnd ;
+    x[2] = (int)(xEnd + yNormale * arrowLen - xNormale * arrowWith );
+    y[2] = (int)(yEnd - xNormale * arrowLen - yNormale * arrowWith );
+    g2.fillPolygon(x, y, 3);
+  }
+  
+  
+  
+  private class ShortestPair {
     private int s1;
     private int s2;
-    ShortestPair(int tmps1, int tmps2)
-    {
+    ShortestPair(int tmps1, int tmps2) {
       s1 = tmps1;
       s2 = tmps2;
     }
   }
   
-  private  ShortestPair getShortestPair( int p1, int p2, int q1, int q2)
-  {
+  private  ShortestPair getShortestPair( int p1, int p2, int q1, int q2) {
     int r1;
     int r2;
 
@@ -634,20 +631,17 @@ public class NetVisGraphComponent extends JComponent implements
     r1 = p1;
     r2 = q1;
     int d2 = Math.abs(p1 - q2);
-    if( d2 < d1 )
-    {
+    if( d2 < d1 ) {
       // r1 is already p1
       r2 = q2;
     }
     int d3 = Math.abs(p2 - q1);
-    if(( d3 < d2 ) && ( d3 < d1 ))
-    {
+    if(( d3 < d2 ) && ( d3 < d1 )) {
       r1 = p2;
       r2 = q1;
     }
     int d4 = Math.abs(p2 - q2);
-    if( ( d4 < d3 ) && ( d4 < d2 ) && ( d4 < d1 ))
-    {
+    if( ( d4 < d3 ) && ( d4 < d2 ) && ( d4 < d1 )) {
       r1 = p2;
       r2 = q2;
     }
@@ -657,30 +651,19 @@ public class NetVisGraphComponent extends JComponent implements
   }
 
 
-  private Color getColorOfLinkAge( long millis, boolean isActive )
-  { 
-    if( isActive )
-    {
-      if ( !mMain.isOnline() )
-      {
+  private Color getColorOfLinkAge( long millis, boolean isActive ) { 
+    if( isActive ) {
+      if ( !mMain.isOnline() ) {
         millis = 1000;
       }
-
       float hue;
       double fsFract =  Math.exp( -(double)millis / 100000.0 );
       hue = (float) ( 0.6666 - fsFract * 2.0 / 3.0);
       double b  = fsFract * 0.5 +0.5;
-
       Color bgc = Color.getHSBColor(hue, (float)1.0, (float)b);
-
       return ( bgc );
-    }
-    else
-    {
+    } else {
       return ( Color.DARK_GRAY.darker().darker() );
     }
   }
-
-  
-
 }
