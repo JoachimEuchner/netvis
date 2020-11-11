@@ -53,7 +53,8 @@ public class Model {
     
     Node srcNode = findNodeAndAdd ( src );
     Node dstNode = findNodeAndAdd ( dst );
-    Packet p = new Packet ( now, srcNode, dstNode, ipv4p.length());
+    Packet p = new Packet ( now, ipv4p.getHeader().getProtocol(), srcNode, dstNode, ipv4p.length());
+    
     synchronized( mAllPackets ) {
       mAllPackets.add(p);
     }
