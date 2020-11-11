@@ -475,19 +475,18 @@ public class NetVisGraphComponent extends JComponent implements
       if( e.getClickCount() == 1 ) {
         NetVisGraphNode n = getNode( e.getX(), e.getY() );
         if( n != null ) {
-          mSelectedNode = n;
-          if( ( e.getX() > ( n.getMx() + n.getWidth() - 10 ) ) && 
-              ( e.getX() < ( n.getMx() + n.getWidth() - 2 ) ) &&
-              ( e.getY() > ( n.getMy() + 3  )) &&
-              ( e.getY() < ( n.getMy() + 10 ))) {
+          mSelectedNode = n;          
+          if( ( e.getX() >= ( n.getMx() + n.getWidth() - 10 ) ) && 
+              ( e.getX() <= ( n.getMx() + n.getWidth() - 2 ) ) &&
+              ( e.getY() >= ( n.getMy() + 3  )) &&
+              ( e.getY() <= ( n.getMy() + 10 ))) {
             // pin-rectangle hit:
-            if( n.isManuallyMoved() ) {
-              n.setIsManuallyMoved( false );
-            } 
+            n.setIsManuallyMoved( !n.isManuallyMoved() );
           } else {
             // pin-rectangle not hit
             n.setIsManuallyMoved( true );
           }
+          repaint();
         }
       }
     }
@@ -535,6 +534,8 @@ public class NetVisGraphComponent extends JComponent implements
         mDraggingNode = n;
         mDraggingNodeDx = ev.getX() - n.getMx();
         mDraggingNodeDy = ev.getY() - n.getMy();   // 0...mHeight
+        
+        mSelectedNode = n;
       }
     }
   }
