@@ -21,7 +21,7 @@ public class Node {
   private int sentPackets;
   public void incSentPackets() { sentPackets++; }
   public int getSentPackets() { return sentPackets; }
-
+  
   private long timeOfLastSeenPacket = 0;
   public void setTimeOfLastSeenPacket( long now ) {
     timeOfLastSeenPacket = now;
@@ -40,6 +40,17 @@ public class Node {
     mGraphNode = new NetVisGraphNode(this);
     
     getHostName();
+    
+    logger.info("Node<ctor>:"+addr
+              +", name\""+ mGraphNode.getDisplayString()+"\" "
+              +", isAnyLocalAddress():"+addr.isAnyLocalAddress()
+              +", isLinkLocalAddress():"+addr.isLinkLocalAddress()
+              +", isMulticastAddress():"+addr.isMulticastAddress()
+              +", isSiteLocalAddress():"+addr.isSiteLocalAddress()
+              +", isLoopbackAddress():"+addr.isLoopbackAddress()
+              +", isMCGlobal():"+addr.isMCGlobal()
+              );
+    
   }
 
   public void setInet4Address( Inet4Address addr ) {
@@ -54,12 +65,10 @@ public class Node {
     }
     
     String hostname = getHostName( name4Numbers );
-    if( !hostname.isEmpty())
-    {
+    if( !hostname.isEmpty()) {
       mGraphNode.setDisplayString( hostname );
     }
-    else
-    {
+    else {
       mGraphNode.setDisplayString( name4Numbers );
     }
   }

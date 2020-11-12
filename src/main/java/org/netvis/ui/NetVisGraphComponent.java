@@ -201,25 +201,68 @@ public class NetVisGraphComponent extends JComponent implements
   
   private void checkInitialLayoutNodes() {
     synchronized( mAllGraphNodes ) {
-      int nrOfNodesToLayout = mAllGraphNodes.size();
+      if( mAllGraphNodes.size() > 0 ) {
 
-      int xCenter = mWidth / 2;
-      int yCenter = mHeight / 2;
+        int nrOfLocalNodesToLayout = 0;
+        int nrOfMulticastNodesToLayout = 0;
+        int nrOfOtherNodesToLayout = 0;
 
-      double radius = mHeight * 0.4;
-
-      double i = 0.0;
-      if( nrOfNodesToLayout > 0 ) {
         for (NetVisGraphNode nvgn : mAllGraphNodes ) {
           if( ( !nvgn.isInitiallyLayouted() ) 
               && ( !nvgn.isManuallyMoved() ) ) {
-            double angle = 2* Math.PI / nrOfNodesToLayout * i;
-
-            nvgn.setMx( (int)( xCenter + radius * Math.sin ( angle )) );
-            nvgn.setMy( (int)( yCenter + radius * Math.cos ( angle )) );
+            if( nvgn.getNode().getAddr().isMulticastAddress() ) {
+              nrOfMulticastNodesToLayout++;
+            } else if( nvgn.getNode().getAddr().isSiteLocalAddress() ) {
+              nrOfLocalNodesToLayout++;
+            } else {
+              nrOfOtherNodesToLayout++;
+            }
           }
-          i += 1.0;
-          nvgn.setIsInitiallyLayouted( true );
+        }
+
+        int xCenter = mWidth / 2;
+        int yCenter = mHeight / 2;
+
+        double radiusMulticastNodesX = (double)mWidth * 0.1;
+        double radiusMulticastNodesY= (double)mHeight * 0.1;
+        double radiusLocalNodesX = (double)mWidth * 0.45;
+        double radiusLocalNodesY = (double)mHeight * 0.45;
+        double radiusOtherNodesX = (double)mWidth * 0.3;
+        double radiusOtherNodesY = (double)mHeight * 0.3;
+
+        double nrMulticastNode = 0.0;
+        double nrLocalNode = 0.0;
+        double nrOtherNode = 0.0;
+
+        for (NetVisGraphNode nvgn : mAllGraphNodes ) {
+          if( ( !nvgn.isInitiallyLayouted() ) 
+              && ( !nvgn.isManuallyMoved() ) ) {
+            if( nvgn.getNode().getAddr().isMulticastAddress() ) {
+              if( nrOfMulticastNodesToLayout > 0) {
+                double angle = 2* Math.PI / nrOfMulticastNodesToLayout * nrMulticastNode;
+                nvgn.setMx( (int)( xCenter + radiusMulticastNodesX * Math.sin ( angle )) );
+                nvgn.setMy( (int)( yCenter + radiusMulticastNodesY * Math.cos ( angle )) );
+                nrMulticastNode+=1.0;
+                nvgn.setIsInitiallyLayouted( true );
+              } 
+            } else if( nvgn.getNode().getAddr().isSiteLocalAddress() ) {
+              if( nrOfLocalNodesToLayout > 0) {
+                double angle = 2* Math.PI / nrOfLocalNodesToLayout * nrLocalNode;
+                nvgn.setMx( (int)( xCenter + radiusLocalNodesX * Math.sin ( angle )) );
+                nvgn.setMy( (int)( yCenter + radiusLocalNodesY * Math.cos ( angle )) );
+                nrLocalNode+=1.0;
+                nvgn.setIsInitiallyLayouted( true );
+              }
+            } else {
+              if( nrOfOtherNodesToLayout > 0) {
+                double angle = 2* Math.PI / nrOfOtherNodesToLayout * nrOtherNode;
+                nvgn.setMx( (int)( xCenter + radiusOtherNodesX * Math.sin ( angle )) );
+                nvgn.setMy( (int)( yCenter + radiusOtherNodesY * Math.cos ( angle )) );
+                nrOtherNode+=1.0;
+                nvgn.setIsInitiallyLayouted( true );
+              }
+            } 
+          } 
         }
       }
     }
@@ -269,6 +312,15 @@ public class NetVisGraphComponent extends JComponent implements
       for (NetVisGraphNode nvgn : mAllGraphNodes ) {
         
         g2.setColor(Color.WHITE);
+        
+        if( nvgn.getNode().getAddr().isMulticastAddress() ) {
+          g2.setColor(Color.BLUE);
+        } 
+        
+        if( nvgn.getNode().getAddr().isSiteLocalAddress() ) {
+          g2.setColor(Color.ORANGE);
+        } 
+        
         String s = nvgn.getDisplayString();
         if( nvgn.getStringWidth() == -1) {
           int stringWidth = (int) g2.getFontMetrics().getStringBounds(s, g2).getWidth();
@@ -344,11 +396,11 @@ public class NetVisGraphComponent extends JComponent implements
                   }
 
                   int yBottom = timeDiagramHeight + nvgn.getMy()  + 33;
-
                   g2.drawLine( x, yTop, x, yBottom );  
                 }
               }
             }
+            g2.setColor(Color.CYAN);
           }
           g2.setColor(Color.WHITE);
         }
