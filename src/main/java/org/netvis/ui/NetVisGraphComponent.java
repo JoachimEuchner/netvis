@@ -63,6 +63,9 @@ public class NetVisGraphComponent extends JComponent implements
                                                       mStroke4, mStroke5, mStroke6,
                                                       mStroke7, mStroke8, mStroke9 };
 
+  private boolean mAnonDisplay;
+  public void toggleAnonDisplay() { mAnonDisplay = !mAnonDisplay; repaint(); }
+  
   private final ArrayList<NetVisGraphNode> mAllGraphNodes;
   public List<NetVisGraphNode> getAllGraphNodes() { return mAllGraphNodes; }
   
@@ -91,6 +94,8 @@ public class NetVisGraphComponent extends JComponent implements
     mMain = main;
     this.myPlain10Font = new Font("Courier", Font.PLAIN, 10);
     this.myPlain11Font = new Font("Courier", Font.PLAIN, 11);  
+    
+    mAnonDisplay = false;
     
     addMouseListener(this);
     addKeyListener(this);
@@ -475,6 +480,9 @@ public class NetVisGraphComponent extends JComponent implements
         } 
         
         String s = nvgn.getDisplayString();
+        if( mAnonDisplay ) {
+          s = nvgn.getAnonDisplayString();
+        }
         if( nvgn.getStringWidth() == -1) {
           int stringWidth = (int) g2.getFontMetrics().getStringBounds(s, g2).getWidth();
           nvgn.setStringWidth( stringWidth );

@@ -53,6 +53,15 @@ public class NetVisGraphNode {
   private int mStringWidth;
   public int getStringWidth() { return mStringWidth; }
   public void setStringWidth( int w ) { mStringWidth = w; }
+  private String mAnonDisplayString;
+  public String getAnonDisplayString() { 
+    if ((mDisplayString!=null) && ( mAnonDisplayString==null)) {
+      mAnonDisplayString = mDisplayString.replaceAll("[a-z]", "x");
+      mAnonDisplayString = mAnonDisplayString.replaceAll("[A-Z]", "X");
+      mAnonDisplayString = mAnonDisplayString.replaceAll("[0-9]", "X");
+    }
+    return mAnonDisplayString;
+  }
   
   int mLevelOfDetail = 0;
   public int getLod() { return mLevelOfDetail; }

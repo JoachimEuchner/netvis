@@ -50,6 +50,9 @@ public class NetVisMenuBar extends JMenuBar implements ActionListener {
   JMenuItem mIncSpring;
   JMenuItem mDecSpring;
   
+  JMenu mDisplayMenu;
+  JMenuItem mToggleAnonDisplay;
+  
   public NetVisMenuBar( NetVisMain m )  {
     mMain = m;
     
@@ -172,6 +175,15 @@ public class NetVisMenuBar extends JMenuBar implements ActionListener {
     mLayoutMenu.add(mDecSpring);
     
     add( mLayoutMenu );
+    
+    // -------------- Display  -----------------
+    mDisplayMenu = new JMenu("Display");
+    mToggleAnonDisplay = new JMenuItem("ToggleAnonDisplay");
+    mToggleAnonDisplay.addActionListener(this);
+    mDisplayMenu.add(mToggleAnonDisplay);
+    
+    add(mDisplayMenu);
+    
   }
 
   
@@ -241,6 +253,9 @@ public class NetVisMenuBar extends JMenuBar implements ActionListener {
     }
     else if( cmd.equals("dec. spring")) {
       mMain.getNetVisFrame().getNetVisGraphComponent().decSpring();
+    }
+    else if( cmd.equals("ToggleAnonDisplay")){
+      mMain.getNetVisFrame().getNetVisGraphComponent().toggleAnonDisplay();
     }
   }
  
