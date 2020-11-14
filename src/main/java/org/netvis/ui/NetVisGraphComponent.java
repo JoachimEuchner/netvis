@@ -20,7 +20,10 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import javax.swing.JComponent;
 import org.netvis.NetVisMain;
 import org.netvis.model.Packet;
@@ -73,6 +76,11 @@ public class NetVisGraphComponent extends JComponent implements
   private transient NetVisGraphNode mDraggingNode = null;
   private int mDraggingNodeDx = 0;
   private int mDraggingNodeDy = 0; 
+  
+  // layouting
+  private double standardCharge;
+  private double standardSpring;
+  
  
   /**
    * <ctor>
@@ -81,6 +89,8 @@ public class NetVisGraphComponent extends JComponent implements
   public NetVisGraphComponent( NetVisMain main ) {
     logger.debug("NetVisComponent<ctor> called.");
     mMain = main;
+    this.myPlain10Font = new Font("Courier", Font.PLAIN, 10);
+    this.myPlain11Font = new Font("Courier", Font.PLAIN, 11);  
     
     addMouseListener(this);
     addKeyListener(this);
@@ -101,8 +111,8 @@ public class NetVisGraphComponent extends JComponent implements
     mDraggingNodeDx = 0;
     mDraggingNodeDy = 0;
     
-    this.myPlain10Font = new Font("Courier", Font.PLAIN, 10);
-    this.myPlain11Font = new Font("Courier", Font.PLAIN, 11);   
+    standardCharge = 15000.0;
+    standardSpring = 0.05;
   }
   
   
@@ -198,7 +208,9 @@ public class NetVisGraphComponent extends JComponent implements
     g2.drawString(s, this.mWidth - 250, this.mHeight - 8);
   }
   
-  
+  /**
+   * initial layout, e.g. three circles
+   */
   private void checkInitialLayoutNodes() {
     synchronized( mAllGraphNodes ) {
       if( mAllGraphNodes.size() > 0 ) {
@@ -209,7 +221,8 @@ public class NetVisGraphComponent extends JComponent implements
 
         for (NetVisGraphNode nvgn : mAllGraphNodes ) {
           if( ( !nvgn.isInitiallyLayouted() ) 
-              && ( !nvgn.isManuallyMoved() ) ) {
+              && ( !nvgn.isManuallyMoved() ) 
+              && ( !nvgn.isAutomatiallyMoved()) )  {
             if( nvgn.getNode().getAddr().isMulticastAddress() ) {
               nrOfMulticastNodesToLayout++;
             } else if( nvgn.getNode().getAddr().isSiteLocalAddress() ) {
@@ -236,7 +249,8 @@ public class NetVisGraphComponent extends JComponent implements
 
         for (NetVisGraphNode nvgn : mAllGraphNodes ) {
           if( ( !nvgn.isInitiallyLayouted() ) 
-              && ( !nvgn.isManuallyMoved() ) ) {
+              && ( !nvgn.isManuallyMoved() ) 
+              && ( !nvgn.isAutomatiallyMoved()) ) {
             if( nvgn.getNode().getAddr().isMulticastAddress() ) {
               if( nrOfMulticastNodesToLayout > 0) {
                 double angle = 2* Math.PI / nrOfMulticastNodesToLayout * nrMulticastNode;
@@ -270,7 +284,8 @@ public class NetVisGraphComponent extends JComponent implements
   
   
   /**
-   * resets the isLayouted for all nodes.
+   * resets the isInitialLayouted for all nodes.
+   * needed when resizing JFrame
    */
   private void revertAllLayoutNodes() {
     synchronized( mAllGraphNodes ) { 
@@ -280,7 +295,145 @@ public class NetVisGraphComponent extends JComponent implements
     }
   }
 
+  
+  /**
+   * automatic layouting
+   */
+  public void incCharge() { standardCharge *= 1.6; }
+  public void decCharge() { standardCharge /= 1.6; }
+  public void incSpring() { standardSpring *= 1.6; }
+  public void decSpring() { standardSpring /= 1.6; }
+  Timer timer;
+  int mLayoutCounter;
+  public void startLayouting() {
+    logger.info("startLayouting(): {} nodes, {} connections", mAllGraphNodes.size(), mAllGraphConnections.size());
+    timer = new Timer("Timer");
+    mLayoutCounter = 0;
+    TimerTask task = new TimerTask() {
+      public void run() {
+        
+        // logger.info("startLayouting::run() {} nodes, {} connections, count= {}", mAllGraphNodes.size(), mAllGraphConnections.size(), mLayoutCounter);
+        long layoutstart = System.currentTimeMillis();
+        
+        synchronized ( mAllGraphNodes ) {
+          synchronized ( mAllGraphConnections ) {
+            
+            for( NetVisGraphNode n : mAllGraphNodes ) {
+              n.fx = 0.0;
+              n.fy = 0.0;
+            }
+            
+            // calculate electrostatic force for each node
+            for( NetVisGraphNode n : mAllGraphNodes ) {
+              // need to work through all other nodes:   
+              for( NetVisGraphNode m : mAllGraphNodes ) {
+                if( n != m ) {
+                  double dx = n.getX() - m.getX();
+                  double dy = n.getY() - m.getY();
+                  double d2 = dx*dx + dy*dy;
 
+                  if( d2 > 0 ) {
+                    double d = Math.sqrt ( d2 );  // <-- the most expensive line 
+                    double nx = dx / d;
+                    double ny = dy / d;
+                    n.fx += standardCharge * nx / d2;
+                    n.fy += standardCharge * ny / d2;
+                  }
+                }
+              } // m
+            } // n
+            
+            // calculate spring force for each node
+            // need to work through all connections:
+            for ( NetVisGraphConnection c : mAllGraphConnections ) {
+              NetVisGraphNode src = c.getSrcGraphNode();
+              NetVisGraphNode dst = c.getDstGraphNode();
+
+              double dx = src.getX() - dst.getX();
+              double dy = src.getY() - dst.getY();
+
+              double mySpring = standardSpring * (1.0 + c.getConnection().getNrOfSeenPackets() / 1000.0 );
+              if( mySpring > 50.0) {
+                mySpring = 50.0;
+              }
+              src.fx -= mySpring * dx ;
+              src.fy -= mySpring * dy ;
+              dst.fx += mySpring * dx ;
+              dst.fy += mySpring * dy ;
+            } // c
+            // all forces calculated.
+            
+            // apply all individual forces to all individual nodes
+            double maxForce = 50.0; // avoid too big jumps.
+            for( NetVisGraphNode n : mAllGraphNodes ) {
+              if( n.canFlow() )
+              {
+                if( n.fx > maxForce ) {
+                  n.fx = maxForce;
+                }
+                if( n.fx < -maxForce ) {
+                  n.fx = -maxForce;
+                }
+                if( n.fy > maxForce ) {
+                  n.fy = maxForce;
+                }
+                if( n.fy < -maxForce ) {
+                  n.fy = -maxForce;
+                }
+
+                // apply force to a given node.
+                // for now, do not do the full numerical approach to the 
+                // partial differential equation, "F=m*a" :
+                // Simply move the node. (we do not need a full oscillation here)
+
+                // x
+                n.setX( n.getX() + n.fx ) ;
+                if( n.getMx() > (mWidth - n.getWidth())) {
+                  n.setMx( mWidth - n.getWidth() );
+                }
+                if( n.getMx() < 0 ) {
+                  n.setMx( 0 );
+                }
+
+                // y
+                n.setY( n.getY() + n.fy  ) ;
+                if( n.getMy() > (mHeight - n.getHeight())) {
+                  n.setMy( mHeight - n.getHeight() );
+                }
+                if( n.getMy() < 0 ) {
+                  n.setMy( 0 );
+                }
+
+                n.setIsAutomaticallyMoved(true);
+              }
+            } // n
+          } // sync allConnections
+        } // sync all Nodes
+        
+        repaint();
+        long layoutTime = System.currentTimeMillis() - layoutstart;
+        if( layoutTime > 20 ) { // ms
+          logger.info("MyLayouter.run() layout: {} ms, {} nodes, {} connections", layoutTime, mAllGraphNodes.size(), mAllGraphConnections.size());
+        }
+        
+        mLayoutCounter++;
+        if(( mLayoutCounter % 600 ) == 0 ) {
+          logger.info("MyLayouter.run() layout: count:{}, charge: {}, spring {} ", mLayoutCounter, standardCharge, standardSpring);
+        }
+          
+      }
+    };
+      
+    long delay = 100L;
+    timer.schedule(task, delay, delay);
+    logger.info("startLayouting() done.");
+  }
+  
+  public void stopLayouting() {
+    timer.cancel();
+  }
+
+  
   /**
    * get the top (z-sorted) NetVisGraphNode at x,y 
    * @param x
@@ -340,7 +493,7 @@ public class NetVisGraphComponent extends JComponent implements
           g2.drawLine(nvgn.getMx()+width-6, nvgn.getMy()+4, nvgn.getMx()+width-6, nvgn.getMy()+9); // v
         }
 
-
+        // paint the node:
         if( nvgn.getLod() == 0 ) {
           // simple plain hostname
           nvgn.setHeight(13);
@@ -375,6 +528,7 @@ public class NetVisGraphComponent extends JComponent implements
           g2.setColor(Color.CYAN);
           g2.drawRect(nvgn.getMx(), nvgn.getMy() + 33, timeDiagramWidth, timeDiagramHeight);
 
+          // paint mini-diagram:
           synchronized ( mMain.getModel().getAllPackets() ) {  
             g2.setStroke(mStroke1);
             g2.setColor(Color.CYAN);

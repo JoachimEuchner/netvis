@@ -16,13 +16,28 @@ public class NetVisGraphNode {
   public boolean isManuallyMoved() { return mIsManuallyMoved; }
   public void setIsManuallyMoved( boolean l ) { mIsManuallyMoved = l; } 
   
+  private boolean mIsAutomaticallyMoved;
+  public boolean isAutomatiallyMoved() { return mIsAutomaticallyMoved; }
+  public void setIsAutomaticallyMoved( boolean l ) { mIsAutomaticallyMoved = l; }
+  
+  public boolean canFlow() { return ( !mIsManuallyMoved ); } // tbd
+  
   private int mx;
   public int getMx() { return mx; }
-  public void setMx( int x) { mx = x; }
+  public void setMx( int ix) { mx = ix; x = (double)(ix);}
   
   private int my;
   public int getMy() { return my; }
-  public void setMy( int y) { my = y; }
+  public void setMy( int iy) { my = iy; y = (double)(iy);}
+  
+  private double x;
+  public double getX() { return x; }
+  public void setX( double dx) { x = dx; mx= (int)(dx + 0.5); }
+  
+  private double y;
+  public double getY() { return y; }
+  public void setY( double dy) { y = dy; my= (int)(dy + 0.5); }
+  
   
   private int mWidth;
   public int getWidth() { return mWidth; }
@@ -44,10 +59,14 @@ public class NetVisGraphNode {
   public void increaseLod() { mLevelOfDetail++; if( mLevelOfDetail > 2 ) { mLevelOfDetail = 0;} }
   public void resetLod() { mLevelOfDetail = 0; }
   
+  public double fx;
+  public double fy;
+  
   public NetVisGraphNode( Node  n )  {
     mNode = n;
     mIsInitiallyLayouted = false;
     mIsManuallyMoved = false;
+    mIsAutomaticallyMoved = false;
     
     mDisplayString = n.getAddr().toString();
     

@@ -41,8 +41,8 @@ public class NetVisListener implements Runnable {
   private static final String READ_TIMEOUT_KEY = NetVisListener.class.getName() + ".readTimeout";
   private static final int READ_TIMEOUT = Integer.getInteger(READ_TIMEOUT_KEY, 100); // [ms]
 
-  private int nifIdx = 2;
-  public int getCurrentNifIdx() {return nifIdx; };
+  private int nifIdx = -1;
+  public int getCurrentNifIdx() { return nifIdx; };
   boolean keepReentring = true;
   
   public NetVisListener(NetVisMain main) {
@@ -68,6 +68,7 @@ public class NetVisListener implements Runnable {
       mListeningStartThread.interrupt();
       try {
         mListeningStartThread.join(1000);
+        logger.debug("NetVisListener.stop() called, nifIdx= {}, thread joined.", nifIdx);
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
@@ -78,6 +79,11 @@ public class NetVisListener implements Runnable {
     logger.debug("NetVisListener.clear() called");
     mMain.getNetVisFrame().getNetVisGraphComponent().clear();
     mMain.getModel().clear();
+  }
+  
+  
+  public void setNif ( int nif ) {
+    nifIdx = nif;
   }
   
   

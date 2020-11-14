@@ -14,7 +14,6 @@ public class NetVisMain {
   private NetVisListener mNVL;
   public NetVisListener getNetVisListener() { return mNVL; }
  
-
   private Model mModel;
   public Model getModel() { return mModel; }
 
@@ -25,6 +24,7 @@ public class NetVisMain {
   public NetVisFrame getNetVisFrame() { return mNVF; }
   
   public static NetVisMain getMain() { return handle; };
+  
   
   private NetVisMain ( String[] args ) {
     
@@ -39,9 +39,6 @@ public class NetVisMain {
     else {
       // args[] will point to a pcap-file
     }
-    
-    
-
   }
 
 
