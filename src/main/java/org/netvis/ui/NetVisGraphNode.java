@@ -47,9 +47,41 @@ public class NetVisGraphNode {
   public int getHeight() { return mHeight; }
   public void setHeight( int height ) { mHeight = height; }
   
+  // first attempt to some groupings:
+  
+  private static final int CATakamaitechnologies = 1;
+  private static final int CATamazonaws = 2;
+  private static final int CATgoogle1e100 = 3;
+  private static final int CATcloudfront = 4;
+  private static final int CATgoogleusercontent = 5;
+  private static final int CATebay = 6;
+  
+  
   private String mDisplayString;
+  private int mCategory;
+  public int getCategory() { return mCategory; }
   public String getDisplayString() { return mDisplayString; };
-  public void setDisplayString( String s ) { mDisplayString = s; mStringWidth = -1; };
+  public void setDisplayString( String s ) { 
+    mDisplayString = s; 
+    mStringWidth = -1; 
+    if( s.endsWith("static.akamaitechnologies.com" ) ) {
+      mCategory = CATakamaitechnologies;
+    } else if( s.endsWith("compute.amazonaws.com" ) ) {
+      mCategory = CATamazonaws; 
+    } else if( s.endsWith("compute.amazonaws.com" ) ) {
+      mCategory = CATamazonaws; 
+    } else if( s.endsWith("1e100.net" ) ) {
+      mCategory = CATgoogle1e100; 
+    } else if( s.endsWith("cloudfront.net" ) ) {
+      mCategory = CATcloudfront; 
+    } else if( s.endsWith("compute.amazonaws.com" ) ) {
+      mCategory = CATamazonaws; 
+    } else if( s.endsWith("googleusercontent.com" ) ) {
+      mCategory = CATgoogleusercontent; 
+    } else if( s.endsWith("ebay.com" ) ) {
+      mCategory = CATebay; 
+    }
+  }
   private int mStringWidth;
   public int getStringWidth() { return mStringWidth; }
   public void setStringWidth( int w ) { mStringWidth = w; }
@@ -58,10 +90,12 @@ public class NetVisGraphNode {
     if ((mDisplayString!=null) && ( mAnonDisplayString==null)) {
       mAnonDisplayString = mDisplayString.replaceAll("[a-z]", "x");
       mAnonDisplayString = mAnonDisplayString.replaceAll("[A-Z]", "X");
-      mAnonDisplayString = mAnonDisplayString.replaceAll("[0-9]", "X");
+      mAnonDisplayString = mAnonDisplayString.replaceAll("[0-9]", "x");
     }
     return mAnonDisplayString;
   }
+  
+  
   
   int mLevelOfDetail = 0;
   public int getLod() { return mLevelOfDetail; }
@@ -78,6 +112,7 @@ public class NetVisGraphNode {
     mIsAutomaticallyMoved = false;
     
     mDisplayString = n.getAddr().toString();
+    mCategory = 0;
     
     NetVisGraphComponent nvgc = NetVisMain.getMain().getNetVisFrame().getNetVisGraphComponent();
     nvgc.addGraphNode( this );

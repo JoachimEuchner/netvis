@@ -203,8 +203,9 @@ public class NetVisGraphComponent extends JComponent implements
 
     checkInitialLayoutNodes();
     
-    paintAllNodes( g2 );
     paintAllConnections ( g2 );
+   
+    paintAllNodes( g2 );
     
     long paintend = System.currentTimeMillis();
     g2.setColor(java.awt.Color.GREEN.darker());
@@ -341,8 +342,14 @@ public class NetVisGraphComponent extends JComponent implements
                     double d = Math.sqrt ( d2 );  // <-- the most expensive line 
                     double nx = dx / d;
                     double ny = dy / d;
-                    n.fx += standardCharge * nx / d2;
-                    n.fy += standardCharge * ny / d2;
+                    
+                    double localCharge = standardCharge;
+                    if( ( n.getCategory() != 0 ) && ( m.getCategory() == n.getCategory() ) ) {
+                      localCharge = standardCharge / 2;
+                    }
+                    
+                    n.fx += localCharge * nx / d2;
+                    n.fy += localCharge * ny / d2;
                   }
                 }
               } // m
@@ -371,8 +378,7 @@ public class NetVisGraphComponent extends JComponent implements
             // apply all individual forces to all individual nodes
             double maxForce = 50.0; // avoid too big jumps.
             for( NetVisGraphNode n : mAllGraphNodes ) {
-              if( n.canFlow() )
-              {
+              if( n.canFlow() ) {
                 if( n.fx > maxForce ) {
                   n.fx = maxForce;
                 }
@@ -464,7 +470,7 @@ public class NetVisGraphComponent extends JComponent implements
    * @param g2
    */
   private void paintAllNodes( Graphics2D g2 ) {
-   
+    g2.setStroke(mStroke1);
     g2.setFont(this.myPlain11Font);
     synchronized( mAllGraphNodes ) {
       for (NetVisGraphNode nvgn : mAllGraphNodes ) {
@@ -491,6 +497,7 @@ public class NetVisGraphComponent extends JComponent implements
 
         int width = nvgn.getWidth();
         g2.drawRect(nvgn.getMx()+width-9, nvgn.getMy()+2, 6, 9);
+        // draw pin
         if( nvgn.isManuallyMoved() ) {
           // pinned
           g2.drawLine(nvgn.getMx()+width-7, nvgn.getMy()+7, nvgn.getMx()+width-5, nvgn.getMy()+7); // h
@@ -500,6 +507,30 @@ public class NetVisGraphComponent extends JComponent implements
           g2.drawLine(nvgn.getMx()+width-7, nvgn.getMy()+4, nvgn.getMx()+width-5, nvgn.getMy()+4); // h
           g2.drawLine(nvgn.getMx()+width-6, nvgn.getMy()+4, nvgn.getMx()+width-6, nvgn.getMy()+9); // v
         }
+        
+        if ( nvgn.getNode().getSentPackets() > 0 ) { 
+          // draw sending circle
+          Color c = g2.getColor();
+          int radius =  nvgn.getNode().getSentPackets() / 20 + 1;
+          if(  radius > 25 ) {
+            radius = 25;
+          } 
+          g2.setColor(Color.GREEN);
+          g2.drawOval(nvgn.getMx()-radius, nvgn.getMy()-radius, 2*radius, 2*radius);
+          g2.setColor(c);
+        }
+        if ( nvgn.getNode().getReceivedPackets() > 0 ) {
+          // draw receiving circle
+          Color c = g2.getColor();
+          int radius =  nvgn.getNode().getSentPackets() / 20 + 1;
+          if(  radius > 25 ) {
+            radius = 25;
+          } 
+          g2.setColor(Color.GREEN);
+          g2.drawOval(nvgn.getMx() + nvgn.getWidth() -radius , nvgn.getMy()-radius, 2*radius, 2*radius);
+          g2.setColor(c);
+        }
+        
 
         // paint the node:
         if( nvgn.getLod() == 0 ) {
@@ -577,6 +608,7 @@ public class NetVisGraphComponent extends JComponent implements
    * @param g2
    */
   private void paintAllConnections( Graphics2D g2 ) {
+    long now = System.currentTimeMillis();
     synchronized( mAllGraphConnections ) {
       g2.setColor(Color.GREEN);
       for (NetVisGraphConnection nvgc : mAllGraphConnections ) {
@@ -628,7 +660,15 @@ public class NetVisGraphComponent extends JComponent implements
             offset = 10.0;
           }
           
-          drawParabel( g2, xp.s1, yp.s1, xp.s2, yp.s2, size, offset );
+          double travelFraction = ( now - nvgc.getConnection().getTimeOfLastSeenPacket() ) / 1000.0;
+          if ( travelFraction > 1.0 ) {
+            travelFraction = 1.0;
+          }
+          if ( travelFraction < 0.0 ) { // strange...
+            travelFraction = 0.0;
+          }
+          
+          drawParabel( g2, xp.s1, yp.s1, xp.s2, yp.s2, size, offset, travelFraction, nvgc.getConnection().getSizeOfLastSeenPacket() );
         }
       }
     }
@@ -763,11 +803,11 @@ public class NetVisGraphComponent extends JComponent implements
     }
   }
   
-  public static void drawParabel( Graphics2D g2, int xStart, int yStart, int xEnd, int yEnd, int size, double shift) {
+  public static void drawParabel( Graphics2D g2, int xStart, int yStart, int xEnd, int yEnd, int size, double shift, double travelFraction, int packetSize) {
     if ((xStart == xEnd) && (yStart == yEnd)) {
       return;
     }
-    
+
     if( size < mStrokes.length ) {
       if( size > 0 ){
         g2.setStroke( mStrokes[ size-1 ] );
@@ -778,27 +818,35 @@ public class NetVisGraphComponent extends JComponent implements
       g2.setStroke( mStrokes[ mStrokes.length-1 ] );
     }
 
-    double xNormale = (yEnd - yStart);
-    double yNormale = -(xEnd - xStart);
-    double len = Math.sqrt(xNormale * xNormale + yNormale * yNormale);
-    if( len > 0 ) {
-      xNormale /= len;
-      yNormale /= len;
-    }
-    
+    int boxSize = packetSize / 100 + 3;
+
     double arrowLen = size*5.0;
     double arrowWith = size*2.0;
-    
+
     if( shift == 0.0 ) {
       drawArrow(g2, xStart, yStart, xEnd, yEnd, size, arrowLen, arrowWith);
+      if( travelFraction < 1.0 ) {
+        int xPacket = (int)(travelFraction * (double)( xEnd - xStart ) + xStart);
+        int yPacket = (int)(travelFraction * (double)( yEnd - yStart ) + yStart);
+        g2.setColor(Color.WHITE);
+        g2.fillRect(xPacket-boxSize/2, yPacket-boxSize/2, boxSize, boxSize);
+      }
     } else {
+      double xNormale = (yEnd - yStart);
+      double yNormale = -(xEnd - xStart);
+      double len = Math.sqrt(xNormale * xNormale + yNormale * yNormale);
+      if( len > 0 ) {
+        xNormale /= len;
+        yNormale /= len;
+      }
       int x1 = xStart;
       int y1 = yStart;
       int x = 0;
       int y = 0;
 
       // drawParabel
-      int steps = (int)len/10 + 1;
+      int steps = (int)(len/10.0 + 1.0);
+      double dv = 1.0 / steps;
       for ( int step = 0; step <= steps; step++) {
         double v = (double)( step ) / (double)(steps);
         double u = 1.0 - 4.0 * (v - 0.5) * (v - 0.5);
@@ -807,12 +855,33 @@ public class NetVisGraphComponent extends JComponent implements
         if( step < steps ) {
           // draw all segments but the last
           g2.drawLine(x1, y1, x, y);
+
+          if((  v <= travelFraction ) && ( travelFraction < ( v+dv ))) {
+            Color c = g2.getColor();
+            int xPacket = (int)(travelFraction * (double)( x - x1 ) + x1);
+            int yPacket = (int)(travelFraction * (double)( y - y1 ) + y1);
+            g2.setColor(Color.WHITE);
+            g2.fillRect(xPacket-boxSize/2, yPacket-boxSize/2, boxSize,  boxSize);
+            g2.setColor(c);
+          }
+
           x1 = x;
           y1 = y;
         }
       }
-      // draw Arrow:
+      
+      // draw last segment as an arrow:
       drawArrow(g2, x1, y1, xEnd, yEnd, size, arrowLen, arrowWith);
+      
+      if((  (1.0-dv ) <= travelFraction ) && ( travelFraction < 1.0 )) {
+        Color c = g2.getColor();
+        int xPacket = (int)(travelFraction * (double)( xEnd - x1 ) + x1);
+        int yPacket = (int)(travelFraction * (double)( yEnd - y1 ) + y1);
+        g2.setColor(Color.WHITE);
+        g2.fillRect(xPacket-boxSize/2, yPacket-boxSize/2, boxSize,  boxSize);
+        g2.setColor(c);
+      }
+      
     }
   }
   
@@ -886,14 +955,27 @@ public class NetVisGraphComponent extends JComponent implements
 
   private Color getColorOfLinkAge( long millis, boolean isActive ) { 
     if( isActive ) {
+
       if ( !mMain.isOnline() ) {
         millis = 1000;
       }
-      float hue;
-      double fsFract =  Math.exp( -(double)millis / 100000.0 );
-      hue = (float) ( 0.6666 - fsFract * 2.0 / 3.0);
-      double b  = fsFract * 0.5 +0.5;
-      Color bgc = Color.getHSBColor(hue, (float)1.0, (float)b);
+      // float hue;
+      double fsFract =  Math.exp( -(double)millis / 100000.0 ); // 1.0 ... 0.0
+      // hue = (float) ( 0.6666 - fsFract * 2.0 / 3.0);
+      double bright  = fsFract * 0.5 + 0.5;  // 1.0 ... 0.5
+
+      // Color bgc = Color.getHSBColor(hue, (float)1.0, (float)b);
+      Color bgc = Color.WHITE;
+      if( fsFract > 0.5 ) {
+        double hue = 0.0; // constant red
+        double sat = - 1.0 + 2.0 * fsFract ; // 1.0 ... 0.0
+        bgc = Color.getHSBColor((float)hue, (float)sat, (float)bright);
+      } else {
+        double hue = 0.66666;  // constant blue
+        double sat = 1.0 - 2.0 * fsFract; // 0.0 ... 1.0
+        bgc = Color.getHSBColor((float)hue, (float)sat, (float)bright);
+      }
+
       return ( bgc );
     } else {
       return ( Color.DARK_GRAY.darker().darker() );

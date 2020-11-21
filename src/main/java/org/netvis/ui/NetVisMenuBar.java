@@ -52,6 +52,7 @@ public class NetVisMenuBar extends JMenuBar implements ActionListener {
   
   JMenu mDisplayMenu;
   JMenuItem mToggleAnonDisplay;
+  JMenuItem mPrintAllNodes;
   
   public NetVisMenuBar( NetVisMain m )  {
     mMain = m;
@@ -182,6 +183,10 @@ public class NetVisMenuBar extends JMenuBar implements ActionListener {
     mToggleAnonDisplay.addActionListener(this);
     mDisplayMenu.add(mToggleAnonDisplay);
     
+    mPrintAllNodes = new JMenuItem("PrintAllNodes");
+    mPrintAllNodes.addActionListener(this);
+    mDisplayMenu.add(mPrintAllNodes);
+    
     add(mDisplayMenu);
     
   }
@@ -256,6 +261,9 @@ public class NetVisMenuBar extends JMenuBar implements ActionListener {
     }
     else if( cmd.equals("ToggleAnonDisplay")){
       mMain.getNetVisFrame().getNetVisGraphComponent().toggleAnonDisplay();
+    }
+    else if( cmd.equals("PrintAllNodes")){
+      mMain.getModel().printAllNodes();
     }
   }
  

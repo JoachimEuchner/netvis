@@ -17,6 +17,7 @@ public class Connection {
   
 
   private long timeOfLastSeenPacket = 0;
+  private int sizeOfLastSeenPacket = 0;
 
   private NetVisGraphConnection mGraphConnection;
   public NetVisGraphConnection getGraphConnection() { return mGraphConnection; };
@@ -44,11 +45,21 @@ public class Connection {
     seenPackets++;
     mProtocol = p.getProtocol();
     timeOfLastSeenPacket = now;
+    sizeOfLastSeenPacket = p.getSize();
   }
 
   public long getTimeSinceLastSeenPacket() {
     return ( System.currentTimeMillis() - timeOfLastSeenPacket);
   }
+  
+  public long getTimeOfLastSeenPacket() {
+    return ( timeOfLastSeenPacket );
+  }
+  
+  public int getSizeOfLastSeenPacket() {
+    return ( sizeOfLastSeenPacket );
+  }
+  
 
   public void setTimeSeenLastPacket(long t) {
     timeOfLastSeenPacket = t;

@@ -149,4 +149,15 @@ public class Model {
     return ( retVal );
   }
 
+  public void printAllNodes() {
+    synchronized( mAllNodes ) {
+      int i=0;
+      for ( Node n : mAllNodes ) {
+        logger.info(" node: [{}/{}] : {}, {} ({}/{} packets)",
+           i++, mAllNodes.size(), n.getAddr(), n.getGraphNode().getDisplayString(), n.getSentPackets(), n.getReceivedPackets());
+      }
+      i++;
+    }
+  }
+  
 }
